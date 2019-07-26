@@ -13,8 +13,8 @@
 
 #include <winioctl.h> 
 #define INVALID_SET_FILE_POINTER -1
-__inline unsigned short _byteswap_ushort (unsigned short i){return (i>>8)|(i<<8);}
-__inline unsigned long _byteswap_ulong(unsigned long i){return _byteswap_ushort((unsigned short)(i>>16))|(_byteswap_ushort((unsigned short)i)<<16);};
+//__inline unsigned short _byteswap_ushort (unsigned short i){return (i>>8)|(i<<8);}
+//__inline unsigned long _byteswap_ulong(unsigned long i){return _byteswap_ushort((unsigned short)(i>>16))|(_byteswap_ushort((unsigned short)i)<<16);};
 typedef unsigned int UINT32;
 typedef signed int INT32;
 typedef unsigned short UINT16;

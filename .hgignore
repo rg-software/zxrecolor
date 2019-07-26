@@ -3,4 +3,8 @@ ZXColorTool/.vs/**
 ZXColorTool/ZXColor/bin/**
 ZXColorTool/ZXColor/obj/**
 ZXColorTool/ZXColor/ZXColor.csproj.user
+MyUnrealSpeccy/.vs/**
 MyUnrealSpeccy/UnrealSpeccy/.vs/**
+MyUnrealSpeccy/UnrealSpeccy/Debug/**
+MyUnrealSpeccy/UnrealSpeccy/Release/**
+MyUnrealSpeccy/UnrealSpeccy/unreal.vcxproj.user
