@@ -1,0 +1,5 @@
+syntax: glob
+ZXColorTool/.vs/**
+ZXColorTool/ZXColor/bin/**
+ZXColorTool/ZXColor/obj/**
+ZXColorTool/ZXColor/ZXColor.csproj.user
