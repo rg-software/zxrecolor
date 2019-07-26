@@ -105,7 +105,7 @@ void init_all(int argc, char **argv)
 
 //Alone Coder 0.37.1C -----
    temp.mem_autoload=0;
-   for (i = 0; i < argc; i++) {
+   for (auto i = 0; i < argc; i++) {
       if (argv[i][0] != '/' && argv[i][0] != '-') continue;
       if (!stricmp(argv[i]+1, "c") && (i+1 < argc))
 	  {
@@ -120,7 +120,7 @@ void init_all(int argc, char **argv)
 
 //Alone Coder 0.37.1CFIX -----
    temp.mem_autosave=0;
-   for (i = 0; i < argc; i++) {
+   for (auto i = 0; i < argc; i++) {
       if (argv[i][0] != '/' && argv[i][0] != '-') continue;
       if ((argv[i][1]=='s') && (i+1 < argc))
 	  {
