@@ -1,4 +1,3 @@
-#include "daa_tabs.h"
 // table for daa, contains af
 const unsigned char daatab[0x1000] =
 {

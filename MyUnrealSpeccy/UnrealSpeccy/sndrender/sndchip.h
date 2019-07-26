@@ -3,6 +3,10 @@
    created under public domain license by SMT, jan.2006
 */
 
+//TurboSound2:
+#define SNDR_TURBOSLIDER_DEFAULT 4096
+#define SNDR_TURBOSLIDER_MAX 8192
+//
 
 #ifndef _SNDCHIP_H_INCLUDED
 #define _SNDCHIP_H_INCLUDED
@@ -55,7 +59,7 @@ class SNDCHIP : public SNDRENDER
 
    void set_chip(CHIP_TYPE type) { chiptype = type; }
    void set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, unsigned sample_rate);
-   void set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo);
+   void set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo, const unsigned TurboSlider); //TurboSound2
 
    void reset(unsigned timestamp = 0); // call with default parameter, when context outside start_frame/end_frame block
 

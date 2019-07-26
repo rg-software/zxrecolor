@@ -1,25 +1,3 @@
-#include "std.h"
-
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-
-#include "resource.h"
-#include "emul.h"
-#include "vars.h"
-#include "config.h"
-#include "draw.h"
-#include "dx.h"
-#include "dxrend.h"
-#include "dxr_advm.h"
-#include "dxr_rsm.h"
-#include "fntsrch.h"
-#include "tape.h"
-#include "snapshot.h"
-#include "leds.h"
-
-#include "util.h"
-
 void setcheck(unsigned ID, unsigned char state = 1)
 {
    CheckDlgButton(dlg, ID, state ? BST_CHECKED : BST_UNCHECKED);
@@ -36,7 +14,7 @@ unsigned char getcheck(unsigned ID)
 CONFIG c1;
 char dlgok = 0;
 
-const char *lastpage;
+char *lastpage;
 
 char rset_list[0x800];
 
@@ -60,30 +38,16 @@ void find_romset()
 
 char select_romfile(char *dstname)
 {
-   char fname[FILENAME_MAX];
-   fname[0] = 0;
-/*
-   strcpy(fname, dstname);
-   char *x = strrchr(fname+2, ':');
-   if(x)
-       *x = 0;
-*/
-   OPENFILENAME ofn = { 0 };
-   ofn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
+   char fname[0x200]; strcpy(fname, dstname);
+   char *x = strrchr(fname+2, ':'); if (x) *x = 0;
+   OPENFILENAME ofn = { /*OPENFILENAME_SIZE_VERSION_400*/sizeof OPENFILENAME }; //Alone Coder
    ofn.hwndOwner = dlg;
    ofn.lpstrFilter = "ROM image (*.ROM)\0*.ROM\0All files\0*.*\0";
-   ofn.lpstrFile = fname;
-   ofn.nMaxFile = _countof(fname);
+   ofn.lpstrFile = fname; ofn.nMaxFile = sizeof fname;
    ofn.lpstrTitle = "Select ROM";
-   ofn.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-   ofn.lpstrInitialDir   = temp.RomDir;
-   if (!GetOpenFileName(&ofn))
-       return 0;
+   ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+   if (!GetOpenFileName(&ofn)) return 0;
    strcpy(dstname, fname);
-   strcpy(temp.RomDir, ofn.lpstrFile);
-   char *Ptr = strrchr(temp.RomDir, '\\');
-   if(Ptr)
-    *Ptr = 0;
    return 1;
 }
 
@@ -91,14 +55,10 @@ char *MemDlg_get_bigrom()
 {
    if (c1.mem_model == MM_ATM450) return c1.atm1_rom_path;
    if (c1.mem_model == MM_ATM710) return c1.atm2_rom_path;
-   if (c1.mem_model == MM_ATM3) return c1.atm3_rom_path;
    if (c1.mem_model == MM_PROFI) return c1.profi_rom_path;
    if (c1.mem_model == MM_SCORP) return c1.scorp_rom_path;
    if (c1.mem_model == MM_PROFSCORP) return c1.prof_rom_path;
- //[vv] kay-1024 не имел стандартной раскладки ПЗУ (раскладка переключалась джампером J5)
-//   if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
-   if (c1.mem_model == MM_PLUS3) return c1.plus3_rom_path;
-   if (c1.mem_model == MM_QUORUM) return c1.quorum_rom_path;
+   if (c1.mem_model == MM_KAY) return c1.kay_rom_path;
    return 0;
 }
 
@@ -107,8 +67,7 @@ void change_rompage(int dx, int reload)
    int x = SendDlgItemMessage(dlg, IDC_ROMPAGE, CB_GETCURSEL, 0, 0);
    static char *pgs[] = { c1.sos_rom_path, c1.zx128_rom_path, c1.dos_rom_path, c1.sys_rom_path };
    char *ptr = pgs[x];
-   if (reload)
-       select_romfile(ptr);
+   if (reload) select_romfile(ptr);
    if (dx) {
       char *x = strrchr(ptr+2, ':');
       unsigned pg = 0;
@@ -130,62 +89,27 @@ void change_rombank(int dx, int reload)
 {
    char *romname = MemDlg_get_bigrom();
 
-   char line[512];
-
-   strcpy(line, romname);
-
+   char line[512]; strcpy(line, romname);
    char *x = strrchr(line+2, ':');
+   unsigned pg = 0; if (!x) x = line + strlen(line); else { *x = 0; pg = atoi(x+1); }
+   if (reload) { if (!select_romfile(line)) return; }
 
-   unsigned pg = 0;
-   if (!x)
-       x = line + strlen(line);
-   else
-   {
-       *x = 0;
-       pg = atoi(x+1);
-   }
-
-   if (reload)
-   {
-       if (!select_romfile(line))
-           return;
-       x = line + strlen(line);
-   }
-
-   FILE *ff = fopen(line, "rb");
-   unsigned sz = 0;
-   if (ff)
-   {
-       fseek(ff, 0, SEEK_END);
-       sz = ftell(ff);
-       fclose(ff);
-   }
-   
-   if (!sz || (sz & 0xFFFF))
-   {
-       err: MessageBox(dlg, "Invalid ROM size", "error", MB_ICONERROR | MB_OK);
-       return;
-   }
-
+   FILE *ff = fopen(line, "rb"); unsigned sz = 0;
+   if (ff) fseek(ff, 0, SEEK_END), sz = ftell(ff), fclose(ff);
+   if (!sz || (sz & 0xFFFF)) { err: MessageBox(dlg, "Invalid ROM size", "error", MB_ICONERROR | MB_OK); return; }
    sz /= 1024;
 
-   if ((c1.mem_model == MM_SCORP || c1.mem_model == MM_PROFI || c1.mem_model == MM_KAY) && sz != 64)
-       goto err;
-   if ((c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3) && sz != 64 && sz != 128 && sz != 256 && sz != 512 && sz != 1024)
-       goto err;
-   if (c1.mem_model == MM_PROFSCORP && sz != 128 && sz != 256 && sz != 512 && sz != 1024)
-       goto err;
+   if ((c1.mem_model == MM_SCORP || c1.mem_model == MM_PROFI || c1.mem_model == MM_KAY) && sz != 64) goto err;
+   if (c1.mem_model == MM_ATM710 && sz != 64 && sz != 128 && sz != 256 && sz != 512 && sz != 1024) goto err;
+   if (c1.mem_model == MM_PROFSCORP && sz != 128 && sz != 256 && sz != 512 && sz != 1024) goto err;
 
-   if ((unsigned)(pg+dx) < sz/256)
-       pg += dx;
-   if (sz > 256)
-       sprintf(x, ":%d", pg);
+   if ((unsigned)(pg+dx) < sz/256) pg += dx;
+   if (sz > 256) sprintf(x, ":%d", pg);
    strcpy(romname, line);
    SendDlgItemMessage(dlg, IDE_BIGROM, WM_SETTEXT, 0, (LPARAM)romname);
 
    sprintf(line, "Loaded ROM size: %dK", sz);
-   if (c1.mem_model == MM_PROFSCORP && sz > 256)
-       sprintf(line, "Loaded ROM size: %d*256K", sz/256);
+   if (c1.mem_model == MM_PROFSCORP && sz > 256) sprintf(line, "Loaded ROM size: %d*256K", sz/256);
    SetDlgItemText(dlg, IDC_TOTAL_ROM, line);
    ShowWindow(GetDlgItem(dlg, IDC_TOTAL_ROM), SW_SHOW);
 }
@@ -225,26 +149,22 @@ void mem_set_sizes()
    EnableWindow(GetDlgItem(dlg, IDC_RAM256),  (mems & RAM_256)?  1:0);
    EnableWindow(GetDlgItem(dlg, IDC_RAM512),  (mems & RAM_512)?  1:0);
    EnableWindow(GetDlgItem(dlg, IDC_RAM1024), (mems & RAM_1024)? 1:0);
-   EnableWindow(GetDlgItem(dlg, IDC_RAM4096), (mems & RAM_4096)? 1:0);
 
    char ok = 1;
-   if (getcheck(IDC_RAM128) && !(mems & RAM_128))  ok = 0;
-   if (getcheck(IDC_RAM256) && !(mems & RAM_256))  ok = 0;
-   if (getcheck(IDC_RAM512) && !(mems & RAM_512))  ok = 0;
-   if (getcheck(IDC_RAM1024)&& !(mems & RAM_1024)) ok = 0;
-   if (getcheck(IDC_RAM4096)&& !(mems & RAM_4096)) ok = 0;
+   if (getcheck(IDC_RAM128) && !(mems & RAM_128)) ok = 0;
+   if (getcheck(IDC_RAM256) && !(mems & RAM_256)) ok = 0;
+   if (getcheck(IDC_RAM512) && !(mems & RAM_512)) ok = 0;
+   if (getcheck(IDC_RAM1024)&& !(mems & RAM_1024))ok = 0;
 
    if (!ok) {
       setcheck(IDC_RAM128, 0);
       setcheck(IDC_RAM256, 0);
       setcheck(IDC_RAM512, 0);
       setcheck(IDC_RAM1024,0);
-      setcheck(IDC_RAM4096,0);
       if (best == 128) setcheck(IDC_RAM128);
       if (best == 256) setcheck(IDC_RAM256);
       if (best == 512) setcheck(IDC_RAM512);
       if (best == 1024)setcheck(IDC_RAM1024);
-      if (best == 4096)setcheck(IDC_RAM4096);
    }
 
    char *romname = MemDlg_get_bigrom();
@@ -260,7 +180,7 @@ void mem_set_sizes()
    MemDlg_set_visible();
 }
 
-INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg; char bf[0x800];
    static char lock = 0;
@@ -326,7 +246,6 @@ INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (getcheck(IDC_RAM256)) c1.ramsize = 256;
       if (getcheck(IDC_RAM512)) c1.ramsize = 512;
       if (getcheck(IDC_RAM1024))c1.ramsize = 1024;
-      if (getcheck(IDC_RAM4096))c1.ramsize = 4096;
 
       c1.smuc = getcheck(IDC_SMUC);
    }
@@ -337,7 +256,6 @@ INT_PTR CALLBACK MemDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       setcheck(IDC_RAM256, (c1.ramsize == 256));
       setcheck(IDC_RAM512, (c1.ramsize == 512));
       setcheck(IDC_RAM1024,(c1.ramsize == 1024));
-      setcheck(IDC_RAM4096,(c1.ramsize == 4096));
       setcheck(IDC_SINGLE_ROM, !c1.use_romset);
       setcheck(IDC_CUSTOM_ROM, c1.use_romset);
       find_romset();
@@ -373,7 +291,7 @@ void setint(unsigned ID, int num) {
    SendMessage(wnd, WM_SETTEXT, 0, (LPARAM)bf);
 }
 
-INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    NMHDR *nm = (NMHDR*)lp;
@@ -386,8 +304,8 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
    if (msg == WM_COMMAND && !block) {
       unsigned id = LOWORD(wp), code = HIWORD(wp);
-      if ((code == EN_CHANGE && (id==IDE_FRAME || id==IDE_LINE || id==IDE_INT || id==IDE_INT_LEN || id==IDE_PAPER))
-          || (code == BN_CLICKED && (id==IDC_EVENM1 || id==IDC_4TBORDER || id==IDC_FLOAT_BUS || id==IDC_FLOAT_DOS || id==IDC_PORT_FF)))
+      if ((code == EN_CHANGE && (id==IDE_FRAME || id==IDE_LINE || id==IDE_INT || id==IDE_PAPER))
+          || (code == BN_CLICKED && (id==IDC_EVENM1 || id==IDC_4TBORDER || id==IDC_FLOAT_BUS || id==IDC_FLOAT_DOS)))
       {
          c1.ula_preset = -1;
          SendDlgItemMessage(dlg, IDC_ULAPRESET, CB_SETCURSEL, num_ula, 0);
@@ -403,7 +321,6 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
             c1.frame = /*conf.frame*/frametime/*Alone Coder*/, c1.intfq = conf.intfq, c1.intlen = conf.intlen, c1.t_line = conf.t_line,
             c1.paper = conf.paper, c1.even_M1 = conf.even_M1, c1.border_4T = conf.border_4T;
             c1.floatbus = conf.floatbus, c1.floatdos = conf.floatdos;
-            c1.portff = conf.portff;
             conf = tmp;
             goto refresh;
          }
@@ -422,18 +339,9 @@ INT_PTR CALLBACK UlaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.border_4T = getcheck(IDC_4TBORDER);
       c1.floatbus = getcheck(IDC_FLOAT_BUS);
       c1.floatdos = getcheck(IDC_FLOAT_DOS);
-      c1.portff = getcheck(IDC_PORT_FF) != 0;
-      if(c1.mem_model == MM_PROFI)
-      {
-           c1.profi_monochrome = getcheck(IDC_PROFI_MONOCHROME);
-      }
-      if (c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3 || c1.mem_model == MM_ATM450 || c1.mem_model == MM_PROFI)
-      {
-          c1.use_comp_pal = getcheck(IDC_ATMPAL);
-      }
-      if (c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3 || c1.mem_model == MM_ATM450)
-      {
+      if (c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM450) {
          c1.atm.mem_swap = getcheck(IDC_ATM_SWAP);
+         c1.atm.use_pal = getcheck(IDC_ATMPAL);
       }
    }
    if (nm->code == PSN_SETACTIVE) {
@@ -450,16 +358,12 @@ refresh:
       setcheck(IDC_4TBORDER, c1.border_4T);
       setcheck(IDC_FLOAT_BUS, c1.floatbus);
       setcheck(IDC_FLOAT_DOS, c1.floatdos);
-      setcheck(IDC_PORT_FF, c1.portff);
 
-      unsigned en_atm =  (c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM3 || c1.mem_model == MM_ATM450);
-      unsigned en_profi =  (c1.mem_model == MM_PROFI);
-      EnableWindow(GetDlgItem(dlg, IDC_ATM_SWAP), en_atm);
-      EnableWindow(GetDlgItem(dlg, IDC_PROFI_MONOCHROME), en_profi);
-      EnableWindow(GetDlgItem(dlg, IDC_ATMPAL), en_atm || en_profi);
-      setcheck(IDC_PROFI_MONOCHROME, en_profi ? c1.profi_monochrome : 0);
-      setcheck(IDC_ATM_SWAP, en_atm ? c1.atm.mem_swap : 0);
-      setcheck(IDC_ATMPAL, (en_atm || en_profi) ? c1.use_comp_pal : 0);
+      unsigned en =  (c1.mem_model == MM_ATM710 || c1.mem_model == MM_ATM450);
+      EnableWindow(GetDlgItem(dlg, IDC_ATM_SWAP), en);
+      EnableWindow(GetDlgItem(dlg, IDC_ATMPAL), en);
+      setcheck(IDC_ATM_SWAP, en? c1.atm.mem_swap : 0);
+      setcheck(IDC_ATMPAL, en? c1.atm.use_pal : 0);
 
       block=0;
       lastpage = "ULA";
@@ -547,49 +451,24 @@ void HddDlg_select_image(int device)
       return;
    }
 
-   if (code >= 8)
-   { // physical device
-      if(MessageBox(dlg, "All volumes on drive will be dismounted\n", "Warning",
-          MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
-          return;
+   if (code >= 8) { // physical device
       strcpy(c1.ide[device].image, phys[code-8].viewname);
       HddDlg_show_info(device);
       return;
    }
 
    // open HDD image
-   OPENFILENAME fn = { 0 };
-/*
+   OPENFILENAME fn = { /*OPENFILENAME_SIZE_VERSION_400*/sizeof OPENFILENAME }; //Alone Coder
    strcpy(textbuf, c1.ide[device].image);
    if (textbuf[0] == '<') *textbuf = 0;
-*/
-   textbuf[0] = 0;
-   fn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
    fn.hwndOwner = dlg;
    fn.lpstrFilter = "Hard disk drive image (*.HDD)\0*.HDD\0";
    fn.lpstrFile = textbuf;
-   fn.nMaxFile = _countof(textbuf);
+   fn.nMaxFile = sizeof textbuf;
    fn.lpstrTitle = "Select image file for HDD emulator";
-   fn.Flags = OFN_CREATEPROMPT | OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
-   fn.lpstrInitialDir   = temp.HddDir;
-   if (!GetOpenFileName(&fn))
-       return;
-   strcpy(temp.HddDir, fn.lpstrFile);
-   char *Ptr = strrchr(temp.HddDir, '\\');
-   if(Ptr)
-    *Ptr = 0;
-
-   int file = open(textbuf, O_RDONLY | O_BINARY, S_IREAD);
-   if(file < 0)
-       return;
-   __int64 sz = _filelengthi64(file);
-   close(file);
-
+   fn.Flags = OFN_CREATEPROMPT | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+   if (!GetOpenFileName(&fn)) return;
    strcpy(c1.ide[device].image, textbuf);
-   c1.ide[device].c = 0;
-   c1.ide[device].h = 0;
-   c1.ide[device].s = 0;
-   c1.ide[device].lba = unsigned(sz / 512);
    HddDlg_show_info(device);
 }
 
@@ -609,52 +488,34 @@ void HddDlg_show_size(unsigned id, unsigned sectors)
    SetDlgItemText(dlg, id, dst);
 }
 
-INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    NMHDR *nm = (NMHDR*)lp;
    volatile static char block=0;
-   if (msg == WM_INITDIALOG)
-   {
+   if (msg == WM_INITDIALOG) {
       HWND box = GetDlgItem(dlg, IDC_IDESCHEME);
-      ComboBox_AddString(box, "NONE");
-      ComboBox_AddString(box, "ATM");
-      ComboBox_AddString(box, "NEMO");
-      ComboBox_AddString(box, "NEMO (A8)");
-      ComboBox_AddString(box, "NEMO (DIVIDE)");
-      ComboBox_AddString(box, "SMUC");
-      ComboBox_AddString(box, "PROFI");
-      ComboBox_AddString(box, "DIVIDE");
-      ComboBox_SetItemData(box, 0, (LPARAM)IDE_NONE);
-      ComboBox_SetItemData(box, 1, (LPARAM)IDE_ATM);
-      ComboBox_SetItemData(box, 2, (LPARAM)IDE_NEMO);
-      ComboBox_SetItemData(box, 3, (LPARAM)IDE_NEMO_A8);
-      ComboBox_SetItemData(box, 4, (LPARAM)IDE_NEMO_DIVIDE);
-      ComboBox_SetItemData(box, 5, (LPARAM)IDE_SMUC);
-      ComboBox_SetItemData(box, 6, (LPARAM)IDE_PROFI);
-      ComboBox_SetItemData(box, 7, (LPARAM)IDE_DIVIDE);
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"NONE");
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"ATM");
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"NEMO");
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"NEMO (A8)");
+      SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"SMUC");
    }
-   if (msg == WM_COMMAND && !block)
-   {
+   if (msg == WM_COMMAND && !block) {
       unsigned id = LOWORD(wp), code = HIWORD(wp);
-      if (code == CBN_SELCHANGE && id == IDC_IDESCHEME)
-      {
-         HWND box = GetDlgItem(dlg, IDC_IDESCHEME);
-         int Idx = ComboBox_GetCurSel(box);
-         c1.ide_scheme = (IDE_SCHEME)ComboBox_GetItemData(box, Idx);
+      if (code == CBN_SELCHANGE && id == IDC_IDESCHEME) {
+         c1.ide_scheme = (IDE_SCHEME)SendDlgItemMessage(dlg, IDC_IDESCHEME, CB_GETCURSEL, 0, 0);
          HddDlg_set_active();
       }
       if (id == IDB_HDD0) HddDlg_select_image(0);
       if (id == IDB_HDD1) HddDlg_select_image(1);
 
-      if (code == EN_CHANGE)
-      {
+      if (code == EN_CHANGE) {
          char bf[64]; unsigned c=0, h=0, s=0, l=0;
          GetWindowText((HWND)lp, bf, sizeof bf);
          sscanf(bf, "%d/%d/%d", &c, &h, &s);
          sscanf(bf, "%d", &l);
-         switch (id)
-         {
+         switch (id) {
             case IDE_HDD0_CHS: HddDlg_show_size(IDS_HDD0_CHS, c*h*s); break;
             case IDE_HDD0_LBA: HddDlg_show_size(IDS_HDD0_LBA, l); break;
             case IDE_HDD1_CHS: HddDlg_show_size(IDS_HDD1_CHS, c*h*s); break;
@@ -680,20 +541,9 @@ INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          }
 
    }
-   if (nm->code == PSN_SETACTIVE)
-   {
+   if (nm->code == PSN_SETACTIVE) {
       block=1;
-      HWND box = GetDlgItem(dlg, IDC_IDESCHEME);
-      int Cnt = ComboBox_GetCount(box);
-      for(int i = 0; i < Cnt; i++)
-      {
-          ULONG_PTR Data = (ULONG_PTR)ComboBox_GetItemData(box, i);
-          if(Data == c1.ide_scheme)
-          {
-              ComboBox_SetCurSel(box, i);
-              break;
-          }
-      }
+      SendDlgItemMessage(dlg, IDC_IDESCHEME, CB_SETCURSEL, c1.ide_scheme, 0);
       HddDlg_set_active();
       block=0;
       setcheck(IDC_HDD0_RO, c1.ide[0].readonly);
@@ -708,7 +558,7 @@ INT_PTR CALLBACK HddDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK EFF7Dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK EFF7Dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    NMHDR *nm = (NMHDR*)lp;
@@ -738,7 +588,7 @@ INT_PTR CALLBACK EFF7Dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    if (msg == WM_INITDIALOG) {
@@ -774,6 +624,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.sound.ay_vols = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_GETCURSEL, 0, 0);
       c1.sound.ay_stereo = (unsigned char)SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_GETCURSEL, 0, 0);
       c1.sound.ay_samples = getcheck(IDC_CHIP_DIGITAL);
+	  c1.sound.TurboSlider = SendDlgItemMessage(dlg, IDC_CHIP_TURBOSLIDER, TBM_GETPOS, 0, 0); //TurboSound2
    }
    if (nm->code == PSN_SETACTIVE) {
       setint(IDC_CHIP_CLK, c1.sound.ayfq);
@@ -781,6 +632,8 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       SendDlgItemMessage(dlg, IDC_CHIP_SCHEME, CB_SETCURSEL, c1.sound.ay_scheme, 0);
       SendDlgItemMessage(dlg, IDC_CHIP_VOL, CB_SETCURSEL, c1.sound.ay_vols, 0);
       SendDlgItemMessage(dlg, IDC_CHIP_STEREO, CB_SETCURSEL, c1.sound.ay_stereo, 0);
+      SendDlgItemMessage(dlg, IDC_CHIP_TURBOSLIDER, TBM_SETRANGE, 0, MAKELONG(0,8192)); //TurboSound2
+      SendDlgItemMessage(dlg, IDC_CHIP_TURBOSLIDER, TBM_SETPOS, 1, c1.sound.TurboSlider); //TurboSound2
       setcheck(IDC_CHIP_DIGITAL, c1.sound.ay_samples);
       lastpage = "AY";
    }
@@ -789,7 +642,7 @@ INT_PTR CALLBACK ChipDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    if (msg == WM_INITDIALOG) {
@@ -805,7 +658,7 @@ INT_PTR CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       EnableWindow(GetDlgItem(dlg, IDC_FRAMES_BOX), en);
       return 0;
    }
-   if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
+   if (msg == WM_SYSCOMMAND && wp == SC_CLOSE) EndDialog(dlg, 0);
    if (msg != WM_COMMAND) return 0;
    unsigned id = LOWORD(wp), code = HIWORD(wp);
    if (id == IDCANCEL) EndDialog(dlg, 0);
@@ -821,12 +674,11 @@ INT_PTR CALLBACK fir_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 0;
 }
 
-INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg; unsigned id, code;
    int i; //Alone Coder 0.36.7
-   if (msg == WM_INITDIALOG)
-   {
+   if (msg == WM_INITDIALOG) {
       HWND box = GetDlgItem(dlg, IDC_VIDEOFILTER);
       for (/*int*/ i = 0; renders[i].func; i++)
          SendMessage(box, CB_ADDSTRING, 0, (LPARAM)renders[i].name);
@@ -848,12 +700,6 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       unsigned index = c1.fontsize - 5;
       if (!c1.pixelscroll && index == 3) index++;
       SendMessage(box, CB_SETCURSEL, index, 0);
-
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)"scr");
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)"bmp");
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_ADDSTRING, 0, (LPARAM)"png");
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, conf.scrshot, 0);
-
       goto filter_changed;
    }
    if (msg == WM_COMMAND) {
@@ -881,7 +727,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          sh = (f & RF_BORDER)? SW_HIDE : SW_SHOW;
          ShowWindow(GetDlgItem(dlg, IDC_FLASH), sh);
 
-         sh = (((f & (RF_DRIVER | RF_8BPCH | RF_USEFONT)) == RF_DRIVER) || (rend == render_tv) || (rend == render_advmame))? SW_SHOW : SW_HIDE;
+         sh = (((f & (RF_DRIVER | RF_8BPCH | RF_USEFONT)) == RF_DRIVER) || (rend == render_tv) /*|| (rend == render_advmame)*//*Alone Coder*/)? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_NOFLIC), sh);
 
          if (!(f & RF_2X) || getcheck(IDC_FAST_SL) || !getcheck(IDC_NOFLIC)) sh = SW_HIDE;
@@ -896,13 +742,13 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          ShowWindow(GetDlgItem(dlg, IDC_REND_TITLE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_RENDER), sh);
 
-         sh = (rend == render_rsm)? SW_SHOW : SW_HIDE;
+         sh = /*(rend == render_rsm)? SW_SHOW :*//*Alone Coder*/ SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_FIR), sh);
 
          sh = (f & RF_2X) && (f & (RF_DRIVER | RF_USEC32))? SW_SHOW : SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_FAST_SL), sh);
 
-         sh = (rend == render_advmame) ? SW_SHOW : SW_HIDE;
+         sh = /*(rend == render_advmame)? SW_SHOW :*//*Alone Coder*/ SW_HIDE;
          ShowWindow(GetDlgItem(dlg, IDC_VIDEOSCALE), sh);
          ShowWindow(GetDlgItem(dlg, IDC_VSCALE_TITLE1), sh);
          ShowWindow(GetDlgItem(dlg, IDC_VSCALE_TITLE2), sh);
@@ -914,8 +760,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    if (msg != WM_NOTIFY) return 0;
    NMHDR *nm = (NMHDR*)lp;
 
-   if (nm->code == PSN_KILLACTIVE)
-   {
+   if (nm->code == PSN_KILLACTIVE) {
       unsigned index = SendDlgItemMessage(dlg, IDC_FONTHEIGHT, CB_GETCURSEL, 0, 0);
       c1.pixelscroll = (index == 4)? 0 : 1;
       c1.fontsize = (index == 4)? 8 : index + 5;
@@ -926,7 +771,7 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.frameskipmax = getint(IDE_SKIP2);
       c1.scanbright = getint(IDE_SCBRIGHT);
       c1.fast_sl = getcheck(IDC_FAST_SL);
-      c1.scrshot = SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_GETCURSEL, 0, 0);
+      c1.bmpshot = getcheck(IDC_BMPSHOT);
       c1.flip = getcheck(IDC_FLIP);
       c1.updateb = getcheck(IDC_UPDB);
       c1.pal = SendDlgItemMessage(dlg, IDC_PALETTE, CB_GETCURSEL, 0, 0);
@@ -942,15 +787,12 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       c1.videoscale = (unsigned char)(SendDlgItemMessage(dlg, IDC_VIDEOSCALE, TBM_GETPOS, 0, 0));
    }
 
-   if (nm->code == PSN_SETACTIVE)
-   {
+   if (nm->code == PSN_SETACTIVE) {
       setint(IDE_SKIP1, c1.frameskip);
       setint(IDE_SKIP2, c1.frameskipmax);
       setint(IDE_MINX, c1.minres);
       setint(IDE_SCBRIGHT, c1.scanbright);
-
-      SendDlgItemMessage(dlg, IDC_SCRSHOT, CB_SETCURSEL, c1.scrshot, 0);
-
+      setcheck(IDC_BMPSHOT, c1.bmpshot);
       setcheck(IDC_FLIP, c1.flip);
       setcheck(IDC_UPDB, c1.updateb);
       setcheck(IDC_FLASH, c1.flashcolor);
@@ -976,23 +818,22 @@ INT_PTR CALLBACK VideoDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-static struct
-{
+struct {
    unsigned ID;
    int *value;
 } slider[] = {
-   { IDC_SND_BEEPER,  &c1.sound.beeper_vol  },
-   { IDC_SND_MICOUT,  &c1.sound.micout_vol  },
-   { IDC_SND_MICIN,   &c1.sound.micin_vol   },
-   { IDC_SND_AY,      &c1.sound.ay_vol      },
-   { IDC_SND_COVOXFB, &c1.sound.covoxFB_vol },
-   { IDC_SND_COVOXDD, &c1.sound.covoxDD_vol },
-   { IDC_SND_SD,      &c1.sound.sd_vol      },
-   { IDC_SND_BASS,    &c1.sound.bass_vol    },
-   { IDC_SND_GS,      &c1.sound.gs_vol      },
+   { IDC_SND_BEEPER,  &c1.sound.beeper  },
+   { IDC_SND_MICOUT,  &c1.sound.micout  },
+   { IDC_SND_MICIN,   &c1.sound.micin   },
+   { IDC_SND_AY,      &c1.sound.ay      },
+   { IDC_SND_COVOXFB, &c1.sound.covoxFB },
+   { IDC_SND_COVOXDD, &c1.sound.covoxDD },
+   { IDC_SND_SD,      &c1.sound.sd      },
+   { IDC_SND_BASS,    &c1.sound.bass    },
+   { IDC_SND_GS,      &c1.sound.gs      },
 };
 
-INT_PTR CALLBACK SoundDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK SoundDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    if (msg == WM_INITDIALOG)
@@ -1038,14 +879,13 @@ upd:  for (int i = 0; i < sizeof slider/sizeof*slider; i++) {
 
    #ifdef MOD_GSBASS
    if (msg == WM_COMMAND && LOWORD(wp) == IDB_SAVEMOD) {
-      OPENFILENAME ofn = { 0 };
+      OPENFILENAME ofn = { /*OPENFILENAME_SIZE_VERSION_400*/sizeof OPENFILENAME }; //Alone Coder
       char fname[0x200]; strncpy(fname, (char*)gs.mod, 20); fname[20] = 0;
       for (char *ptr = fname; *ptr; ptr++)
          if (*ptr == '|' || *ptr == '<' || *ptr == '>' ||
              *ptr == '?' || *ptr == '/' || *ptr == '\\' ||
              *ptr == '"' || *ptr == ':' || *ptr == '*' || *(unsigned char*)ptr < ' ')
             *ptr = ' ';
-      ofn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
       ofn.lpstrFilter = "Amiga music module (MOD)\0*.mod\0";
       ofn.lpstrFile = fname; ofn.nMaxFile = sizeof fname;
       ofn.lpstrTitle = "Save music from GS";
@@ -1084,7 +924,7 @@ upd:  for (int i = 0; i < sizeof slider/sizeof*slider; i++) {
    return 1;
 }
 
-INT_PTR CALLBACK TapeDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK TapeDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    if (msg == WM_INITDIALOG) {
@@ -1111,95 +951,59 @@ INT_PTR CALLBACK TapeDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void FillModemList(HWND box)
 {
-   ComboBox_AddString(box, "NONE");
-   for (unsigned port = 1; port < 256; port++)
-   {
+   SendMessage(box, CB_ADDSTRING, 0, (LPARAM)"None");
+   for (unsigned port = 1; port < 9; port++) {
       HANDLE hPort;
-      if (modem.open_port == port)
-          hPort = modem.hPort;
-      else
-      {
-         char portName[11];
-         _snprintf(portName, _countof(portName), "\\\\.\\COM%d", port);
-
+      if (modem.open_port == port) hPort = modem.hPort;
+      else {
+         char portName[6] = "COM*"; portName[3] = port + '0';
          hPort = CreateFile(portName, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-         if (hPort == INVALID_HANDLE_VALUE)
-             continue;
+         if (hPort == INVALID_HANDLE_VALUE) continue;
       }
-
-      struct
-      {
+      struct {
          COMMPROP comm;
          char xx[4000];
       } b;
-
       b.comm.wPacketLength = sizeof(b);
       b.comm.dwProvSpec1 = COMMPROP_INITIALIZED;
-      if (GetCommProperties(hPort, &b.comm) && b.comm.dwProvSubType == PST_MODEM)
-      {
+      if (GetCommProperties(hPort, &b.comm) && b.comm.dwProvSubType == PST_MODEM) {
          MODEMDEVCAPS *mc = (MODEMDEVCAPS*)&b.comm.wcProvChar;
          char vendor[0x100], model[0x100];
-
-         unsigned vsize = mc->dwModemManufacturerSize / sizeof(WCHAR);
-         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)(PCHAR(mc) + mc->dwModemManufacturerOffset), vsize, vendor, sizeof vendor, 0, 0);
-         vendor[vsize] = 0;
-
-         unsigned msize = mc->dwModemModelSize / sizeof(WCHAR);
-         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)(PCHAR(mc) + mc->dwModemModelOffset), msize, model, sizeof model, 0, 0);
-         model[msize] = 0;
-         char line[0x200];
-         _snprintf(line, _countof(line), "COM%d: %s %s", port, vendor, model);
-         ComboBox_AddString(box, line);
+         unsigned vsize = mc->dwModemManufacturerSize / sizeof WCHAR;
+         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)((int)mc + mc->dwModemManufacturerOffset), vsize, vendor, sizeof vendor, 0, 0); vendor[vsize] = 0;
+         unsigned msize = mc->dwModemModelSize / sizeof WCHAR;
+         WideCharToMultiByte(CP_ACP, 0, (WCHAR*)((int)mc + mc->dwModemModelOffset), msize, model, sizeof model, 0, 0); model[msize] = 0;
+         char line[0x200]; sprintf(line, "COM%d: %s %s", port, vendor, model);
+         SendMessage(box, CB_ADDSTRING, 0, (LPARAM)line);
       }
-      else
-      {
-         char portName[11];
-         _snprintf(portName, _countof(portName), "COM%d:", port);
-         ComboBox_AddString(box, portName);
-      }
-      if (modem.open_port != port)
-          CloseHandle(hPort);
+      if (modem.open_port != port) CloseHandle(hPort);
    }
 }
 
 void SelectModem(HWND box)
 {
-   if (!c1.modem_port)
-   {
-       ComboBox_SetCurSel(box, 0);
-       return;
-   }
-
+   if (!c1.modem_port) { SendMessage(box, CB_SETCURSEL, 0, 0); return; }
    char line[0x200];
-   int Cnt = ComboBox_GetCount(box);
-   for (int i = 0; i < Cnt; i++)
-   {
-      ComboBox_GetLBText(box, i, line);
-      int Port = 0;
-      sscanf(line, "COM%d", &Port);
-      if (Port == c1.modem_port)
-      {
+   unsigned count = SendMessage(box, CB_GETCOUNT, 0, 0);
+   for (unsigned i = 0; i < count; i++) {
+      SendMessage(box, CB_GETLBTEXT, i, (LPARAM)line);
+      if (!strnicmp(line, "COM", 3) && line[3]-'0' == c1.modem_port) {
          SendMessage(box, CB_SETCURSEL, i, 0);
-         ComboBox_SetCurSel(box, i);
          return;
       }
    }
 }
 
-int GetModemPort(HWND box)
+unsigned char GetModemPort(HWND box)
 {
-   int index = ComboBox_GetCurSel(box);
-   if (!index)
-       return 0;
-
-   char line[0x200];
-   ComboBox_GetLBText(box, index, line);
-   int Port = 0;
-   sscanf(line, "COM%d", &Port);
-   return Port;
+   unsigned index = SendMessage(box, CB_GETCURSEL, 0, 0);
+   if (!index) return 0;
+   char line[0x200]; SendMessage(box, CB_GETLBTEXT, index, (LPARAM)line);
+   if (!strnicmp(line, "COM", 3) && (unsigned)(line[3])-'1' < 9) return line[3]-'0';
+   return 0;
 }
 
-INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg; char names[0x2000];
    if (msg == WM_INITDIALOG) {
@@ -1220,10 +1024,6 @@ INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       if (getcheck(IDC_MOUSE_NONE)) c1.input.mouse = 0;
       if (getcheck(IDC_MOUSE_KEMPSTON)) c1.input.mouse = 1;
       if (getcheck(IDC_MOUSE_AY)) c1.input.mouse = 2;
-      if (getcheck(IDC_WHEEL_NONE)) c1.input.mousewheel = MOUSE_WHEEL_NONE;
-      if (getcheck(IDC_WHEEL_KEYBOARD)) c1.input.mousewheel = MOUSE_WHEEL_KEYBOARD;
-      if (getcheck(IDC_WHEEL_KEMPSTON)) c1.input.mousewheel = MOUSE_WHEEL_KEMPSTON;
-      c1.input.keybpcmode = getcheck(IDC_PC_LAYOUT);
       c1.input.mouseswap = getcheck(IDC_MOUSESWAP);
       c1.input.kjoy = getcheck(IDC_KJOY);
       c1.input.keymatrix = getcheck(IDC_KEYMATRIX);
@@ -1250,10 +1050,6 @@ INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       setcheck(IDC_MOUSE_NONE, c1.input.mouse == 0);
       setcheck(IDC_MOUSE_KEMPSTON, c1.input.mouse == 1);
       setcheck(IDC_MOUSE_AY, c1.input.mouse == 2);
-      setcheck(IDC_PC_LAYOUT, c1.input.keybpcmode);
-      setcheck(IDC_WHEEL_NONE, c1.input.mousewheel == MOUSE_WHEEL_NONE);
-      setcheck(IDC_WHEEL_KEYBOARD, c1.input.mousewheel == MOUSE_WHEEL_KEYBOARD);
-      setcheck(IDC_WHEEL_KEMPSTON, c1.input.mousewheel == MOUSE_WHEEL_KEMPSTON);
       setcheck(IDC_MOUSESWAP, c1.input.mouseswap);
       setcheck(IDC_KJOY, c1.input.kjoy);
       setcheck(IDC_KEYMATRIX, c1.input.keymatrix);
@@ -1284,7 +1080,7 @@ INT_PTR CALLBACK InputDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    static int ids[NUM_LEDS][3] = {
      { IDC_LED_AY, IDC_LED_AY_X, IDC_LED_AY_Y },
@@ -1368,39 +1164,32 @@ INT_PTR CALLBACK LedsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    return 1;
 }
 
-INT_PTR CALLBACK BetaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK BetaDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    unsigned ID = LOWORD(wp);
-   if (msg == WM_INITDIALOG)
-   {
+   if (msg == WM_INITDIALOG) {
       setcheck(IDC_DISK_TRAPS, c1.trdos_traps);
    }
-   if (msg == WM_COMMAND)
-   {
+   if (msg == WM_COMMAND) {
       int disk;
-      switch (ID)
-      {
+      switch (ID) {
          case IDB_INS_A: disk = 0; goto load;
          case IDB_INS_B: disk = 1; goto load;
          case IDB_INS_C: disk = 2; goto load;
          case IDB_INS_D: disk = 3; goto load;
          load:
-            if (!comp.wd.fdd[disk].test())
-                return 1;
-            opensnap(disk+1);
-            c1.trdos_wp[disk] = conf.trdos_wp[disk];
-            goto reload;
+            if (!comp.wd.fdd[disk].test()) return 1;
+            comp.wd.fdd[disk].free(); opensnap(disk+1);
+            c1.trdos_wp[disk] = conf.trdos_wp[disk]; goto reload;
 
          case IDB_REM_A: disk = 0; goto remove;
          case IDB_REM_B: disk = 1; goto remove;
          case IDB_REM_C: disk = 2; goto remove;
          case IDB_REM_D: disk = 3; goto remove;
          remove:
-            if (!comp.wd.fdd[disk].test())
-                return 1;
-            comp.wd.fdd[disk].free();
-            c1.trdos_wp[disk] = conf.trdos_wp[disk];
+            if (!comp.wd.fdd[disk].test()) return 1;
+            comp.wd.fdd[disk].free(); c1.trdos_wp[disk] = conf.trdos_wp[disk];
             goto reload;
 
          case IDB_SAVE_A: savesnap(0); goto reload;
@@ -1553,8 +1342,6 @@ void setup_dlg()
 
    c1 = conf; PropertySheet(&psh);
    if (dlgok) {
-           if(conf.render != c1.render)
-               temp.scale = 1;
            conf = c1;
            frametime = conf.frame; //Alone Coder 0.36.5
    };

@@ -1,20 +1,3 @@
-#include "std.h"
-
-#include "emul.h"
-#include "vars.h"
-#include "emulkeys.h"
-#include "snapshot.h"
-#include "gui.h"
-#include "savesnd.h"
-#include "cheat.h"
-#include "dbgreg.h"
-#include "dbgcmd.h"
-#include "dbgoth.h"
-#include "dbgrwdlg.h"
-#include "dbgbpx.h"
-#include "dbgtrace.h"
-#include "dbglabls.h"
-#include "dbgmem.h"
 
 action ac_main[] =
 {
@@ -34,8 +17,7 @@ action ac_main[] =
    { "main.selectdriver", main_selectdriver },
    { "main.pokedialog", main_poke },
    { "main.starttape", main_starttape },
-   { "main.screenshot", main_scrshot },
-   { "main.savevideo", main_savevideo },
+   { "main.screenshot", scrshot },
    { "main.reset", main_reset },
    { "main.reset128", main_reset128 },
    { "main.resetsys", main_resetsys },
@@ -120,7 +102,6 @@ action ac_main_xt[] =
    { "mon.setbank", editbank },                         \
    { "mon.sethimem", editextbank },                     \
    { "mon.dump", mon_dump },                            \
-   { "mon.switchdump", mon_switch_dump },               \
    { "mon.next", mon_nxt },                             \
    { "mon.prev", mon_prv },                             \
    { "mon.rip", mon_tool },                             \
@@ -130,8 +111,7 @@ action ac_main_xt[] =
    { "mon.setwatch", mon_setwatch },                    \
    { "mon.switchay", mon_switchay },                    \
    { "mon.memsearch", main_cheat },                     \
-   { "mon.labels", mon_show_labels },                   \
-   { "mon.cpu", mon_switch_cpu },
+   { "mon.labels", mon_show_labels },
 
 
 action ac_regs[] =

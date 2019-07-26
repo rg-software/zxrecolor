@@ -1,21 +1,7 @@
-#include "std.h"
+#include "font.cpp"
+unsigned led_updtime, pitch;
 
-#include "emul.h"
-#include "vars.h"
-#include "font.h"
-#include "font16.h"
-#include "gs.h"
-#include "tape.h"
-#include "draw.h"
-#include "debug.h"
-#include "dbgbpx.h"
-#include "memory.h"
-
-#include "util.h"
-
-unsigned pitch;
-
-void text_i(unsigned char *dst, const char *text, unsigned char ink, unsigned off = 0)
+void text_i(unsigned char *dst, char *text, unsigned char ink, unsigned off = 0)
 {
    unsigned char mask = 0xF0; ink &= 0x0F;
    for (unsigned char *x = (unsigned char*)text; *x; x++) {
@@ -34,7 +20,7 @@ void text_i(unsigned char *dst, const char *text, unsigned char ink, unsigned of
    }
 }
 
-static void text_16(unsigned char *dst, const char *text, unsigned char attr)
+void text_16(unsigned char *dst, char *text, unsigned char attr)
 {
    for (; *text; text++, dst += 2)
       for (unsigned y = 0; y < 16; y++)
@@ -245,17 +231,13 @@ void load_led()
    }
 }
 
-static unsigned p_frames = 1;
-static u64 led_updtime, p_time;
-double p_fps;
+unsigned p_frames, p_time, p_fps;
 __inline void update_perf_led()
 {
-   u64 now = led_updtime - p_time;
-   if (now >= temp.cpufq) // усреднение за секунду
-   {
-      p_fps = (p_frames * temp.cpufq) / double(now) + 0.005;
-      p_frames = 0;
-      p_time = led_updtime;
+   unsigned now = led_updtime - p_time;
+   if (now > 500) {
+      p_fps = (int)((double)p_frames*1000/now + 0.5);
+      p_frames = 0; p_time = led_updtime;
    }
    p_frames++;
 }
@@ -264,9 +246,8 @@ void perf_led()
 {
    char bf[0x20]; unsigned PSZ;
    if (conf.led.perf_t)
-      sprintf(bf, "%6d*%2.2f", cpu.haltpos ? cpu.haltpos : cpu.t, p_fps), PSZ = 7;
-   else
-      sprintf(bf, "%2.2f fps", p_fps), PSZ = 5;
+      sprintf(bf, "%6d*%d", cpu.haltpos ? cpu.haltpos : cpu.t, p_fps), PSZ = 7;
+   else sprintf(bf, "%2d fps", p_fps), PSZ = 5;
    text_i(temp.led.perf, bf, 0x0E);
    if (cpu.haltpos) {
       unsigned char *ptr = temp.led.perf + pitch*8;
@@ -340,9 +321,8 @@ void debug_led()
       }
       for (unsigned j = 0; j < MAX_PAGES; j++) used_banks[j] = 0;
    }
-   for (unsigned w = 0; w < 4; w++) if (watch_enabled[w])
-   {
-      char bf[12]; sprintf(bf, "%8X", calc(&cpu, watch_script[w]));
+   for (unsigned w = 0; w < 4; w++) if (watch_enabled[w]) {
+      char bf[12]; sprintf(bf, "%8X", calc(watch_script[w]));
       text_i(ptr,bf,0x0F); ptr += pitch*8;
    }
 }
@@ -354,13 +334,12 @@ void show_mband(unsigned char *dst, unsigned start)
    char xx[8]; sprintf(xx, "%02X", start >> 8);
    text_i(dst, xx, 0x0B); dst += 4;
 
-   Z80 &cpu = CpuMgr.Cpu();
    unsigned char band[128];
    unsigned i; //Alone Coder 0.36.7
    for (/*unsigned*/ i = 0; i < 128; i++) {
       unsigned char res = 0;
       for (unsigned q = 0; q < conf.led.bandBpp; q++)
-         res |= cpu.membits[start++];
+         res |= membits[start++];
       band[i] = res;
    }
 
@@ -403,9 +382,8 @@ void memband_led()
       dst += 10*pitch;
    }
 
-   Z80 &cpu = CpuMgr.Cpu();
    for (unsigned i = 0; i < 0x10000; i++)
-      cpu.membits[i] &= ripper | ~(MEMBITS_R | MEMBITS_W | MEMBITS_X);
+      membits[i] &= ripper | ~(MEMBITS_R | MEMBITS_W | MEMBITS_X);
 }
 #endif
 
@@ -469,7 +447,7 @@ void key_led()
 
 void time_led()
 {
-   static u64 prev_time;
+   static unsigned prev_time;
    static char bf[8];
    if (led_updtime - prev_time > 5000) {
       prev_time = led_updtime;
@@ -479,10 +457,9 @@ void time_led()
    text_i(temp.led.time, bf, 0x0D);
 }
 
-// Вызывается раз в кадр
-void showleds()
+__inline void showleds()
 {
-   led_updtime = rdtsc();
+   led_updtime = GetTickCount();
    update_perf_led();
 
    if (temp.vidblock) return;

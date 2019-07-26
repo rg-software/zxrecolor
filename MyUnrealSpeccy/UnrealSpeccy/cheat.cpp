@@ -1,12 +1,3 @@
-#include "std.h"
-
-#include "resource.h"
-#include "emul.h"
-#include "vars.h"
-
-#include "gui.h"
-#include "dx.h"
-#include "util.h"
 
 struct CHEATDLG
 {
@@ -191,7 +182,7 @@ void CHEATDLG::ShowResults()
    }
 }
 
-INT_PTR CALLBACK cheatdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK cheatdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG) {
 
@@ -207,19 +198,19 @@ INT_PTR CALLBACK cheatdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       sizeCol.fmt = LVCFMT_LEFT;
 
       sizeCol.cx = 50;
-      sizeCol.pszText = LPSTR("Address");
+      sizeCol.pszText = "Address";
       SendMessage(CheatDlg.resBox, LVM_INSERTCOLUMN, 0, (LPARAM)&sizeCol);
 
       sizeCol.cx = 40;
-      sizeCol.pszText = LPSTR("Page");
+      sizeCol.pszText = "Page";
       SendMessage(CheatDlg.resBox, LVM_INSERTCOLUMN, 1, (LPARAM)&sizeCol);
 
       sizeCol.cx = 50;
-      sizeCol.pszText = LPSTR("Offset");
+      sizeCol.pszText = "Offset";
       SendMessage(CheatDlg.resBox, LVM_INSERTCOLUMN, 2, (LPARAM)&sizeCol);
 
       sizeCol.cx = 50;
-      sizeCol.pszText = LPSTR("Value");
+      sizeCol.pszText = "Value";
       SendMessage(CheatDlg.resBox, LVM_INSERTCOLUMN, 3, (LPARAM)&sizeCol);
 
       // SetFocus(GetDlgItem(dlg, IDE_VALUE));
@@ -230,7 +221,7 @@ INT_PTR CALLBACK cheatdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
 
    if ((msg == WM_COMMAND && wp == IDCANCEL) ||
-       (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE)) EndDialog(dlg, 0);
+       (msg == WM_SYSCOMMAND && wp == SC_CLOSE)) EndDialog(dlg, 0);
 
    if (msg == WM_COMMAND && HIWORD(wp) == BN_CLICKED)
    {

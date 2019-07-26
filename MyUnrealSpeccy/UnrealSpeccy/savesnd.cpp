@@ -1,14 +1,3 @@
-#include "std.h"
-
-#include "resource.h"
-
-#include "emul.h"
-#include "vars.h"
-#include "dx.h"
-#include "memory.h"
-
-#include "util.h"
-
 unsigned char wavhdr[]= {
    0x52,0x49,0x46,0x46,0xcc,0xf6,0x3e,0x00,
    0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,
@@ -18,8 +7,7 @@ unsigned char wavhdr[]= {
    0xa8,0xf6,0x3e,0x00
 };
 #pragma pack(1)
-static struct
-{
+struct {
    unsigned short sig;
    unsigned char stereo;
    unsigned short start;
@@ -34,7 +22,7 @@ bool silence(unsigned pos)
    return !(vtxbuf[pos+8] | vtxbuf[pos+9] | vtxbuf[pos+10]) ||
           (vtxbuf[pos+7] & 0x3F) == 0x3F;
 }
-INT_PTR CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
+BOOL CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp);
 unsigned vtxyear, vtxchip;
 char vtxname[200], vtxauthor[200], vtxsoft[200], vtxtracker[200], vtxcomm[200];
 
@@ -70,16 +58,12 @@ void savesnddialog()
          STARTUPINFO si = { sizeof si };
          si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE;
          PROCESS_INFORMATION pi;
-         char Parh[] = "lha a vtx.lzh vtx.tmp";
-         if (CreateProcess(0, Parh, 0, 0, 0, 0, 0, 0, &si, &pi))
-         {
+         if (CreateProcess(0, "lha a vtx.lzh vtx.tmp", 0, 0, 0, 0, 0, 0, &si, &pi)) {
             WaitForSingleObject(pi.hProcess, 5000);
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
             DeleteFile("vtx.tmp");
-         }
-         else
-         {
+         } else {
             DeleteFile("vtx.tmp");
             MessageBox(wnd, "LHA.EXE not found in %PATH%", 0, MB_ICONERROR);
             return;
@@ -107,14 +91,12 @@ void savesnddialog()
       fclose(savesnd);
       savesndtype = 0;
    } else {
-      OPENFILENAME ofn = { 0 };
+      OPENFILENAME ofn = { /*OPENFILENAME_SIZE_VERSION_400*/sizeof OPENFILENAME }; //Alone Coder
       char sndsavename[0x200]; *sndsavename = 0;
-
-      ofn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
       ofn.lpstrFilter = "All sound (WAV)\0*.wav\0AY sound (VTX)\0*.vtx\0";
       ofn.lpstrFile = sndsavename; ofn.nMaxFile = sizeof sndsavename;
       ofn.lpstrTitle = "Save Sound";
-      ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
+      ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
       ofn.hwndOwner = wnd;
       ofn.nFilterIndex = 1;
       if (GetSaveFileName(&ofn)) {
@@ -140,7 +122,7 @@ void savesnddialog()
    sound_play(); //Alone Coder
 }
 
-INT_PTR CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG) {
       static char chips[] = "ABC AY\0ABC YM\0ACB AY\0ACB YM\0MONO AY\0MONO YM\0";
@@ -151,7 +133,7 @@ INT_PTR CALLBACK VtxDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       SetFocus(GetDlgItem(dlg, IDE_VTXNAME));
       return 1;
    }
-   if ((msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) ||
+   if ((msg == WM_SYSCOMMAND && wp == SC_CLOSE) ||
        (msg == WM_COMMAND && LOWORD(wp) == IDOK))
    {
       SendDlgItemMessage(dlg, IDE_VTXNAME, WM_GETTEXT, sizeof vtxname, (LPARAM)vtxname);
@@ -179,20 +161,19 @@ int dopoke(int really)
       while (isdigit(*ptr)) val = val*10 + (*ptr++ - '0');
       if (val > 0xFF) return ptr-snbuf+1;
       while (*ptr == ' ' || *ptr == ':' || *ptr == ';' || *ptr == ',') ptr++;
-      if (really)
-          cpu.DirectWm(num, val);
+      if (really) wmdbg(num, val);
    }
    return 0;
 }
 
-INT_PTR CALLBACK pokedlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK pokedlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG) {
       SetFocus(GetDlgItem(dlg, IDE_POKE));
       return 1;
    }
    if ((msg == WM_COMMAND && wp == IDCANCEL) ||
-       (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE)) EndDialog(dlg, 0);
+       (msg == WM_SYSCOMMAND && wp == SC_CLOSE)) EndDialog(dlg, 0);
    if (msg == WM_COMMAND && LOWORD(wp) == IDOK)
    {
       SendDlgItemMessage(dlg, IDE_POKE, WM_GETTEXT, /*sizeof snbuf*/640*480*4, (LPARAM)snbuf); //Alone Coder 0.36.5

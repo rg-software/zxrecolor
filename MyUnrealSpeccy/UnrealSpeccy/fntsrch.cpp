@@ -1,12 +1,3 @@
-#include "std.h"
-
-#include "resource.h"
-#include "emul.h"
-#include "vars.h"
-#include "dxr_text.h"
-
-#include "util.h"
-
 #ifdef MOD_SETTINGS
 unsigned font_maxmem = 0xFFFF;
 unsigned char r21=1, r30=1, r41=1, r61=1, r80=1, rae=1, rf0=0, roth=0;
@@ -67,9 +58,9 @@ void paint_font(HWND dlg, int paint=0)
    static struct {
       BITMAPINFO header;
       RGBQUAD waste[0x100];
-   } gdibmp = { { sizeof(BITMAPINFOHEADER), sz, -sz, 1, 8, BI_RGB } };
+   } gdibmp = { { sizeof BITMAPINFOHEADER, sz, -sz, 1, 8, BI_RGB } };
    static RGBQUAD cl[] = { {0xFF,0,0},{0xC0,0xC0,0xC0},{0,0,0} };
-   memcpy(gdibmp.header.bmiColors, cl, sizeof(cl));
+   memcpy(gdibmp.header.bmiColors, cl, sizeof cl);
    memset(buf, 0, sz*sz);
 
    unsigned next_pixel, next_char;
@@ -164,11 +155,11 @@ unsigned count_lnk(unsigned mode)
    return result;
 }
 
-static union { unsigned v32; unsigned char v8[4]; } c_map0[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map1[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map2[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map3[16];
-static union { unsigned v32; unsigned char v8[4]; } c_map4[16];
+union { unsigned v32; unsigned char v8[4]; } c_map0[16];
+union { unsigned v32; unsigned char v8[4]; } c_map1[16];
+union { unsigned v32; unsigned char v8[4]; } c_map2[16];
+union { unsigned v32; unsigned char v8[4]; } c_map3[16];
+union { unsigned v32; unsigned char v8[4]; } c_map4[16];
 
 void create_maps()
 {
@@ -397,15 +388,13 @@ void save_font()
 
 void FontFromFile(HWND dlg)
 {
-   OPENFILENAME ofn = { 0 };
+   OPENFILENAME ofn = { /*OPENFILENAME_SIZE_VERSION_400*/sizeof OPENFILENAME }; //Alone Coder
    char fname[0x200]; *fname = 0;
-
-   ofn.lStructSize = (WinVerMajor < 5) ? OPENFILENAME_SIZE_VERSION_400 : sizeof(OPENFILENAME);
    ofn.hwndOwner = dlg;
    ofn.lpstrFilter = "font files (*.FNT,*.FNX)\0*.fnt;*.fnx\0All files\0*.*\0";
    ofn.lpstrFile = fname; ofn.nMaxFile = sizeof fname;
    ofn.lpstrTitle = "Load font from file";
-   ofn.Flags = OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+   ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
    if (!GetOpenFileName(&ofn)) return;
 
    FILE *ff = fopen(fname, "rb"); if (!ff) return;
@@ -421,7 +410,7 @@ void FontFromFile(HWND dlg)
    paint_font(dlg);
 }
 
-INT_PTR CALLBACK fonts_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK fonts_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG) {
       block_font_dialog = 1;
@@ -448,7 +437,7 @@ INT_PTR CALLBACK fonts_dlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
 
    if (msg == WM_PAINT) { paint_font(dlg, 1); return 1; }
-   if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
+   if (msg == WM_SYSCOMMAND && wp == SC_CLOSE) EndDialog(dlg, 0);
 
    if (block_font_dialog) return 0;
 

@@ -1,63 +1,31 @@
-#include "std.h"
-
-#include "resource.h"
-#include "emul.h"
-#include "vars.h"
-#include "debug.h"
-#include "dbgpaint.h"
-#include "util.h"
-
-namespace z80dbg
-{
-__int64 __cdecl delta()
-{
-    return comp.t_states + cpu.t - cpu.debug_last_t;
-}
-}
 
 void show_time()
 {
-   Z80 &cpu = CpuMgr.Cpu();
    tprint(time_x, time_y, "time delta:", W_OTHEROFF);
-   char text[32];
-   sprintf(text, "%14I64d", cpu.Delta());
+   char text[32]; sprintf(text, "%14I64d", (__int64)(comp.t_states + cpu.t - debug_last_t));
    tprint(time_x+11, time_y, text, W_OTHER);
    tprint(time_x+25, time_y, "t", W_OTHEROFF);
    frame(time_x, time_y, 26, 1, FRAME);
 }
 
-static void wtline(const char *name, unsigned ptr, unsigned y)
+void wtline(char *name, unsigned ptr, unsigned y)
 {
-   char line[40];
-   if(name)
-       sprintf(line, "%3s: ", name);
-   else
-       sprintf(line, "%04X ", ptr);
-
-   Z80 &cpu = CpuMgr.Cpu();
-   for (unsigned dx = 0; dx < 8; dx++)
-   {
-      unsigned char c = cpu.DirectRm(ptr++);
-      sprintf(line+5+3*dx, "%02X", c);
-      line[7+3*dx] = ' ';
+   char line[40]; sprintf(line, name?"%3s: ":"%04X ", name?name:(char*)ptr);
+   for (unsigned dx = 0; dx < 8; dx++) {
+      unsigned char c = rmdbg(ptr++);
+      sprintf(line+5+3*dx, "%02X", c); line[7+3*dx] = ' ';
       line[29+dx] = c ? c : '.';
    }
-
-   line[37] = 0;
-   tprint(wat_x, wat_y+y, line, W_OTHER);
+   line[37] = 0; tprint(wat_x, wat_y+y, line, W_OTHER);
 }
 
 void showwatch()
 {
-   if (show_scrshot)
-   {
+   if (show_scrshot) {
       for (unsigned y = 0; y < wat_sz; y++)
          for (unsigned x = 0; x < 37; x++)
             txtscr[80*30 +  (wat_y+y)*80 + (wat_x+x)] = 0xFF;
-   }
-   else 
-   {
-      Z80 &cpu = CpuMgr.Cpu();
+   } else {
       wtline("PC", cpu.pc, 0);
       wtline("SP", cpu.sp, 1);
       wtline("BC", cpu.bc, 2);
@@ -72,12 +40,10 @@ void showwatch()
       wtline(0, user_watches[1], 11);
       wtline(0, user_watches[2], 12);
    }
-   const char *text = "watches";
+   char *text = "watches";
    if (show_scrshot == 1) text = "screen memory";
    if (show_scrshot == 2) text = "ray-painted";
    tprint(wat_x, wat_y-1, text, W_TITLE);
-   if(comp.flags & CF_DOSPORTS)
-       tprint(wat_x+34, wat_y-1, "DOS", W_DOS);
    frame(wat_x,wat_y,37,wat_sz,FRAME);
 }
 
@@ -94,16 +60,14 @@ void mon_setwatch()
 
 void showstack()
 {
-   Z80 &cpu = CpuMgr.Cpu();
-   for (unsigned i = 0; i < stack_size; i++)
-   {
+   for (unsigned i = 0; i < stack_size; i++) {
       char xx[10]; //-2:1234
                    //SP:1234
                    //+2:
       if (!i) *(unsigned*)xx = WORD2('-','2');
       else if (i==1) *(unsigned*)xx = WORD2('S','P');
       else sprintf(xx, (i > 8) ? "%X" : "+%X", (i-1)*2);
-      sprintf(xx+2, ":%02X%02X", cpu.DirectRm(cpu.sp+(i-1)*2+1), cpu.DirectRm(cpu.sp+(i-1)*2));
+      sprintf(xx+2, ":%02X%02X", rmdbg(cpu.sp+(i-1)*2+1), rmdbg(cpu.sp+(i-1)*2));
       tprint(stack_x, stack_y+i, xx, W_OTHER);
    }
    tprint(stack_x, stack_y-1, "stack", W_TITLE);
@@ -113,7 +77,7 @@ void showstack()
 void show_ay()
 {
    if (!conf.sound.ay_scheme) return;
-   const char *ayn = comp.active_ay ? "AY1" : "AY0";
+   char *ayn = comp.active_ay? "AY1" : "AY0";
    if (conf.sound.ay_scheme < AY_SCHEME_QUADRO) ayn = "AY:", comp.active_ay = 0;
    tprint(ay_x-3, ay_y, ayn, W_TITLE);
    SNDCHIP *chip = &ay[comp.active_ay];
@@ -132,52 +96,20 @@ void mon_switchay()
    comp.active_ay ^= 1;
 }
 
-void __cdecl BankNames(int i, char *Name)
-{
-    unsigned rom_bank;
-    unsigned ram_bank;
-
-    bool IsRam = (RAM_BASE_M <= bankr[i]) && (bankr[i] < RAM_BASE_M + PAGE * MAX_RAM_PAGES);
-    bool IsRom = (ROM_BASE_M <= bankr[i]) && (bankr[i] < ROM_BASE_M + PAGE * MAX_ROM_PAGES);
-
-    if(IsRam)
-        ram_bank = ULONG((bankr[i] - RAM_BASE_M)/PAGE);
-
-    if(IsRom)
-        rom_bank = ULONG((bankr[i] - ROM_BASE_M)/PAGE);
-
-    if (IsRam)
-        sprintf(Name, "RAM%2X", ram_bank);
-
-    if (IsRom)
-        sprintf(Name, "ROM%2X", rom_bank);
-
-    if (bankr[i] == base_sos_rom)
-        strcpy(Name, "BASIC");
-    if (bankr[i] == base_dos_rom)
-        strcpy(Name, "TRDOS");
-    if (bankr[i] == base_128_rom)
-        strcpy(Name, "B128K");
-    if (bankr[i] == base_sys_rom && (conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP))
-        strcpy(Name, "SVM  ");
-    if ((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP) && IsRom && rom_bank > 3)
-        sprintf(Name, "ROM%2X", rom_bank);
-
-    if (bankr[i] == CACHE_M)
-        strcpy(Name, (conf.cache!=32)?"CACHE":"CACH0");
-    if (bankr[i] == CACHE_M+PAGE)
-        strcpy(Name, "CACH1");
-}
-
 void showbanks()
 {
-   Z80 &cpu = CpuMgr.Cpu();
-   for (int i = 0; i < 4; i++)
-   {
+   for (int i = 0; i < 4; i++) {
       char ln[64]; sprintf(ln, "%d:", i);
       tprint(banks_x, banks_y+i+1, ln, W_OTHEROFF);
       strcpy(ln, "?????");
-      cpu.BankNames(i, ln);
+      if (bankr[i] < RAM_BASE_M+MAX_RAM_PAGES*PAGE) sprintf(ln, "RAM%2X", (bankr[i] - RAM_BASE_M)/PAGE);
+      if ((unsigned)(bankr[i] - ROM_BASE_M) < PAGE*MAX_ROM_PAGES) sprintf(ln, "ROM%2X", (bankr[i] - ROM_BASE_M)/PAGE);
+      if (bankr[i] == base_sos_rom) strcpy(ln, "BASIC");
+      if (bankr[i] == base_dos_rom) strcpy(ln, "TRDOS");
+      if (bankr[i] == base_128_rom) strcpy(ln, "B128K");
+      if (bankr[i] == base_sys_rom) strcpy(ln, "SERVM");
+      if (bankr[i] == CACHE_M) strcpy(ln, (conf.cache!=32)?"CACHE":"CACH0");
+      if (bankr[i] == CACHE_M+PAGE) strcpy(ln, "CACH1");
       tprint(banks_x+2, banks_y+i+1, ln, bankr[i]!=bankw[i] ? W_BANKRO : W_BANK);
    }
    frame(banks_x, banks_y+1, 7, 4, FRAME);
@@ -187,48 +119,29 @@ void showbanks()
 void showports()
 {
    char ln[64];
-   sprintf(ln, "  FE:%02X", comp.pFE);
-   tprint(ports_x, ports_y, ln, W_OTHER);
-   sprintf(ln, "7FFD:%02X", comp.p7FFD);
-   tprint(ports_x, ports_y+1, ln, (comp.p7FFD & 0x20) && 
-   !((conf.mem_model == MM_PENTAGON && conf.ramsize == 1024) ||
-     (conf.mem_model == MM_PROFI && (comp.pDFFD & 0x10))) ? W_48K : W_OTHER);
+   sprintf(ln, "  FE:%02X", comp.pFE); tprint(ports_x, ports_y, ln, W_OTHER);
+   sprintf(ln, "7FFD:%02X", comp.p7FFD); tprint(ports_x, ports_y+1, ln, W_OTHER);
 
-   switch (conf.mem_model)
-   {
+   switch (conf.mem_model) {
       case MM_KAY:
       case MM_SCORP:
       case MM_PROFSCORP:
-      case MM_PLUS3:
-         dbg_extport = 0x1FFD; dgb_extval = comp.p1FFD;
-      break;
+         dbg_extport = 0x1FFD; dgb_extval = comp.p1FFD; break;
       case MM_PROFI:
-         dbg_extport = 0xDFFD; dgb_extval = comp.pDFFD;
-      break;
+         dbg_extport = 0xDFFD; dgb_extval = comp.pDFFD; break;
       case MM_ATM450:
-         dbg_extport = 0xFDFD; dgb_extval = comp.pFDFD;
-      break;
+         dbg_extport = 0xFDFD; dgb_extval = comp.pFDFD; break;
       case MM_ATM710:
-      case MM_ATM3:
-         dbg_extport = (comp.aFF77 & 0xFFFF);
-         dgb_extval = comp.pFF77;
-      break;
-      case MM_QUORUM:
-         dbg_extport = 0x0000; dgb_extval = comp.p00;
-      break;
+         dbg_extport = (comp.aFF77 & 0xFFFF); dgb_extval = comp.pFF77; break;
       default:
-         dbg_extport = -1;
+         dbg_extport = 0;
    }
-   if (dbg_extport != -1)
-       sprintf(ln, "%04X:%02X", dbg_extport, dgb_extval);
-   else
-       sprintf(ln, "cmos:%02X", comp.cmos_addr);
+   if (dbg_extport) sprintf(ln, "%04X:%02X", dbg_extport, dgb_extval);
+   else sprintf(ln, "cmos:%02X", comp.cmos_addr);
    tprint(ports_x, ports_y+2, ln, W_OTHER);
 
-   sprintf(ln, "EFF7:%02X", comp.pEFF7);
-   tprint(ports_x, ports_y+3, ln, W_OTHER);
-   frame(ports_x, ports_y, 7, 4, FRAME);
-   tprint(ports_x, ports_y-1, "ports", W_TITLE);
+   sprintf(ln, "EFF7:%02X", comp.pEFF7); tprint(ports_x, ports_y+3, ln, W_OTHER);
+   frame(ports_x, ports_y, 7, 4, FRAME); tprint(ports_x, ports_y-1, "ports", W_TITLE);
 }
 
 void showdos()
@@ -238,7 +151,7 @@ void showdos()
 //    SECT:00
 //    T:00/01
 //    S:00/00
-//[vv]   if (conf.trdos_present) comp.wd.process();
+   if (conf.trdos_present) comp.wd.process();
    char ln[64]; unsigned char atr = conf.trdos_present ? W_OTHER : W_OTHEROFF;
    sprintf(ln, "CD:%02X%02X", comp.wd.cmd, comp.wd.data);
    tprint(dos_x, dos_y, ln, atr);
@@ -282,7 +195,7 @@ void showdos()
 }
 
 #ifdef MOD_GSBASS
-INT_PTR CALLBACK gsdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK gsdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    char tmp[0x200];
    unsigned i; //Alone Coder 0.36.7
@@ -307,7 +220,7 @@ repaint:
       SendDlgItemMessage(dlg, IDE_GS, WM_SETTEXT, 0, (LPARAM)tmp);
       return 1;
    }
-   if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
+   if (msg == WM_SYSCOMMAND && wp == SC_CLOSE) EndDialog(dlg, 0);
    if (msg != WM_COMMAND) return 0;
    unsigned id = LOWORD(wp);
    if (id == IDCANCEL || id == IDOK) EndDialog(dlg, 0);
@@ -327,8 +240,7 @@ repaint:
    return 0;
 }
 
-void mon_gsdialog()
-{
+void mon_gsdialog() {
    if (conf.gs_type == 2)
       DialogBox(hIn, MAKEINTRESOURCE(IDD_GS), wnd, gsdlg);
    else MessageBox(wnd, "high-level GS emulation\nis not initialized", 0, MB_OK | MB_ICONERROR);

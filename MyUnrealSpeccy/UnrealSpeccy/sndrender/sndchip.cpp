@@ -1,8 +1,3 @@
-#include "../std.h"
-
-#include "../emul.h"
-#include "../vars.h"
-#include "../emul_2203.h"
 /*
    YM-2149F emulator for Unreal Speccy project
    created under public domain license by SMT, jan.2006
@@ -232,16 +227,19 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    nextfmtickfloat = 0.; //Alone Coder
    nextfmtick = 0; //Alone Coder
    ayticks_per_fmtick = (float)chip_clock_rate/conf.sound.fq /*44100*/; //Alone Coder
-   FMbufMUL=(UINT16)(((float)conf.sound.ay_vol/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
+   FMbufMUL=(UINT16)(((float)conf.sound.ay/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
 
    apply_regs();
 }
 
-void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo)
+void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo, const unsigned TurboSlider) //TurboSound2
 {
    for (int j = 0; j < 6; j++)
       for (int i = 0; i < 32; i++)
-         vols[j][i] = (unsigned) (((uint64_t)global_vol * voltab->v[i] * stereo->raw[j])/(65535*100*3));
+         vols[j][i] = (unsigned) (
+		  (((uint64_t)global_vol * voltab->v[i] * stereo->raw[j])/65536) //TurboSound2
+		  *TurboSlider/(100*3 * SNDR_TURBOSLIDER_MAX ) //TurboSound2
+		  );
 }
 
 void SNDCHIP::reset(unsigned timestamp)
@@ -275,7 +273,7 @@ SNDCHIP::SNDCHIP()
    set_timings(SNDR_DEFAULT_SYSTICK_RATE, SNDR_DEFAULT_AY_RATE, SNDR_DEFAULT_SAMPLE_RATE);
    Chip2203 = (YM2203 *) YM2203Init(NULL, 0, conf.sound.ayfq*2, conf.sound.fq /*44100*/); //Dexus
    set_chip(CHIP_YM);
-   set_volumes(0x7FFF, SNDR_VOL_YM, SNDR_PAN_ABC);
+   set_volumes(0x7FFF, SNDR_VOL_YM, SNDR_PAN_ABC, SNDR_TURBOSLIDER_DEFAULT); //TurboSound2
    reset();
 }
 

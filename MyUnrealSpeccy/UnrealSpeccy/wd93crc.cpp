@@ -1,7 +1,3 @@
-#include "std.h"
-
-#include "emul.h"
-#include "wd93crc.h"
 
 // for WD1793 engine
 unsigned wd93_crc(unsigned char *ptr, unsigned size)
@@ -15,7 +11,7 @@ unsigned wd93_crc(unsigned char *ptr, unsigned size)
    return _byteswap_ushort(crc); // return crc & 0xFFFF;
 }
 
-static unsigned short crcTab[256] =
+unsigned short crcTab[256] =
    { 0x0000, 0x97A0, 0xB9E1, 0x2E41, 0xE563, 0x72C3, 0x5C82, 0xCB22,
      0xCAC7, 0x5D67, 0x7326, 0xE486, 0x2FA4, 0xB804, 0x9645, 0x01E5,
      0x032F, 0x948F, 0xBACE, 0x2D6E, 0xE64C, 0x71EC, 0x5FAD, 0xC80D,

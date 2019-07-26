@@ -1,24 +1,3 @@
-#include "std.h"
-
-#include "resource.h"
-#include "emul.h"
-#include "vars.h"
-#include "config.h"
-#include "draw.h"
-#include "dx.h"
-#include "debug.h"
-#include "memory.h"
-#include "sound.h"
-#include "savesnd.h"
-#include "tape.h"
-#include "gui.h"
-#include "leds.h"
-#include "snapshot.h"
-#include "wd93dat.h"
-#include "init.h"
-#include "z80.h"
-#include "emulkeys.h"
-#include "util.h"
 
 void main_pause()
 {
@@ -26,8 +5,7 @@ void main_pause()
 
    pause = 1;
    sound_stop();
-   updatebitmap();
-   active = 0;
+   updatebitmap(); active = 0;
    adjust_mouse_cursor();
 
    while (!process_msgs());
@@ -40,11 +18,7 @@ void main_pause()
 
 void main_debug()
 {
-   Z80 &cpu = CpuMgr.Cpu();
-
-   cpu.dbgchk = 1;
-   cpu.dbgbreak = 1;
-   dbgbreak = 1;
+   dbgchk = dbgbreak = 1;
 }
 
 enum { FIX_FRAME = 0, FIX_LINE, FIX_PAPER, FIX_NOPAPER, FIX_HWNC, FIX_LAST };
@@ -144,7 +118,7 @@ void main_maxspeed()
 
 // select filter / driver through gui dialog ----------------------------
 
-INT_PTR CALLBACK filterdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+BOOL CALLBACK filterdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG) {
       HWND box = GetDlgItem(dlg, IDC_LISTBOX); int i;
@@ -183,7 +157,7 @@ INT_PTR CALLBACK filterdlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
    }
 
    if ((msg == WM_COMMAND && wp == IDCANCEL) ||
-       (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE)) EndDialog(dlg, -1);
+       (msg == WM_SYSCOMMAND && wp == SC_CLOSE)) EndDialog(dlg, -1);
 
    if (msg == WM_COMMAND) {
       int control = LOWORD(wp);
@@ -213,16 +187,11 @@ void main_selectdriver()
 
    sound_stop();
    int index = DialogBoxParam(hIn, MAKEINTRESOURCE(IDD_FILTER_DIALOG), wnd, filterdlg, 1);
-   eat();
-   sound_play();
-
-   if (index < 0)
-       return;
+   eat(); sound_play(); if (index < 0) return;
 
    conf.driver = index;
    sprintf(statusline, "Render to: %s", drivers[index].name); statcnt = 50;
-   apply_video();
-   eat();
+   apply_video(); eat();
 }
 
 // ----------------------------------------------------------------------
@@ -231,12 +200,10 @@ void main_poke()
 {
    sound_stop();
    DialogBox(hIn, MAKEINTRESOURCE(IDD_POKE), wnd, pokedlg);
-   eat();
-   sound_play();
+   eat(); sound_play();
 }
 
-void main_starttape()
-{
+void main_starttape() {
    //if (comp.tape.play_pointer) stop_tape(); else start_tape();
    (comp.tape.play_pointer) ? stop_tape() : start_tape();
 }
@@ -252,7 +219,7 @@ void main_tapebrowser()
 void setup_dlg() {}
 #endif
 
-static const char *getrom(ROM_MODE page)
+char *getrom(ROM_MODE page)
 {
    switch (page) {
       case RM_128: return "Basic 128";
@@ -267,8 +234,6 @@ static const char *getrom(ROM_MODE page)
 void m_reset(ROM_MODE page)
 {
    sprintf(statusline, "Reset to %s", getrom(page)); statcnt = 50;
-   nmi_pending = 0;
-   cpu.nmi_in_progress = false;
    reset(page);
 }
 void main_reset128() { m_reset(RM_128); }
@@ -281,38 +246,35 @@ void main_reset() { m_reset((ROM_MODE)conf.reset_rom); }
 
 void m_nmi(ROM_MODE page)
 {
+  if(cpu.pch & 0xc0) //0.37
+  {
+   comp.nmi_pending = false; //scorpion nmi fix
    set_mode(page);
    sprintf(statusline, "NMI to %s", getrom(page)); statcnt = 50;
-   comp.p00 = 0; // quorum
-   cpu.sp -= 2;
-   if(cpu.DbgMemIf->rm(cpu.pc) == 0x76) // nmi on halt command
-       cpu.pc++;
-   cpu.DbgMemIf->wm(cpu.sp, cpu.pcl);
-   cpu.DbgMemIf->wm(cpu.sp+1, cpu.pch);
+   cpu.sp -= 2; z80dbg::wm(cpu.sp, cpu.pcl); z80dbg::wm(cpu.sp+1, cpu.pch);
    cpu.pc = 0x66; cpu.iff1 = cpu.halted = 0;
+  }
+  else
+  {
+   sprintf(statusline, "NMI in ROM ignored"); statcnt = 50; //0.37
+  };
 }
-
-void main_nmi()
-{
-    nmi_pending  = 1;
-    if(conf.mem_model != MM_ATM3)
-        m_nmi(RM_NOCHANGE);
-}
-
-void main_nmidos()
-{
+void main_nmi() { m_nmi(RM_NOCHANGE); }
+void main_nmidos() {
+//scorpion nmi fix
  if((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP) &&
-   !(comp.flags & CF_TRDOS) && cpu.pc < 0x4000)
+   (!(comp.flags & CF_TRDOS) /*&& !(comp.p7FFD & 0x10)*/ /*B128 Active*/) &&
+   (cpu.pc < 0x4000))
  {
-     nmi_pending = conf.frame * 50; // 50 * 20ms
-     return;
+   comp.nmi_pending = true;
+   return;
  }
- m_nmi(RM_DOS);
+//~scorpion nmi fix
+ m_nmi(RM_DOS); 
 }
-
 void main_nmicache() { m_nmi(RM_CACHE); }
 
-static void qsave(const char *fname) {
+void qsave(char *fname) {
    char xx[0x200]; addpath(xx, fname);
    FILE *ff = fopen(xx, "wb");
    if (ff) {
@@ -324,7 +286,7 @@ void qsave1() { qsave("qsave1.sna"); }
 void qsave2() { qsave("qsave2.sna"); }
 void qsave3() { qsave("qsave3.sna"); }
 
-static void qload(const char *fname) {
+void qload(char *fname) {
    char xx[0x200]; addpath(xx, fname);
    if (loadsnap(xx)) sprintf(statusline, "Quick load from %s", fname), statcnt = 30;
 }
@@ -347,29 +309,20 @@ void main_autofire()
 void main_save()
 {
    sound_stop();
-   if (conf.cmos)
-       save_nv();
+   if (conf.cmos) save_nv();
    unsigned char optype = 0;
-   for (int i = 0; i < 4; i++)
-   {
-      if (!comp.wd.fdd[i].test())
-          return;
+   for (int i = 0; i < 4; i++) {
+      if (!comp.wd.fdd[i].test()) return;
       optype |= comp.wd.fdd[i].optype;
    }
 
-   if (!optype)
-       sprintf(statusline, "all saved"), statcnt = 30;
+   if (!optype) sprintf(statusline, "all saved"), statcnt = 30;
 }
 
 void main_fullscr()
 {
-   if (!(temp.rflags & (RF_GDI|RF_OVR|RF_CLIP)))
-       sprintf(statusline, "only for overlay/gdi modes"), statcnt = 30;
-   else
-   {
-       conf.fullscr ^= 1;
-       apply_video();
-   }
+   if (!(temp.rflags & (RF_GDI|RF_OVR|RF_CLIP))) sprintf(statusline, "only for overlay/gdi modes"), statcnt = 30;
+   else conf.fullscr ^= 1, apply_video();
 }
 
 void main_mouse()
@@ -394,32 +347,15 @@ void main_pastetext() { input.paste(); }
 
 void wnd_resize(int scale)
 {
-   if (conf.fullscr)
-   {
-       sprintf(statusline, "impossible in fullscreen mode");
-       statcnt = 50;
-       return;
-   }
-
-   if (!scale)
-   {
-       ShowWindow(wnd, SW_MAXIMIZE);
-       return;
-   }
+   if (conf.fullscr) { sprintf(statusline, "impossible in fullscreen mode"); statcnt = 50; return; }
+   if (!scale) { ShowWindow(wnd, SW_MAXIMIZE); return; }
 
    ShowWindow(wnd, SW_RESTORE);
    DWORD style = GetWindowLong(wnd, GWL_STYLE);
-   RECT rc = { 0, 0, temp.ox * scale, temp.oy * scale };
+   RECT rc = { 0,0, temp.ox*scale, temp.oy*scale };
    AdjustWindowRect(&rc, style, 0);
-   SetWindowPos(wnd, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
-   if(temp.rflags & RF_2X)
-       scale *= 2;
-   else if(temp.rflags & RF_3X)
-       scale *= 3;
-   else if(temp.rflags & RF_4X)
-       scale *= 4;
-   sprintf(statusline, "scale: %dx", scale);
-   statcnt = 50;
+   SetWindowPos(wnd, 0, 0,0, rc.right-rc.left, rc.bottom-rc.top, SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+   sprintf(statusline, "scale: %dx", scale); statcnt = 50;
 }
 
 void main_size1() { wnd_resize(1); }
@@ -429,26 +365,21 @@ void main_sizem() { wnd_resize(0); }
 void correct_exit()
 {
    sound_stop();
-   if(!done_fdd(true))
-       return;
-
-   nowait = 1;
-   normal_exit = true;
-   exit();
+   for (int i = 0; i < 4; i++)
+      if (!comp.wd.fdd[i].test()) return;
+   nowait = 1; exit();
 }
 
 void opensnap()
 {
    sound_stop();
    opensnap(0);
-   eat();
-   sound_play();
+   eat(); sound_play();
 }
 
 void savesnap()
 {
    sound_stop();
    savesnap(-1);
-   eat();
-   sound_play();
+   eat(); sound_play();
 }

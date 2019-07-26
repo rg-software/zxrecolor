@@ -1,14 +1,4 @@
-#include "std.h"
 
-#include "emul.h"
-#include "vars.h"
-#include "bass.h"
-#include "snd_bass.h"
-#include "gshle.h"
-#include "gs.h"
-#include "sound.h"
-
-#ifdef MOD_GSBASS
 void GSHLE::set_busy(unsigned char newval)
 {
    busy = chan[0].busy = chan[1].busy = chan[2].busy = chan[3].busy = newval;
@@ -34,8 +24,7 @@ void GSHLE::applyconfig()
    for (/*int*/ i = 0; i < 96; i++, period *= mx)
       note2rate[i] = (unsigned)(basefq/period);
    for (; i < 0x100; i++) note2rate[i] = note2rate[i-1];
-   if (BASS::Bass)
-       setmodvol(modvol);
+   if (hBass) setmodvol(modvol);
 }
 
 unsigned char GSHLE::in(unsigned char port)
@@ -62,7 +51,7 @@ void GSHLE::out(unsigned char port, unsigned char byte)
       } else {
          if (load_stream == 4) { // covox
             flush_dig_snd();
-            covFB_vol = byte*conf.sound.gs_vol/0x100;
+            covFB_vol = byte*conf.sound.gs/0x100;
             return;
          }
          streamstart[streamsize++] = byte;
@@ -257,35 +246,22 @@ void GSHLE::start_fx(unsigned fx, unsigned ch, unsigned char vol, unsigned char 
    chan[ch].ptr = 0;
    chan[ch].freq = note2rate[note];
    // ch0,1 - left, ch2,3 - right
-   startfx(&chan[ch], (ch & 2)? 1.0f : -1.0f);
+   startfx(&chan[ch], (ch & 2)? 100 : -100);
 }
 
-DWORD CALLBACK gs_render(HSTREAM handle, void *buffer, DWORD length, void *user)
+DWORD CALLBACK gs_render(HSTREAM handle, void *buffer, DWORD length, DWORD user)
 {
    GSHLE::CHANNEL *ch = (GSHLE::CHANNEL*)user;
 
-   if (!ch->start)
-       return BASS_STREAMPROC_END;
-   if (ch->busy)
-   {
-       memset(buffer, 0, length);
-       return length;
-   }
+   if (!ch->start) return BASS_STREAMPROC_END;
+   if (ch->busy) { memset(buffer, 0, length); return length; }
    unsigned sample_pos = 0;
-   for (unsigned i = 0; i < length; i++)
-   {
+   for (unsigned i = 0; i < length; i++) {
       ((BYTE*)buffer)[i] = ch->start[ch->ptr++];
-      if (ch->ptr >= ch->end)
-      {
-         if (ch->end < ch->loop)
-         {
-             ch->start = 0;
-             return i + BASS_STREAMPROC_END;
-         }
-         else
-             ch->ptr = ch->loop;
+      if (ch->ptr >= ch->end) {
+         if (ch->end < ch->loop) { ch->start = 0; return i + BASS_STREAMPROC_END; }
+         else ch->ptr = ch->loop;
       }
    }
    return length;
 }
-#endif

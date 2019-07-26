@@ -1,11 +1,3 @@
-#include "std.h"
-
-#include "emul.h"
-#include "vars.h"
-#include "draw.h"
-#include "dx.h"
-#include "dxrframe.h"
-
 RENDER_FUNC auto_ch = 0;
 
 void __fastcall _render_ch_ax(unsigned char *dst, unsigned pitch, RENDER_FUNC c2, RENDER_FUNC c4)
@@ -158,12 +150,7 @@ void __fastcall render_ch_hw(unsigned char *dst, unsigned pitch)
 
 void __fastcall  _render_c2x16b(unsigned char *dst, unsigned pitch)
 {
-   if (conf.updateb)
-   {
-       if (!conf.fast_sl) rend_frame_16d(dst, pitch);
-       else rend_frame_16d1(dst, pitch*2);
-   }
-
+   rend_frame_x2_16(dst, pitch);
    get_c2_32();
    dst += pitch * (temp.b_top*2) + temp.b_left*2*sizeof(WORD);
 
@@ -215,7 +202,7 @@ void __fastcall  _render_c2x16b(unsigned char *dst, unsigned pitch)
 }
 void __fastcall  _render_c2x16bl(unsigned char *dst, unsigned pitch)
 {
-   rend_frame16(dst, pitch);
+   rend_frame_x1_16s(dst, pitch);
    get_c2_32();
    dst += pitch * temp.b_top + temp.b_left*sizeof(WORD);
 
@@ -265,12 +252,7 @@ void __fastcall  _render_c2x16bl(unsigned char *dst, unsigned pitch)
 }
 void __fastcall  _render_c4x16b(unsigned char *dst, unsigned pitch)
 {
-   if (conf.updateb)
-   {
-       if (!conf.fast_sl) rend_frame_16d(dst, pitch);
-       else rend_frame_16d1(dst, pitch*2);
-   }
-
+   rend_frame_x2_16(dst, pitch);
    get_c4_32();
    dst += pitch * (temp.b_top*2) + 2*temp.b_left*sizeof(WORD);
 
@@ -325,7 +307,7 @@ void __fastcall  _render_c4x16b(unsigned char *dst, unsigned pitch)
 }
 void __fastcall  _render_c4x16bl(unsigned char *dst, unsigned pitch)
 {
-   rend_frame16(dst, pitch);
+   rend_frame_x1_16s(dst, pitch);
    get_c4_32();
    dst += pitch * temp.b_top + temp.b_left*sizeof(WORD);
 
@@ -387,9 +369,7 @@ void __fastcall render_c16b(unsigned char *dst, unsigned pitch)
 
 void __fastcall render_c4x32b(unsigned char *dst, unsigned pitch)
 {
-   if (!conf.fast_sl) rend_frame_32d(dst, pitch);
-   else rend_frame_32d1(dst, pitch*2);
-
+   rend_frame_x2_32(dst, pitch);
    get_c4_32();
    dst += pitch * (temp.b_top*2) + 2*temp.b_left*sizeof(DWORD);
 

@@ -16,13 +16,12 @@ void SNDCOUNTER::begin()
 void SNDCOUNTER::count(SNDRENDER &render)
 {
    unsigned rendsamples = (render.dstpos - bufstart) & (SND_EXTERNAL_BUFFER_SIZE-1);
-//   assert(rendsamples != 0);
-   if (rendsamples < n_samples)
-       n_samples = rendsamples;
+   if (rendsamples < n_samples) n_samples = rendsamples;
    #ifdef SND_TEST_FAILURES
    unsigned lastframe_samples = (render.dstpos - render.dst_start) & (SND_EXTERNAL_BUFFER_SIZE-1);
-   if (lastframe_samples > rendsamples)
-      errexit("SNDRENDER object is out of sync with other sound objects");
+//Alone Coder commented
+/*   if (lastframe_samples > rendsamples)
+      errexit("SNDRENDER object is out of sync with other sound objects");*/
    #endif // SND_TEST_FAILURES
    #ifdef SND_TEST_SHOWSTAT
    printf(" %I64d", render.passed_snd_ticks);

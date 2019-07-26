@@ -1,5 +1,3 @@
-#include "std.h"
-
 #if 0
 typedef int (__cdecl *GetASPI32SupportInfo_t)();
 typedef int (__cdecl *SendASPI32Command_t)(void *SRB);

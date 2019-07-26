@@ -103,8 +103,14 @@
 /************************************************************************/
 
 //fnum= fq*2.3575
+#define WIN32_LEAN_AND_MEAN
 /* globals */
-#include "std.h"
+#include <windows.h>
+#include <stdio.h>
+#include <math.h>
+#include <malloc.h>
+#include <memory.h>
+
 #include "emul_2203.h"
 
 #define TYPE_SSG    0x01    /* SSG support          */
@@ -1691,17 +1697,17 @@ int YM2203Write(void *chip,int a,UINT8 v)
 	FM_OPN *OPN = &F2203->OPN;
 
 	if( !(a&1) )
-	{	// address port
+	{	// address port 
 		OPN->ST.address = (v &= 0xff);
 
-		// Write register to SSG emulator
+		// Write register to SSG emulator 
 //		if( v < 16 ) (*OPN->ST.SSG->write)(OPN->ST.param,0,v);
 
 	}
 	else
-	{	// data port
+	{	// data port 
 		int addr = OPN->ST.address;
-		// prescaler select : 2d,2e,2f
+		// prescaler select : 2d,2e,2f  
 		if( addr >= 0x2d && addr <= 0x2f )
 			OPNPrescaler_w(OPN , addr , 1);
 		else {

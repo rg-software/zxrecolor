@@ -1,12 +1,3 @@
-#include "std.h"
-
-#include "resource.h"
-
-#include "emul.h"
-#include "vars.h"
-#include "gui.h"
-
-#include "util.h"
 
 struct FILEPREVIEWINFO
 {
@@ -145,15 +136,15 @@ UINT_PTR CALLBACK PreviewDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
          sizeCol.fmt = LVCFMT_LEFT;
 
          sizeCol.cx = 80;
-         sizeCol.pszText = PSTR("Filename");
+         sizeCol.pszText = "Filename";
          SendMessage(FilePreviewInfo.list.h, LVM_INSERTCOLUMN, 0, (LPARAM)&sizeCol);
 
          sizeCol.cx = 40;
-         sizeCol.pszText = PSTR("Ext");
+         sizeCol.pszText = "Ext";
          SendMessage(FilePreviewInfo.list.h, LVM_INSERTCOLUMN, 1, (LPARAM)&sizeCol);
 
          sizeCol.cx = 50;
-         sizeCol.pszText = PSTR("Size");
+         sizeCol.pszText = "Size";
          SendMessage(FilePreviewInfo.list.h, LVM_INSERTCOLUMN, 2, (LPARAM)&sizeCol);
 
          HFONT fnt = (HFONT)GetStockObject(OEM_FIXED_FONT);
@@ -187,27 +178,19 @@ UINT_PTR CALLBACK PreviewDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 int GetSnapshotFileName(OPENFILENAME *ofn, int save)
 {
    ofn->Flags |= save? OFN_PATHMUSTEXIST : OFN_FILEMUSTEXIST;
-   ofn->Flags |= OFN_HIDEREADONLY | OFN_EXPLORER | OFN_NOCHANGEDIR | OFN_ENABLESIZING;
+   ofn->Flags |= OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLESIZING;
    ofn->Flags |= OFN_ENABLEHOOK | OFN_ENABLETEMPLATE;
 
    ofn->hwndOwner = GetForegroundWindow();
    ofn->hInstance = hIn;
    ofn->lpstrTitle = save? "Save Snapshot / Disk / Tape as" : "Load Snapshot / Disk / Tape";
 
-   ofn->lpfnHook          = PreviewDlgProc;
+   ofn->lpfnHook          = (unsigned int (__stdcall *)(struct HWND__ *,unsigned int,unsigned int,long))PreviewDlgProc; //Alone Coder
    ofn->lpTemplateName    = MAKEINTRESOURCE(IDD_FILEPREVIEW);
-   ofn->lpstrInitialDir   = temp.SnapDir;
 
    BOOL res = save? GetSaveFileName(ofn) : GetOpenFileName(ofn);
 
-   if (res)
-   {
-       strcpy(temp.SnapDir, ofn->lpstrFile);
-       char *Ptr = strrchr(temp.SnapDir, '\\');
-       if(Ptr)
-        *Ptr = 0;
-       return res;
-   }
+   if (res) return res;
    DWORD errcode = CommDlgExtendedError();
    if (!errcode) return 0;
 

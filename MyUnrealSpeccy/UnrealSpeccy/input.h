@@ -1,4 +1,3 @@
-#pragma once
 
 struct ATM_KBD
 {
@@ -18,19 +17,14 @@ struct ATM_KBD
 
 struct K_INPUT
 {
-#pragma pack(push, 1)
-   union
-   {
-      volatile unsigned char kbd[16];
-      volatile unsigned kbd_x4[4];
+   union {
+      volatile unsigned char kbd[8];
+      volatile unsigned kbd_x4[2];
    };
-
-   union
-   { // without keymatrix effect
-      volatile unsigned char rkbd[16];
-      volatile unsigned rkbd_x4[4];
+   union { // without keymatrix effect
+      volatile unsigned char rkbd[8];
+      volatile unsigned rkbd_x4[2];
    };
-#pragma pack(pop)
 
    unsigned lastkey, nokb, nomouse;
 
@@ -60,13 +54,10 @@ struct K_INPUT
    unsigned char aymouse_rd();
    void aymouse_wr(unsigned char val);
 
-   void clear_zx();
-   inline void press_zx(unsigned char key);
-   bool process_pc_layout();
+   __inline void clear_zx();
    void make_matrix();
    char readdevices();
    unsigned char read(unsigned char scan);
-   u8 read_quorum(u8 scan);
    void paste();
 
    K_INPUT()
