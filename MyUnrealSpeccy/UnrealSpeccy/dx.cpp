@@ -51,6 +51,7 @@ RENDER renders[] =
 {
    { "Normal",                    render_small,         "normal",    RF_DRIVER },
    { "Double size",               render_dbl,           "double",    RF_DRIVER | RF_2X },
+   { "Recolor Renderer",          render_rc,			"rcdouble",  RF_DRIVER | RF_2X | RF_32 },
    { "Anti-Text64",               render_text,          "text",      RF_2X | RF_USEFONT | RF_DRIVER },
    { "Quad size",                 render_quad,          "quad",      RF_DRIVER | RF_4X },
 //   { "Frame resampler",           render_rsm,           "resampler", RF_DRIVER | RF_8BPCH }, //Alone Coder
@@ -98,8 +99,8 @@ void flip()
    if (temp.rflags & RF_GDI)
    {
       if (needclr) { needclr--; gdi_frame(); }
-      renders[conf.render].func(gdibuf, temp.ox*temp.obpp/8); //без этого чёрный экран, но тормоза зависят от его площади!
-      SetDIBitsToDevice(temp.gdidc, temp.gx, temp.gy, temp.ox, temp.oy, 0, 0, 0, temp.oy, gdibuf, &gdibmp.header, DIB_RGB_COLORS); //без этого пустая рамка, и тормоза не зависят от площади окна
+      renders[conf.render].func(gdibuf, temp.ox*temp.obpp/8); //пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!
+      SetDIBitsToDevice(temp.gdidc, temp.gx, temp.gy, temp.ox, temp.oy, 0, 0, 0, temp.oy, gdibuf, &gdibmp.header, DIB_RGB_COLORS); //пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
       return;
    }
 

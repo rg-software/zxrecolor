@@ -15,7 +15,7 @@
     <SccLocalPath />
     <Keyword>MFCProj</Keyword>
     <ProjectGuid>{8A231CB4-FA55-4120-84AD-F3F77D7CD1D2}</ProjectGuid>
-    <ProjectName>unreal</ProjectName>
+    <ProjectName>Unreal</ProjectName>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -69,6 +69,7 @@
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <AdditionalIncludeDirectories>dx\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\src___Win32_Debug\src.tlb</TypeLibraryName>
@@ -88,6 +89,7 @@
       <OutputFile>.\Debug\unreal.exe</OutputFile>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>dx\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom debug\ &gt; nul
@@ -110,6 +112,7 @@ ver &gt; nul</Command>
       <PrecompiledHeaderOutputFile>.\Release\src.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+      <AdditionalIncludeDirectories>dx\include</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom release\ &gt; nul
@@ -134,10 +137,13 @@ ver &gt; nul</Command>
       <SubSystem>Console</SubSystem>
       <OutputFile>Release/unreal.exe</OutputFile>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>dx\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Emul.cpp" />
+    <ClCompile Include="Recolor\RcRender.cpp" />
+    <ClCompile Include="Recolor\Rendcustom.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Res\Cur00000.cur" />

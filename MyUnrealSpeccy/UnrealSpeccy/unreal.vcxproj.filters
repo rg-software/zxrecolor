@@ -18,6 +18,12 @@
     <ClCompile Include="Emul.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\RcRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Recolor\Rendcustom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
