@@ -10,129 +10,30 @@
 #include <map>
 
 #include "RcImage.h"
-
-struct TNameRGB
-{
-	std::map<std::string, unsigned> RGB;
-	TNameRGB()
-	{
-		RGB["black"] = RGB_MAKE(0, 0, 0);
-		RGB["blue"] = RGB_MAKE(0, 0, 0xBF);
-		RGB["red"] = RGB_MAKE(0xBF, 0, 0);
-		RGB["magenta"] = RGB_MAKE(0xBF, 0, 0xBF);
-		RGB["green"] = RGB_MAKE(0, 0xBF, 0);
-		RGB["cyan"] = RGB_MAKE(0, 0xBF, 0xBF);
-		RGB["yellow"] = RGB_MAKE(0xBF, 0xBF, 0);
-		RGB["white"] = RGB_MAKE(0xBF, 0xBF, 0xBF);
-		RGB["black+"] = RGB_MAKE(0, 0, 0);
-		RGB["blue+"] = RGB_MAKE(0, 0, 0xFE);
-		RGB["red+"] = RGB_MAKE(0xFE, 0, 0);
-		RGB["magenta+"] = RGB_MAKE(0xFE, 0, 0xFE);
-		RGB["green+"] = RGB_MAKE(0, 0xFE, 0);
-		RGB["cyan+"] = RGB_MAKE(0, 0xFE, 0xFE);
-		RGB["yellow+"] = RGB_MAKE(0xFE, 0xFE, 0);
-		RGB["white+"] = RGB_MAKE(0xFE, 0xFE, 0xFE);
-	}
-}
-NameRGB;
-
-struct MyRule
-{
-	enum RuleType { DUMMY_BEG_TYPE = 0, BLOCK, PIXEL, DUMMY_END_TYPE } Type;
-	RcImage PcImage;
-	RcImage ZxImage; // old is always small-screen (x1)
-	RcImage ZxImages[8];
-	bool MatchColor;
-	int ColorX, ColorY;
-	unsigned Color;
-	int OffsetX, OffsetY;
-	int Layer;
-
-	MyRule() : MatchColor(false), OffsetY(0), OffsetX(0) {}
-	MyRule(const std::string& line)
-	{
-		MatchColor = false;
-		OffsetX = OffsetY = 0;
-		std::istringstream iss(line);
-
-		std::string type;
-		std::string orig_pic, new_pic;
-		iss >> Layer >> type >> orig_pic >> new_pic;
-
-		if(orig_pic.find('|') != std::string::npos) // color part is found (orig_pic|color_part)
-		{
-			std::string color_part = orig_pic.substr(orig_pic.find('|') + 1);
-			orig_pic = orig_pic.substr(0, orig_pic.find('|'));
-
-			MatchColor = true;	// color_part = "x,y,color_name"
-			ColorX = atoi(color_part.substr(0, color_part.find(',')).c_str());
-			color_part = color_part.substr(color_part.find(',') + 1);
-			ColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
-			color_part = color_part.substr(color_part.find(',') + 1);
-			if(NameRGB.RGB.find(color_part) == NameRGB.RGB.end())
-				throw std::exception("Incorrect color name"); // should never happen
-			Color = NameRGB.RGB[color_part];
-		}
-
-		if(new_pic.find('|') != std::string::npos)
-		{
-			std::string xy_part = new_pic.substr(new_pic.find('|') + 1);
-			new_pic = new_pic.substr(0, new_pic.find('|'));
-
-			OffsetX = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
-			xy_part = xy_part.substr(xy_part.find(',') + 1);
-			OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
-		}
-
-		ZxImage.LoadColored(orig_pic, true, false);
-		
-		for(unsigned i = 0; i < 8; ++i)
-			ZxImages[i].CopyWithShift(ZxImage, i);
-
-		PcImage.LoadColored(new_pic);
-
-		if(type == "block")
-			Type = BLOCK;
-		else if(type == "pixel")
-			Type = PIXEL;
-	}
-
-	unsigned short GetZxKey() const { return ZxImage.GetZxKey(); }
-	
-	bool operator<(const MyRule& rhs) const
-	{
-		return GetZxKey() < rhs.GetZxKey();
-	}
-};
-
-const unsigned char MAXRULES = 250;
+#include "RcRule.h"
 
 struct MyRules
 {
-	MyRule Rules[MAXRULES];					// all rules of the same kind
-	unsigned RulesCount;					// the actual number of rules
+	std::vector<MyRule> Rules;					// all rules of the same kind
 	unsigned char Index[256*256];			// start index of the rule specified by key in Rules[]
 	unsigned char IndexCount[256*256];		// number of rules specified by key
 
 	MyRules()
 	{
-		RulesCount = 0;
 		std::fill_n(Index, 256*256, 0);
 		std::fill_n(IndexCount, 256*256, 0);
 	}
 
 	void Add(const MyRule& rule)
 	{
-		if(RulesCount == MAXRULES)
-			throw std::exception("MAXRULES exceeded"); // should never happen
-		Rules[RulesCount++] = rule;
+		Rules.push_back(rule);
 	}
 
 	void BuildIndex()
 	{
-		std::sort(Rules, Rules + RulesCount); // sort rules by key
+		std::sort(Rules.begin(), Rules.end()); // sort rules by key
 		
-		for(unsigned i = 0; i < RulesCount; ++i)
+		for(unsigned i = 0; i < Rules.size(); ++i)
 		{
 			unsigned short key = Rules[i].GetZxKey();
 			if(IndexCount[key] == 0)

@@ -27,6 +27,9 @@
     <ClCompile Include="Recolor\RcImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\RcRule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -69,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Recolor\RcImage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\RcRule.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
