@@ -1,7 +1,6 @@
 #pragma once
 #include <D3DTYPES.H>
 #include <string>
-#include <cassert>
 #include <vector>
 
 unsigned const TRANSPARENT_COLOR = RGB_MAKE(242, 10, 242);
@@ -9,7 +8,7 @@ unsigned const TRANSPARENT_COLOR = RGB_MAKE(242, 10, 242);
 class RcImage
 {
 public:
-	void LoadColored(const std::string& bmpName, bool convertZx = false, bool makeZxMask = false); // load 24-bit bmp
+	void Load(const std::string& bmpName, bool convertZx = false, bool makeZxMask = false); // load 24-bit bmp
 	void CopyWithShift(const RcImage& src_image, unsigned offset);
 	bool IsFoundAt(uint8_t* curptr);
 	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst);

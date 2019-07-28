@@ -1,6 +1,7 @@
 #include "RcImage.h"
+#include <cassert>
 
-void RcImage::LoadColored(const std::string& bmpName, bool convertZx, bool makeZxMask)
+void RcImage::Load(const std::string& bmpName, bool convertZx, bool makeZxMask)
 {
 	PlainBMP bmp(bmpName);
 	Width = bmp.Width;

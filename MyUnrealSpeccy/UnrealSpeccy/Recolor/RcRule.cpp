@@ -2,16 +2,34 @@
 #include <string>
 #include <sstream>
 
-TNameRGB NameRGB;
+std::map<std::string, unsigned> RcRule::mNameRGB = 
+{
+	{"black", RGB_MAKE(0, 0, 0)},
+	{"blue",  RGB_MAKE(0, 0, 0xBF)},
+	{"red", RGB_MAKE(0xBF, 0, 0)},
+	{"magenta", RGB_MAKE(0xBF, 0, 0xBF)},
+	{"green", RGB_MAKE(0, 0xBF, 0)},
+	{"cyan", RGB_MAKE(0, 0xBF, 0xBF)},
+	{"yellow", RGB_MAKE(0xBF, 0xBF, 0)},
+	{"white", RGB_MAKE(0xBF, 0xBF, 0xBF)},
+	{"black+", RGB_MAKE(0, 0, 0)},
+	{"blue+", RGB_MAKE(0, 0, 0xFE)},
+	{"red+", RGB_MAKE(0xFE, 0, 0)},
+	{"magenta+", RGB_MAKE(0xFE, 0, 0xFE)},
+	{"green+", RGB_MAKE(0, 0xFE, 0)},
+	{"cyan+", RGB_MAKE(0, 0xFE, 0xFE)},
+	{"yellow+", RGB_MAKE(0xFE, 0xFE, 0)},
+	{"white+", RGB_MAKE(0xFE, 0xFE, 0xFE)}
+};
 
-MyRule::MyRule(const std::string& line)
+RcRule::RcRule(const std::string& line)
 {
 	MatchColor = false;
 	OffsetX = OffsetY = 0;
-	std::istringstream iss(line);
+	
+	std::string type, orig_pic, new_pic;
 
-	std::string type;
-	std::string orig_pic, new_pic;
+	std::istringstream iss(line);
 	iss >> Layer >> type >> orig_pic >> new_pic;
 
 	if(orig_pic.find('|') != std::string::npos) // color part is found (orig_pic|color_part)
@@ -24,9 +42,9 @@ MyRule::MyRule(const std::string& line)
 		color_part = color_part.substr(color_part.find(',') + 1);
 		ColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
 		color_part = color_part.substr(color_part.find(',') + 1);
-		if(NameRGB.RGB.find(color_part) == NameRGB.RGB.end())
+		if(mNameRGB.find(color_part) == mNameRGB.end())
 			throw std::exception("Incorrect color name"); // should never happen
-		Color = NameRGB.RGB[color_part];
+		Color = mNameRGB[color_part];
 	}
 
 	if(new_pic.find('|') != std::string::npos)
@@ -39,12 +57,12 @@ MyRule::MyRule(const std::string& line)
 		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-	ZxImage.LoadColored(orig_pic, true, false);
+	ZxImage.Load(orig_pic, true, false);
 
 	for(unsigned i = 0; i < 8; ++i)
 		ZxImages[i].CopyWithShift(ZxImage, i);
 
-	PcImage.LoadColored(new_pic);
+	RecoloredImage.Load(new_pic);
 
 	if(type == "block")
 		Type = BLOCK;

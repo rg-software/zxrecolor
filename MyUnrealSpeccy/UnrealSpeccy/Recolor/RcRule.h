@@ -1,35 +1,11 @@
 #include "RcImage.h"
-#include <D3DTYPES.H>
 #include <map>
 
-struct TNameRGB
+class RcRule
 {
-	std::map<std::string, unsigned> RGB;
-	TNameRGB()
-	{
-		RGB["black"] = RGB_MAKE(0, 0, 0);
-		RGB["blue"] = RGB_MAKE(0, 0, 0xBF);
-		RGB["red"] = RGB_MAKE(0xBF, 0, 0);
-		RGB["magenta"] = RGB_MAKE(0xBF, 0, 0xBF);
-		RGB["green"] = RGB_MAKE(0, 0xBF, 0);
-		RGB["cyan"] = RGB_MAKE(0, 0xBF, 0xBF);
-		RGB["yellow"] = RGB_MAKE(0xBF, 0xBF, 0);
-		RGB["white"] = RGB_MAKE(0xBF, 0xBF, 0xBF);
-		RGB["black+"] = RGB_MAKE(0, 0, 0);
-		RGB["blue+"] = RGB_MAKE(0, 0, 0xFE);
-		RGB["red+"] = RGB_MAKE(0xFE, 0, 0);
-		RGB["magenta+"] = RGB_MAKE(0xFE, 0, 0xFE);
-		RGB["green+"] = RGB_MAKE(0, 0xFE, 0);
-		RGB["cyan+"] = RGB_MAKE(0, 0xFE, 0xFE);
-		RGB["yellow+"] = RGB_MAKE(0xFE, 0xFE, 0);
-		RGB["white+"] = RGB_MAKE(0xFE, 0xFE, 0xFE);
-	}
-};
-
-struct MyRule
-{
+public:
 	enum RuleType { DUMMY_BEG_TYPE = 0, BLOCK, PIXEL, DUMMY_END_TYPE } Type;
-	RcImage PcImage;
+	RcImage RecoloredImage;
 	RcImage ZxImage; // old is always small-screen (x1)
 	RcImage ZxImages[8];
 	bool MatchColor;
@@ -38,13 +14,17 @@ struct MyRule
 	int OffsetX, OffsetY;
 	int Layer;
 
-	MyRule() : MatchColor(false), OffsetY(0), OffsetX(0) {}
-	MyRule(const std::string& line);
+
+	RcRule() : MatchColor(false), OffsetY(0), OffsetX(0) {}
+	RcRule(const std::string& line);
 
 	unsigned short GetZxKey() const { return ZxImage.GetZxKey(); }
 	
-	bool operator<(const MyRule& rhs) const
+	bool operator<(const RcRule& rhs) const
 	{
 		return GetZxKey() < rhs.GetZxKey();
 	}
+
+private:
+	static 	std::map<std::string, unsigned> mNameRGB;
 };

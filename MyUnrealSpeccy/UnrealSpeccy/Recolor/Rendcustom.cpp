@@ -14,7 +14,7 @@
 
 struct MyRules
 {
-	std::vector<MyRule> Rules;					// all rules of the same kind
+	std::vector<RcRule> Rules;					// all rules of the same kind
 	unsigned char Index[256*256];			// start index of the rule specified by key in Rules[]
 	unsigned char IndexCount[256*256];		// number of rules specified by key
 
@@ -24,7 +24,7 @@ struct MyRules
 		std::fill_n(IndexCount, 256*256, 0);
 	}
 
-	void Add(const MyRule& rule)
+	void Add(const RcRule& rule)
 	{
 		Rules.push_back(rule);
 	}
@@ -44,7 +44,7 @@ struct MyRules
 
 };
 
-MyRules* AllRules = new MyRules[MyRule::DUMMY_END_TYPE];
+std::vector<MyRules> AllRules(RcRule::DUMMY_END_TYPE);
 
 void setup_custom()
 {
@@ -55,11 +55,11 @@ void setup_custom()
 	{
 		if(line[0] == ';') continue;
 
-		MyRule rule(line);
+		RcRule rule(line);
 		AllRules[rule.Type].Add(rule);
 	}
 
-	for(unsigned i = 0; i < MyRule::DUMMY_END_TYPE; ++i)
+	for(unsigned i = 0; i < RcRule::DUMMY_END_TYPE; ++i)
 		AllRules[i].BuildIndex();
 }
 
@@ -80,17 +80,17 @@ struct create_blit_list
 	
 	void operator()(unsigned x, unsigned y, RcImage* image, int layer) 
 	{ 
-		blitlist.push_back(blist_list_element(x*2, y*2, image, layer));
+		blitlist.emplace_back(x*2, y*2, image, layer);
 	}
 };
 
 void blit_all(unsigned pitch, unsigned char* dst, const std::vector<blist_list_element>& blitlist)
 {
-	for (std::vector<blist_list_element>::const_iterator p = blitlist.begin(); p != blitlist.end(); ++p)
+	for (auto p = blitlist.begin(); p != blitlist.end(); ++p)
 		p->image->Blit(p->x, p->y, pitch, dst);
 }
 
-bool found_color(unsigned char *dst, unsigned pitch, unsigned x, unsigned y, MyRule& rule)
+bool found_color(unsigned char *dst, unsigned pitch, unsigned x, unsigned y, RcRule& rule)
 {
 	if(!rule.MatchColor)
 		return true;
@@ -102,7 +102,7 @@ bool found_color(unsigned char *dst, unsigned pitch, unsigned x, unsigned y, MyR
 // find a list of found zx-images (only perfect matches within 8*8 blocks are found)
 template<typename Op> void foreach_zxblock(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, Op op)
 {
-	MyRules& Rules = AllRules[MyRule::BLOCK];
+	MyRules& Rules = AllRules[RcRule::BLOCK];
 
 	for(unsigned scry = 0; scry < 240 - 8; scry += 8) // every 8 pixels
 	{
@@ -117,7 +117,7 @@ template<typename Op> void foreach_zxblock(unsigned char *dst, unsigned pitch, u
 			{
 				if(scry + Rules.Rules[i].ZxImage.Height < 240 && 
 								found_color(dst, pitch, scrx*8, scry, Rules.Rules[i]) && Rules.Rules[i].ZxImage.IsFoundAt(curptr))
-					op(scrx*8 + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].PcImage, Rules.Rules[i].Layer);
+					op(scrx*8 + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].RecoloredImage, Rules.Rules[i].Layer);
 			}
 
 			++curptr;
@@ -127,7 +127,7 @@ template<typename Op> void foreach_zxblock(unsigned char *dst, unsigned pitch, u
 
 template<typename Op> void foreach_zxpixel(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, Op op)
 {
-	MyRules& Rules = AllRules[MyRule::PIXEL];
+	MyRules& Rules = AllRules[RcRule::PIXEL];
 
 	for(unsigned scry = 0; scry < 240 - 8; ++scry) // every pixel
 	{
@@ -151,7 +151,7 @@ template<typename Op> void foreach_zxpixel(unsigned char *dst, unsigned pitch, u
 					if(scry + Rules.Rules[i].ZxImage.Height < 240 && 
 								found_color(dst, pitch, scrx*8 + offset, scry, Rules.Rules[i]) &&
 								Rules.Rules[i].ZxImages[offset].IsFoundAt(curptr))
-						op(scrx*8 + offset + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].PcImage, Rules.Rules[i].Layer);
+						op(scrx*8 + offset + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].RecoloredImage, Rules.Rules[i].Layer);
 				}
 			}
 
