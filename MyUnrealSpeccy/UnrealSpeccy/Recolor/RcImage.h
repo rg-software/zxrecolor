@@ -15,8 +15,8 @@ public:
 
 	void LoadColored(const std::string& bmpName, bool convertZx = false, bool makeZxMask = false); // load 24-bit bmp
 	void CopyWithShift(const RcImage& src_image, unsigned offset);
-	bool IsFoundAt(unsigned char* curptr);
-	void Blit(unsigned x, unsigned y, unsigned pitch, unsigned char* dst);
+	bool IsFoundAt(uint8_t* curptr);
+	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst);
 	unsigned short GetZxKey() const { return Data[0] * 256 + Data[Width / 8]; /* two first sprite lines */ }
 
 

@@ -39,15 +39,15 @@ void RcImage::copyData(const RcImage& src_image, std::vector<uint8_t>& data)
 			data[x + (Width / 8) * y] = src_image.Data[x + (src_image.Width / 8) * y];
 }
 
-bool RcImage::IsFoundAt(unsigned char* curptr)
+bool RcImage::IsFoundAt(uint8_t* curptr)
 {
 	unsigned WidthBytes = Width / 8;
 
 	for (unsigned y = 0; y < Height; ++y)
 	{
-		unsigned char* x_buff = curptr + (320 / 8) * y;
-		unsigned char* x_databuff = &Data[0] + WidthBytes * y;
-		unsigned char* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
+		uint8_t* x_buff = curptr + (320 / 8) * y;
+		uint8_t* x_databuff = &Data[0] + WidthBytes * y;
+		uint8_t* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
 
 		for (unsigned x = 0; x < WidthBytes; ++x)
 		{
@@ -59,16 +59,15 @@ bool RcImage::IsFoundAt(unsigned char* curptr)
 	return true;
 }
 
-void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, unsigned char* dst)
+void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst)
 {
 	unsigned wx = Width, wy = Height;
 
-	unsigned char* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
-	unsigned* UData = (unsigned*)&Data[0];
+	uint8_t* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
+	auto UData = reinterpret_cast<unsigned*>(&Data[0]);
 	unsigned uc = 1;
-	bool is_tr_color;
+	bool is_tr_color = false;
 	unsigned c = 0;
-	unsigned color;
 
 	for(unsigned yc = y; yc < y + wy; ++yc)
 	{
@@ -81,7 +80,7 @@ void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, unsigned char* dst)
 				uc = 4;
 			}
 
-			color = Data[c++];
+			unsigned color = Data[c++];
 
 			if(!is_tr_color)
 				*(dst_buff + xc) = color; //Data[c++];
@@ -118,13 +117,13 @@ RcImage::PlainBMP::PlainBMP(const std::string& bmpName)
 
 	Width = gBitmap.bmWidth;
 	Height = gBitmap.bmHeight;
-	unsigned char* rgbData = new unsigned char[Width * Height * 3]; // original format is 24bpp (no alpha)
-	unsigned char* origRgbData = rgbData;
+	uint8_t* rgbData = new uint8_t[Width * Height * 3]; // original format is 24bpp (no alpha)
+	uint8_t* origRgbData = rgbData;
 
 	GetBitmapBits(hObj, Width * Height * 3, (LPVOID)rgbData);
 
 	Data.resize(Width * Height * 4);
-	unsigned char* pData = &Data[0];
+	uint8_t* pData = &Data[0];
 	for (unsigned i = 0; i < Width * Height; ++i)
 	{
 		*pData++ = *rgbData++; // r, g, b
@@ -141,10 +140,10 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 {
 	// zx image should be: black ink, white paper
 
-	std::vector<unsigned char> NewData(bmp.Width * bmp.Height / 8);
+	std::vector<uint8_t> NewData(bmp.Width * bmp.Height / 8);
 	auto NewDataPtr = NewData.begin();
 	auto UData = reinterpret_cast<const unsigned*>(&bmp.Data[0]);
-	unsigned char nextbyte = 0;
+	uint8_t nextbyte = 0;
 	for(unsigned c = 1; c <= bmp.Width * bmp.Height; ++c)
 	{
 		nextbyte <<= 1;
