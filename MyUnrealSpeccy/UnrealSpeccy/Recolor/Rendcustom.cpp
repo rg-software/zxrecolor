@@ -8,186 +8,30 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include <assert.h>
 
-
-////////////////////////////////////////
-#define TORGB(r, g, b) ((r) << 16) + ((g) << 8) + (b)
-unsigned const TRANSPARENT_COLOR = TORGB(242, 10, 242); //(242 << 16) + (10 << 8) + 242; 
-
-struct MyImage
-{
-	unsigned Width, Height; 
-	unsigned char* Data;
-
-	void LoadImage(const char *bmpName) // load 24-bit bmp
-	{
-		BITMAP gBitmap;
-		HBITMAP hObj = (HBITMAP)::LoadImage(0, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-		assert(hObj != NULL);
-		GetObject(hObj, sizeof(BITMAP), (LPVOID)&gBitmap); 
-
-		Width = gBitmap.bmWidth;
-		Height = gBitmap.bmHeight;
-		unsigned char* rgbData = new unsigned char[Width * Height * 3];  // original format is 24bpp (no alpha)
-		unsigned char* origRgbData = rgbData;
-
-		GetBitmapBits(hObj, Width * Height * 3, (LPVOID)rgbData);
-		
-		Data = new unsigned char[Width * Height * 4];
-		unsigned char* pData = Data;
-		for(unsigned i = 0; i < Width * Height; ++i)
-		{
-			*pData++ = *rgbData++;	// r, g, b
-			*pData++ = *rgbData++;
-			*pData++ = *rgbData++;
-			*pData++ = 0;			// alpha
-		}
-
-
-		delete[] origRgbData;
-		DeleteObject(hObj);
-	}
-
-	void ConvertToZx(bool asMask = false)
-	{
-		// zx image should be: black ink, white paper
-		
-		unsigned char* NewData = new unsigned char[Width * Height / 8];
-		unsigned char* NewDataPtr = NewData;
-		unsigned* UData = (unsigned*)Data;
-		unsigned char nextbyte = 0;
-		for(unsigned c = 1; c <= Width * Height; ++c)
-		{
-			nextbyte <<= 1;
-			
-			bool placeOne = asMask ? *UData != TRANSPARENT_COLOR : *UData == 0;
-			
-			UData++;
-			if(placeOne)  //if(*UData++ == 0) // black, put 1
-				nextbyte |= 1;
-
-			if(c > 7 && c % 8 == 0) // starting with c == 8
-			{
-				*NewDataPtr++ = nextbyte;
-				nextbyte = 0;
-			}
-		}
-
-		delete[] Data;
-		Data = NewData;
-	}
-
-	void LogImage()
-	{
-		char binary[10];
-		FILE *f = fopen("!log.txt", "at");
-		for(unsigned y = 0; y < Height; ++y)
-		{
-			for(unsigned x = 0; x < (Width/8); ++x)
-			{
-				itoa(Data[x+ (Width/8)*y], binary, 2);
-				for(unsigned i = 0; i < 8-strlen(binary); ++i) fprintf(f, "0");
-				fprintf(f, "%s ", binary);
-			}
-			fprintf(f, "\n");
-		}
-		
-		fprintf(f, "\n");
-		fclose(f);
-	}
-
-	void CopyAndShift(const MyImage& image, unsigned offset)
-	{
-		Width = image.Width + 8;
-		Height = image.Height;
-		unsigned size = Width * Height / 8;
-		Data = new unsigned char[size];
-		std::fill(Data, Data + size, 0);
-
-		for(unsigned x = 0; x < image.Width/8; ++x)
-			for(unsigned y = 0; y < image.Height; ++y)
-				Data[x + (Width/8)*y] = image.Data[x + (image.Width/8)*y];
-
-		for(unsigned i = 0; i < offset; ++i)
-			Shift();
-		//LogImage();
-	}
-
-	void Shift()
-	{
-		for(unsigned y = 0; y < Height; ++y)
-		{
-			char lobit = Data[0 + (Width/8)*y] & 1;
-			Data[0 + (Width/8)*y] >>= 1;
-
-			for(unsigned x = 1; x < (Width/8); ++x)
-			{
-				char old_lobit = lobit;
-				lobit = Data[x + (Width/8)*y] & 1;
-				
-				Data[x + (Width/8)*y] >>= 1;
-				if(old_lobit)
-					Data[x + (Width/8)*y] |= 128; // 1000 0000
-
-			}
-		}
-	}
-};
-
-// display image in (x,y) location of dst
-void blit_image(unsigned x, unsigned y, unsigned pitch, unsigned char *dst, MyImage& image)
-{
-	unsigned wx = image.Width, wy = image.Height;
-
-	unsigned char* dst_buff = dst + x*3 + pitch*y; // for some reason x*3
-	unsigned *UData = (unsigned*)image.Data;
-	unsigned uc = 1;
-	bool is_tr_color;
-	unsigned c = 0;
-	unsigned color;
-
-	for(unsigned yc = y; yc < y + wy; ++yc)
-	{
-		for(unsigned xc = x; xc < x + wx*4; ++xc)
-		{
-			if(--uc == 0)
-			{
-				is_tr_color = *UData == TRANSPARENT_COLOR;  // every four bytes check for the transparency
-				UData++;
-				uc = 4;
-			}
-
-			color = image.Data[c++];
-
-			if(!is_tr_color)
-				*(dst_buff + xc) = color; //image.Data[c++];
-		}
-		dst_buff += pitch;
-	}
-}
+#include "RcImage.h"
 
 struct TNameRGB
 {
 	std::map<std::string, unsigned> RGB;
 	TNameRGB()
 	{
-		RGB["black"] = TORGB(0, 0, 0);
-		RGB["blue"] = TORGB(0, 0, 0xBF);
-		RGB["red"] = TORGB(0xBF, 0, 0);
-		RGB["magenta"] = TORGB(0xBF, 0, 0xBF);
-		RGB["green"] = TORGB(0, 0xBF, 0);
-		RGB["cyan"] = TORGB(0, 0xBF, 0xBF);
-		RGB["yellow"] = TORGB(0xBF, 0xBF, 0);
-		RGB["white"] = TORGB(0xBF, 0xBF, 0xBF);
-		RGB["black+"] = TORGB(0, 0, 0);
-		RGB["blue+"] = TORGB(0, 0, 0xFE);
-		RGB["red+"] = TORGB(0xFE, 0, 0);
-		RGB["magenta+"] = TORGB(0xFE, 0, 0xFE);
-		RGB["green+"] = TORGB(0, 0xFE, 0);
-		RGB["cyan+"] = TORGB(0, 0xFE, 0xFE);
-		RGB["yellow+"] = TORGB(0xFE, 0xFE, 0);
-		RGB["white+"] = TORGB(0xFE, 0xFE, 0xFE);
+		RGB["black"] = RGB_MAKE(0, 0, 0);
+		RGB["blue"] = RGB_MAKE(0, 0, 0xBF);
+		RGB["red"] = RGB_MAKE(0xBF, 0, 0);
+		RGB["magenta"] = RGB_MAKE(0xBF, 0, 0xBF);
+		RGB["green"] = RGB_MAKE(0, 0xBF, 0);
+		RGB["cyan"] = RGB_MAKE(0, 0xBF, 0xBF);
+		RGB["yellow"] = RGB_MAKE(0xBF, 0xBF, 0);
+		RGB["white"] = RGB_MAKE(0xBF, 0xBF, 0xBF);
+		RGB["black+"] = RGB_MAKE(0, 0, 0);
+		RGB["blue+"] = RGB_MAKE(0, 0, 0xFE);
+		RGB["red+"] = RGB_MAKE(0xFE, 0, 0);
+		RGB["magenta+"] = RGB_MAKE(0xFE, 0, 0xFE);
+		RGB["green+"] = RGB_MAKE(0, 0xFE, 0);
+		RGB["cyan+"] = RGB_MAKE(0, 0xFE, 0xFE);
+		RGB["yellow+"] = RGB_MAKE(0xFE, 0xFE, 0);
+		RGB["white+"] = RGB_MAKE(0xFE, 0xFE, 0xFE);
 	}
 }
 NameRGB;
@@ -195,9 +39,9 @@ NameRGB;
 struct MyRule
 {
 	enum RuleType { DUMMY_BEG_TYPE = 0, BLOCK, PIXEL, DUMMY_END_TYPE } Type;
-	MyImage PcImage;
-	MyImage ZxImage, ZxMask; // old is always small-screen (x1)
-	MyImage ZxImages[8], ZxMasks[8];
+	RcImage PcImage;
+	RcImage ZxImage, ZxMask; // old is always small-screen (x1)
+	RcImage ZxImages[8], ZxMasks[8];
 	bool MatchColor;
 	int ColorX, ColorY;
 	unsigned Color;
@@ -240,10 +84,8 @@ struct MyRule
 			OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 		}
 
-		ZxImage.LoadImage(orig_pic.c_str());
-		ZxMask.LoadImage(orig_pic.c_str());
-		ZxImage.ConvertToZx();
-		ZxMask.ConvertToZx(true);
+		ZxImage.LoadColored(orig_pic, true, false);
+		ZxMask.LoadColored(orig_pic, true, true);
 		
 		for(unsigned i = 0; i < 8; ++i)
 		{
@@ -251,7 +93,7 @@ struct MyRule
 			ZxMasks[i].CopyAndShift(ZxMask, i);
 		}
 
-		PcImage.LoadImage(new_pic.c_str());
+		PcImage.LoadColored(new_pic);
 
 		if(type == "block")
 			Type = BLOCK;
@@ -259,7 +101,7 @@ struct MyRule
 			Type = PIXEL;
 	}
 
-	unsigned short GetZxKey() const { return ZxImage.Data[0]*256 + ZxImage.Data[ZxImage.Width/8]; /* two first sprite lines */ }
+	unsigned short GetZxKey() const { return ZxImage.GetZxKey(); }
 	
 	bool operator<(const MyRule& rhs) const
 	{
@@ -325,32 +167,17 @@ void setup_custom()
 }
 
 // checks whether a zx-image is found under curptr
-bool image_found_at(unsigned char* curptr, MyImage& image, MyImage& mask)
+bool image_found_at(unsigned char* curptr, RcImage& image, RcImage& mask)
 {
-	unsigned WidthBytes = image.Width / 8;
-	
-	for(unsigned y = 0; y < image.Height; ++y)
-	{
-		unsigned char* x_buff = curptr + (320/8)*y;
-		unsigned char* x_databuff = image.Data + WidthBytes*y;
-		unsigned char* x_maskbuff = mask.Data + WidthBytes*y;
-
-		for(unsigned x = 0; x < WidthBytes; ++x)
-		{
-			if((*x_buff++ & *x_maskbuff++) != *x_databuff++)
-				return false;
-		}
-	}
-
-	return true;
+	return image.IsFoundAt(curptr, mask);
 }
 
 struct blist_list_element
 {
 	unsigned x, y;
-	MyImage* image;
+	RcImage* image;
 	int layer;
-	blist_list_element(unsigned x_, unsigned y_, MyImage* image_, int layer_) : x(x_), y(y_), image(image_), layer(layer_) {}
+	blist_list_element(unsigned x_, unsigned y_, RcImage* image_, int layer_) : x(x_), y(y_), image(image_), layer(layer_) {}
 
 	bool operator<(const blist_list_element& rhs) const { return layer < rhs.layer; }
 };
@@ -360,7 +187,7 @@ struct create_blit_list
 	std::vector<blist_list_element>& blitlist;
 	create_blit_list(std::vector<blist_list_element>& blitlist_) : blitlist(blitlist_) {}
 	
-	void operator()(unsigned x, unsigned y, MyImage* image, int layer) 
+	void operator()(unsigned x, unsigned y, RcImage* image, int layer) 
 	{ 
 		blitlist.push_back(blist_list_element(x*2, y*2, image, layer));
 	}
@@ -368,8 +195,8 @@ struct create_blit_list
 
 void blit_all(unsigned pitch, unsigned char* dst, const std::vector<blist_list_element>& blitlist)
 {
-	for(std::vector<blist_list_element>::const_iterator p = blitlist.begin(); p != blitlist.end(); ++p)
-		blit_image(p->x, p->y, pitch, dst, *(p->image));
+	for (std::vector<blist_list_element>::const_iterator p = blitlist.begin(); p != blitlist.end(); ++p)
+		p->image->Blit(p->x, p->y, pitch, dst);
 }
 
 bool found_color(unsigned char *dst, unsigned pitch, unsigned x, unsigned y, MyRule& rule)

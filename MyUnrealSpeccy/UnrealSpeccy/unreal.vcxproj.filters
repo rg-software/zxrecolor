@@ -24,6 +24,9 @@
     <ClCompile Include="Recolor\Rendcustom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\RcImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -63,5 +66,10 @@
     <CustomBuild Include="Res\Cur00008.cur">
       <Filter>Resource Files</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Recolor\RcImage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -142,6 +142,7 @@ ver &gt; nul</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Emul.cpp" />
+    <ClCompile Include="Recolor\RcImage.cpp" />
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\Rendcustom.cpp" />
   </ItemGroup>
@@ -161,6 +162,9 @@ ver &gt; nul</Command>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Res\U1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Recolor\RcImage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
