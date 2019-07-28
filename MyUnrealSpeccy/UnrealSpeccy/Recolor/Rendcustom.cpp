@@ -40,8 +40,8 @@ struct MyRule
 {
 	enum RuleType { DUMMY_BEG_TYPE = 0, BLOCK, PIXEL, DUMMY_END_TYPE } Type;
 	RcImage PcImage;
-	RcImage ZxImage, ZxMask; // old is always small-screen (x1)
-	RcImage ZxImages[8], ZxMasks[8];
+	RcImage ZxImage;//, ZxMask; // old is always small-screen (x1)
+	RcImage ZxImages[8];//, ZxMasks[8];
 	bool MatchColor;
 	int ColorX, ColorY;
 	unsigned Color;
@@ -85,13 +85,9 @@ struct MyRule
 		}
 
 		ZxImage.LoadColored(orig_pic, true, false);
-		ZxMask.LoadColored(orig_pic, true, true);
 		
 		for(unsigned i = 0; i < 8; ++i)
-		{
-			ZxImages[i].CopyAndShift(ZxImage, i);
-			ZxMasks[i].CopyAndShift(ZxMask, i);
-		}
+			ZxImages[i].CopyWithShift(ZxImage, i);
 
 		PcImage.LoadColored(new_pic);
 
@@ -167,10 +163,10 @@ void setup_custom()
 }
 
 // checks whether a zx-image is found under curptr
-bool image_found_at(unsigned char* curptr, RcImage& image, RcImage& mask)
+/*bool image_found_at(unsigned char* curptr, RcImage& image, RcImage& mask)
 {
 	return image.IsFoundAt(curptr, mask);
-}
+}*/
 
 struct blist_list_element
 {
@@ -225,8 +221,9 @@ template<typename Op> void foreach_zxblock(unsigned char *dst, unsigned pitch, u
 			for(unsigned char i = index; i < index + count; ++i) // check carefully
 			{
 				if(scry + Rules.Rules[i].ZxImage.Height < 240 && 
-								found_color(dst, pitch, scrx*8, scry, Rules.Rules[i]) && 
-								image_found_at(curptr, Rules.Rules[i].ZxImage, Rules.Rules[i].ZxMask))
+								found_color(dst, pitch, scrx*8, scry, Rules.Rules[i]) &&
+					Rules.Rules[i].ZxImage.IsFoundAt(curptr))
+								//image_found_at(curptr, Rules.Rules[i].ZxImage, Rules.Rules[i].ZxMask))
 					op(scrx*8 + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].PcImage, Rules.Rules[i].Layer);
 			}
 
@@ -260,7 +257,8 @@ template<typename Op> void foreach_zxpixel(unsigned char *dst, unsigned pitch, u
 					// fix this checking code (prepare the image?)
 					if(scry + Rules.Rules[i].ZxImage.Height < 240 && 
 								found_color(dst, pitch, scrx*8 + offset, scry, Rules.Rules[i]) &&
-								image_found_at(curptr, Rules.Rules[i].ZxImages[offset], Rules.Rules[i].ZxMasks[offset]))
+								Rules.Rules[i].ZxImages[offset].IsFoundAt(curptr))
+								//image_found_at(curptr, Rules.Rules[i].ZxImages[offset], Rules.Rules[i].ZxMasks[offset]))
 						op(scrx*8 + offset + Rules.Rules[i].OffsetX, scry + Rules.Rules[i].OffsetY, &Rules.Rules[i].PcImage, Rules.Rules[i].Layer);
 				}
 			}
