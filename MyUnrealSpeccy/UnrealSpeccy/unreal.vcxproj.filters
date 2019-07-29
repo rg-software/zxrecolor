@@ -21,13 +21,13 @@
     <ClCompile Include="Recolor\RcRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Recolor\Rendcustom.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Recolor\RcImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Recolor\RcRule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Recolor\RuleRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,6 +78,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Recolor\RcRuleset.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\BlitList.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

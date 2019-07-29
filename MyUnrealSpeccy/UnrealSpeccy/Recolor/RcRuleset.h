@@ -38,7 +38,7 @@ public:
 	}
 
 private:
-	uint16_t Index[256 * 256];			// start index of the rule specified by key in Rules[]
-	uint16_t IndexCount[256 * 256];		// number of rules specified by key
+	uint16_t Index[256 * 256]{};			// start index of the rule specified by key in Rules[]
+	uint16_t IndexCount[256 * 256]{};		// number of rules specified by key
 	std::vector<RcRule> Rules;			// all rules of the same kind
 };

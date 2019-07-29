@@ -27,6 +27,8 @@ void create_my_screen(unsigned char *dst, unsigned pitch, bool isbw)
 }*/
 /* (end) ready screen  -- for debug */
 
+#include <exception>
+
 void create_zxline(unsigned char *dst, unsigned char *src, const unsigned *tab)
 {
 	for (unsigned x = 0; x < 320 / 8; ++x)
@@ -50,6 +52,7 @@ void create_zxscreen(unsigned char *src, unsigned char* dst, unsigned delta, con
 
 void rend_dbl(unsigned char *dst, unsigned pitch);
 void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen);
+void __declspec(noreturn) errexit(const char *err, const char *str = 0);
 
 void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsigned delta, const unsigned *tab)
 {
@@ -61,5 +64,14 @@ void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsi
 	create_zxscreen(src, zx_screen, delta, tab);
 
 	rend_dbl(dst, pitch); // standard 2D renderer
-	recolor_render_impl(dst, pitch, zx_screen, nullptr); // recoloring
+	
+	try
+	{
+		recolor_render_impl(dst, pitch, zx_screen, nullptr); // recoloring
+
+	}
+	catch(const std::exception& e)
+	{
+		errexit(e.what());
+	}
 }

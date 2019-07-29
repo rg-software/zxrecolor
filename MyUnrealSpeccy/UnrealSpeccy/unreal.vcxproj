@@ -145,7 +145,7 @@ ver &gt; nul</Command>
     <ClCompile Include="Recolor\RcImage.cpp" />
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\RcRule.cpp" />
-    <ClCompile Include="Recolor\Rendcustom.cpp" />
+    <ClCompile Include="Recolor\RuleRender.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Res\Cur00000.cur" />
@@ -165,6 +165,7 @@ ver &gt; nul</Command>
     <Image Include="Res\U1.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Recolor\BlitList.h" />
     <ClInclude Include="Recolor\RcImage.h" />
     <ClInclude Include="Recolor\RcRule.h" />
     <ClInclude Include="Recolor\RcRuleset.h" />

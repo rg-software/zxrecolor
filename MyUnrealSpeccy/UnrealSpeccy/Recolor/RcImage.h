@@ -12,7 +12,7 @@ public:
 	void CopyWithShift(const RcImage& src_image, unsigned offset);
 	bool IsFoundAt(uint8_t* curptr) const;
 	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const;
-	unsigned short GetZxKey() const { return Data[0] * 256 + Data[Width / 8]; /* two first sprite lines */ }
+	unsigned short GetZxKey() const { return MAKEWORD(Data[Width / 8], Data[0]); } /* two first sprite lines */
 
 	unsigned GetHeight() const { return Height; }
 	unsigned GetWidth() const { return Width; }
