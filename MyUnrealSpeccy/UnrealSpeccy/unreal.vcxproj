@@ -167,6 +167,7 @@ ver &gt; nul</Command>
   <ItemGroup>
     <ClInclude Include="Recolor\RcImage.h" />
     <ClInclude Include="Recolor\RcRule.h" />
+    <ClInclude Include="Recolor\RcRuleset.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

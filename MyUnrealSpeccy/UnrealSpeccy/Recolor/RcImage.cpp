@@ -40,15 +40,15 @@ void RcImage::copyData(const RcImage& src_image, std::vector<uint8_t>& data)
 			data[x + (Width / 8) * y] = src_image.Data[x + (src_image.Width / 8) * y];
 }
 
-bool RcImage::IsFoundAt(uint8_t* curptr)
+bool RcImage::IsFoundAt(uint8_t* curptr) const
 {
 	unsigned WidthBytes = Width / 8;
 
 	for (unsigned y = 0; y < Height; ++y)
 	{
-		uint8_t* x_buff = curptr + (320 / 8) * y;
-		uint8_t* x_databuff = &Data[0] + WidthBytes * y;
-		uint8_t* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
+		const uint8_t* x_buff = curptr + (320 / 8) * y;
+		const uint8_t* x_databuff = &Data[0] + WidthBytes * y;
+		const uint8_t* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
 
 		for (unsigned x = 0; x < WidthBytes; ++x)
 		{
@@ -60,12 +60,12 @@ bool RcImage::IsFoundAt(uint8_t* curptr)
 	return true;
 }
 
-void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst)
+void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 {
 	unsigned wx = Width, wy = Height;
 
 	uint8_t* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
-	auto UData = reinterpret_cast<unsigned*>(&Data[0]);
+	auto UData = reinterpret_cast<const unsigned*>(&Data[0]);
 	unsigned uc = 1;
 	bool is_tr_color = false;
 	unsigned c = 0;

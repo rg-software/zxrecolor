@@ -77,5 +77,8 @@
     <ClInclude Include="Recolor\RcRule.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Recolor\RcRuleset.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

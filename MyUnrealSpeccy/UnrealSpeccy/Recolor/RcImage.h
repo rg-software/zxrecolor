@@ -10,16 +10,18 @@ class RcImage
 public:
 	void Load(const std::string& bmpName, bool convertZx = false, bool makeZxMask = false); // load 24-bit bmp
 	void CopyWithShift(const RcImage& src_image, unsigned offset);
-	bool IsFoundAt(uint8_t* curptr);
-	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst);
+	bool IsFoundAt(uint8_t* curptr) const;
+	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const;
 	unsigned short GetZxKey() const { return Data[0] * 256 + Data[Width / 8]; /* two first sprite lines */ }
 
-	unsigned Height;
+	unsigned GetHeight() const { return Height; }
+	unsigned GetWidth() const { return Width; }
 
 private:
-	unsigned Width;
 	std::vector<uint8_t> Data;
 	std::vector<uint8_t> ZxMaskData;
+	unsigned Height;
+	unsigned Width;
 
 	struct PlainBMP
 	{
