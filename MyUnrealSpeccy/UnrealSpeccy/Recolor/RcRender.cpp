@@ -28,6 +28,7 @@ void create_my_screen(unsigned char *dst, unsigned pitch, bool isbw)
 /* (end) ready screen  -- for debug */
 
 #include <exception>
+#include <cstdio>
 
 void create_zxline(unsigned char *dst, unsigned char *src, const unsigned *tab)
 {
@@ -68,7 +69,6 @@ void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsi
 	try
 	{
 		recolor_render_impl(dst, pitch, zx_screen, nullptr); // recoloring
-
 	}
 	catch(const std::exception& e)
 	{

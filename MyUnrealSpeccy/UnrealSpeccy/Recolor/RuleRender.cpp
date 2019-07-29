@@ -23,7 +23,8 @@ void LoadRules()
 	std::string line;
 	while(std::getline(is, line))
 	{
-		if(line[0] == ';') continue;
+		if(line.empty() || line[0] == ';' || line[0] == '\r' || line[0] == '\n') 
+			continue;
 
 		RcRule rule(line);
 		AllRules[rule.GetType()].Add(rule);
@@ -45,8 +46,9 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 		{
 			unsigned short key = MAKEWORD(*(curptr + 320 / 8), *curptr);
 				//(*curptr)*256 + *(curptr + 320/8);
-			
-			for (auto p = Rules.BeginByKey(key); p != Rules.EndByKey(key); ++p)
+
+			auto endIt = Rules.EndByKey(key);
+			for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
 				if (scry + p->GetZxHeight() < 240 &&
 					p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr, 0))
 				{
@@ -75,7 +77,8 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 				//unsigned short key = ((curptr_v << offset) >> 8)*256 + ((curptr_next_v << offset) >> 8);
 				unsigned short key = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
 
-				for (auto p = Rules.BeginByKey(key); p != Rules.EndByKey(key); ++p)
+				auto endIt = Rules.EndByKey(key);
+				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
 				{
 					// fix this checking code (prepare the image?)
 					if (scry + p->GetZxHeight() < 240 &&

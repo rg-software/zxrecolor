@@ -43,7 +43,7 @@ RcRule::RcRule(const std::string& line)
 		ColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
 		color_part = color_part.substr(color_part.find(',') + 1);
 		if(mNameRGB.find(color_part) == mNameRGB.end())
-			throw std::exception("Incorrect color name"); // should never happen
+			throw std::runtime_error("Incorrect color name"); // should never happen
 		Color = mNameRGB[color_part];
 	}
 

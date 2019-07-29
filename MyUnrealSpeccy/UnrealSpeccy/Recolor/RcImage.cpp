@@ -111,6 +111,9 @@ void RcImage::shiftData(std::vector<uint8_t>& data)
 
 RcImage::PlainBMP::PlainBMP(const std::string& bmpName)
 {
+	if (GetFileAttributes(bmpName.c_str()) == -1)
+		throw std::runtime_error("File " + bmpName + " not found");
+
 	BITMAP gBitmap;
 	HBITMAP hObj = (HBITMAP)::LoadImage(0, bmpName.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 	assert(hObj != NULL);
