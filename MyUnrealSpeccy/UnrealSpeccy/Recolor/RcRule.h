@@ -22,6 +22,7 @@ public:
 
 	bool IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const;
 	bool IsFoundAt(uint8_t* curptr, unsigned offset) const;
+	bool IsFoundAt(uint8_t* curptr) const;
 
 	unsigned short GetZxKey() const { return ZxImages[0].GetZxKey(); }
 	
@@ -41,6 +42,7 @@ private:
 	int Layer;
 
 	RcImage ZxImages[8]; // old is always small-screen (x1)
+	RcImage ZxImage;
 	RcImage RecoloredImage;
 
 	static 	std::map<std::string, unsigned> mNameRGB;

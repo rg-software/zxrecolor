@@ -50,7 +50,7 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 			auto endIt = Rules.EndByKey(key);
 			for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
 				if (scry + p->GetZxHeight() < 240 &&
-					p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr, 0))
+					p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
 				{
 					p->AddToBlitList(scrx * 8, scry, blitlist);
 				}

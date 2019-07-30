@@ -57,7 +57,6 @@ RcRule::RcRule(const std::string& line)
 		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-	RcImage ZxImage; 
 	ZxImage.Load(orig_pic, true, false);
 
 	for(unsigned i = 0; i < 8; ++i)
@@ -81,6 +80,11 @@ bool RcRule::IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsign
 
 	unsigned* dst_buff = (unsigned*)dst + (x * 2 + ColorX) + 640 * (y * 2 + ColorY);	// $mm CONST
 	return *dst_buff == Color;
+}
+
+bool RcRule::IsFoundAt(uint8_t* curptr) const
+{
+	return ZxImage.IsFoundAt(curptr);
 }
 
 bool RcRule::IsFoundAt(uint8_t* curptr, unsigned offset) const
