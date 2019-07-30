@@ -45,12 +45,10 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 		for(unsigned scrx = 0; scrx < 320/8; scrx++)  // every 8 pixels (1 byte)
 		{
 			unsigned short key = MAKEWORD(*(curptr + 320 / 8), *curptr);
-				//(*curptr)*256 + *(curptr + 320/8);
 
 			auto endIt = Rules.EndByKey(key);
 			for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
-				if (scry + p->GetZxHeight() < 240 &&
-					p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
+				if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
 				{
 					p->AddToBlitList(scrx * 8, scry, blitlist);
 				}
@@ -74,16 +72,13 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 
 			for(unsigned offset = 0; offset < 8; ++offset) // check all 8 possible offsets
 			{
-				//unsigned short key = ((curptr_v << offset) >> 8)*256 + ((curptr_next_v << offset) >> 8);
 				unsigned short key = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
 
 				auto endIt = Rules.EndByKey(key);
 				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
 				{
 					// fix this checking code (prepare the image?)
-					if (scry + p->GetZxHeight() < 240 &&
-						p->IsFoundColor(dst, pitch, scrx * 8 + offset, scry) &&
-						p->IsFoundAt(curptr, offset))
+					if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8 + offset, scry) && p->IsFoundAt(curptr, offset))
 					{
 						p->AddToBlitList(scrx * 8 + offset, scry, blitlist);
 					}

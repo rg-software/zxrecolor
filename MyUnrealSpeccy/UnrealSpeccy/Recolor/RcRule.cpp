@@ -57,7 +57,7 @@ RcRule::RcRule(const std::string& line)
 		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-	ZxImage.Load(orig_pic, true, false);
+	ZxImage.Load(orig_pic, true);
 
 	for(unsigned i = 0; i < 8; ++i)
 		ZxImages[i].CopyWithShift(ZxImage, i);

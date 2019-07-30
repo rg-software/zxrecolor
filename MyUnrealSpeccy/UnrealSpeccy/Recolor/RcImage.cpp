@@ -1,7 +1,7 @@
 #include "RcImage.h"
 #include <cassert>
 
-void RcImage::Load(const std::string& bmpName, bool convertZx, bool makeZxMask)
+void RcImage::Load(const std::string& bmpName, bool convertZx)
 {
 	PlainBMP bmp(bmpName);
 	Width = bmp.Width;
@@ -10,7 +10,7 @@ void RcImage::Load(const std::string& bmpName, bool convertZx, bool makeZxMask)
 
 	if(convertZx)
 	{
-		Data = convertToZx(bmp, makeZxMask);
+		Data = convertToZx(bmp, false);
 		ZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
 	}
 }
@@ -148,6 +148,7 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 	auto NewDataPtr = NewData.begin();
 	auto UData = reinterpret_cast<const unsigned*>(&bmp.Data[0]);
 	uint8_t nextbyte = 0;
+
 	for(unsigned c = 1; c <= bmp.Width * bmp.Height; ++c)
 	{
 		nextbyte <<= 1;

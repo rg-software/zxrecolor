@@ -35,6 +35,12 @@ public:
 				Index[key] = i;		// start index of key-rules
 			IndexCount[key]++;
 		}
+
+		for(unsigned i = 0; i < 256*256; ++i)	// for checking hash collisions
+		{
+			if (IndexCount[i] > 1)
+				printf("Sprites for key %d: %d\n", i, IndexCount[i]);
+		}
 	}
 
 private:
