@@ -14,7 +14,6 @@ void atm_memswap()
 void set_atm_FF77(unsigned port, unsigned char val)
 {
    if ((comp.pFF77 ^ val) & 1) atm_memswap();
-   comp.turbo = ((val & 8) != 0); //Alone Coder 0.37.1Cfix2
    comp.pFF77 = val;
    comp.aFF77 = port;
    set_banks();
@@ -33,18 +32,14 @@ void reset_atm()
    // spectrum colors -> palette indexes (RF_PALB - gg0rr0bb format)
    static unsigned char atm_pal[16] =
       { 0x00, 0x02, 0x10, 0x12, 0x80, 0x82, 0x90, 0x92,
-        0x00, 0x03, 0x18, 0x1B, 0xC0, 0xC3, 0xD8, 0xDB }; //todo fix for DDp pal
+        0x00, 0x03, 0x18, 0x1B, 0xC0, 0xC3, 0xD8, 0xDB };
    memcpy(comp.atm_pal, atm_pal, sizeof comp.atm_pal);
 }
 
-//void atm_writepal(unsigned char val)
-void atm_writepal(unsigned short val) //DDp pal
+void atm_writepal(unsigned char val)
 {
-   //comp.atm_pal[comp.border_attr] = t.atm_pal_map[val&0xff];
-	{ //DDp pal
-		comp.atm_pal[comp.border_attr] = t.atm_pal_map[val&0xff];
-	}
-	temp.atm_pal_changed = 1;
+   comp.atm_pal[comp.border_attr] = t.atm_pal_map[val];
+   temp.atm_pal_changed = 1;
 }
 
 unsigned char atm450_z(unsigned t)

@@ -28,8 +28,6 @@ unsigned dsoffset, dsbuffer = DSBUFFER;
 /* ---------------------- renders ------------------------- */
 #pragma warning(disable:4799)
 
-//#include "ddraw.h"
-
 #include "dxerr.cpp"
 #include "dxrcopy.cpp"
 #include "dxrframe.cpp"
@@ -51,7 +49,7 @@ RENDER renders[] =
 {
    { "Normal",                    render_small,         "normal",    RF_DRIVER },
    { "Double size",               render_dbl,           "double",    RF_DRIVER | RF_2X },
-   { "Recolor Renderer",          render_rc,			"rcdouble",  RF_DRIVER | RF_2X | RF_32 },
+   { "Recolor Renderer",          render_rc,			      "rcdouble",  RF_DRIVER | RF_2X | RF_32 },
    { "Anti-Text64",               render_text,          "text",      RF_2X | RF_USEFONT | RF_DRIVER },
    { "Quad size",                 render_quad,          "quad",      RF_DRIVER | RF_4X },
 //   { "Frame resampler",           render_rsm,           "resampler", RF_DRIVER | RF_8BPCH }, //Alone Coder
@@ -240,16 +238,14 @@ void __fastcall do_sound_ds()
 
       if (conf.sleepidle) Sleep(SLEEP_DELAY);
    }
-   /*if (dsoffset >= dsbuffer) dsoffset -= dsbuffer;*/ dsoffset %= dsbuffer; //numlock crash fix
-   if(spbsize) { //numlock crash fix
-     void *ptr1, *ptr2; DWORD sz1, sz2;
-     if ((r = dsbf->Lock(dsoffset, spbsize, &ptr1, &sz1, &ptr2, &sz2, 0)) != DS_OK)
-     { printrds("IDirectSoundBuffer::Lock()", r); exit(); }
-     memcpy(ptr1, sndplaybuf, sz1);
-     if (ptr2) memcpy(ptr2, (void*)((int)sndplaybuf+sz1), sz2);
-     dsbf->Unlock(ptr1, sz1, ptr2, sz2);
-   }
-   dsoffset += spbsize; /*if (dsoffset >= dsbuffer) dsoffset -= dsbuffer;*/ dsoffset %= dsbuffer; //numlock crash fix
+   if (dsoffset >= dsbuffer) dsoffset -= dsbuffer;
+   void *ptr1, *ptr2; DWORD sz1, sz2;
+   if ((r = dsbf->Lock(dsoffset, spbsize, &ptr1, &sz1, &ptr2, &sz2, 0)) != DS_OK)
+   { printrds("IDirectSoundBuffer::Lock()", r); exit(); }
+   memcpy(ptr1, sndplaybuf, sz1);
+   if (ptr2) memcpy(ptr2, (void*)((int)sndplaybuf+sz1), sz2);
+   dsbf->Unlock(ptr1, sz1, ptr2, sz2);
+   dsoffset += spbsize; if (dsoffset >= dsbuffer) dsoffset -= dsbuffer;
 }
 
 void sound_play()
@@ -806,7 +802,7 @@ void start_dx()
    color(CONSCLR_HARDITEM); printf("gfx: ");
 
    char vmodel[MAX_DDDEVICEID_STRING + 32]; *vmodel = 0;
-/*   if (conf.detect_video) {
+   if (conf.detect_video) {
       LPDIRECTDRAW4 dd4;
       if ((r = dd->QueryInterface(IID_IDirectDraw4, (void**)&dd4)) == DD_OK) {
          DDDEVICEIDENTIFIER di;
@@ -818,7 +814,7 @@ void start_dx()
          dd4->Release();
       }
       if (*vmodel) strcat(vmodel, ", ");
-   }*/ //v0.37.1a
+   }
    DDCAPS caps; caps.dwSize = sizeof caps; dd->GetCaps(&caps, 0);
 
    color(CONSCLR_HARDINFO);

@@ -115,14 +115,11 @@ unsigned inputhex(unsigned x, unsigned y, unsigned sz, char hex)
       }
       debugflip();
       unsigned key;
-      for (;;Sleep(20)/*menu update fix*/) {
+      for (;;) {
          key = process_msgs();
-         needclr = 0;/*menu update fix*/
-         debugflip();/*menu update fix*/
          if (mousepos) return 0;
-         //if (!key) { Sleep(20); continue; }/*menu update fix*/
-         //break;/*menu update fix*/
-         if (key) break;/*menu update fix*/
+         if (!key) { Sleep(20); continue; }
+         break;
       }
       if (key == VK_ESCAPE) return 0;
       if (key == VK_RETURN) {
@@ -226,14 +223,11 @@ char handle_menu(MENUDEF *menu)
       debugflip();
 
       unsigned key;
-      for (;;Sleep(20)/*menu update fix*/) {
+      for (;;) {
          key = process_msgs();
-         needclr = 0;/*menu update fix*/
-         debugflip();/*menu update fix*/
          if (mousepos) return 0;
-         //if (!key) { Sleep(20); continue; }/*menu update fix*/
-         //break;/*menu update fix*/
-         if (key) break;/*menu update fix*/
+         if (!key) { Sleep(20); continue; }
+         break;
       }
       if (key == VK_ESCAPE) return 0;
       if (key == VK_RETURN || key == VK_SPACE) return 1;

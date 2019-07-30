@@ -402,7 +402,6 @@ void load_config(char *fname)
 #endif
 
    conf.soundfilter = GetPrivateProfileInt(sound, "SoundFilter", 0, ininame); //Alone Coder 0.36.4
-   conf.sound.TurboSlider = GetPrivateProfileInt(ay, "TurboSlider", 8192, ininame); //TurboSound2
 
    conf.sound.beeper = GetPrivateProfileInt(sound, "Beeper", 4000, ininame);
    conf.sound.micout = GetPrivateProfileInt(sound, "MicOut", 1000, ininame);
@@ -440,11 +439,6 @@ void load_config(char *fname)
    if (!strnicmp(line, "POS", 3)) conf.sound.ay_scheme = AY_SCHEME_POS;
    if (!strnicmp(line, "CHRV", 4)) conf.sound.ay_scheme = AY_SCHEME_CHRV;
 
-   GetPrivateProfileString(input, "ZXKeyMap", "default", conf.zxkeymap, sizeof conf.zxkeymap, ininame);
-   for (i = 0; i < sizeof zxk_maps / sizeof *zxk_maps; i++)
-      if (!strnicmp(conf.zxkeymap, zxk_maps[i].name, strlen(zxk_maps[i].name)))
-         { conf.input.active_zxk = &zxk_maps[i] ; break; }
-
    GetPrivateProfileString(input, "KeybLayout", "default", conf.keyset, sizeof conf.keyset, ininame);
 
    GetPrivateProfileString(input, "Mouse", nil, line, sizeof line, ininame);
@@ -470,9 +464,8 @@ void load_config(char *fname)
    conf.atm.xt_kbd = GetPrivateProfileInt(input, "ATMKBD", 0, ininame);
    GetPrivateProfileString(input, "Fire", "0", line, sizeof line, ininame);
    conf.input.firenum = 0; conf.input.fire = 0;
-   zxkeymap *active_zxk = conf.input.active_zxk;
-   for (i = 0; i < active_zxk->zxk_size; i++)
-      if (!stricmp(line, active_zxk->zxk[i].name))
+   for (i = 0; i < sizeof zxk / sizeof *zxk; i++)
+      if (!strnicmp(line, zxk[i].name, strlen(zxk[i].name)))
       {  conf.input.firenum = i; break; }
 
    char buff[0x7000];
@@ -616,7 +609,7 @@ void apply_memory()
          if (conf.mem_model == MM_SCORP) romname = conf.scorp_rom_path;
          if (conf.mem_model == MM_KAY) romname = conf.kay_rom_path;
          if (conf.mem_model == MM_ATM450) romname = conf.atm1_rom_path;
-         if (!romname) {/*errexit*/errmsg("ROMSET should be defined for this memory model",0);return;} //Alone Coder
+         if (!romname) errexit("ROMSET should be defined for this memory model");
 
          romsize = load_rom(romname, ROM_BASE_M, 64);
          if (romsize != 64) errexit("invalid ROM filesize");
@@ -645,7 +638,7 @@ void applyconfig()
 {
 //Alone Coder 0.36.4
    conf.frame = frametime;
-   //if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))conf.frame = 71680; //removed 0.37.1a
+   if ((conf.mem_model == MM_PENTAGON)&&(comp.pEFF7 & EFF7_GIGASCREEN))conf.frame = 71680;
 //~Alone Coder
    temp.ticks_frame = (unsigned)(temp.cpufq/conf.intfq);
    loadzxkeys(&conf);
@@ -756,31 +749,27 @@ void loadzxkeys(CONFIG *conf)
    char line[0x300];
    char *s; //Alone Coder 0.36.7
    unsigned k; //Alone Coder 0.36.7
-   zxkeymap *active_zxk = conf->input.active_zxk;
    for (unsigned i = 0; i < VK_MAX; i++) {
       inports[i].port1 = inports[i].port2 = &input.kjoy;
       inports[i].mask1 = inports[i].mask2 = 0xFF;
       for (unsigned j = 0; j < sizeof pckeys / sizeof *pckeys; j++)
          if (pckeys[j].virtkey == i) {
             GetPrivateProfileString(section, pckeys[j].name, "", line, sizeof line, ininame);
-            s = strtok(line, " ;");
-            if(s) {
-               for (/*unsigned*/ k = 0; k < active_zxk->zxk_size; k++) {
-                  if (!stricmp(s, active_zxk->zxk[k].name)) {
-                     inports[i].port1 = active_zxk->zxk[k].port;
-                     inports[i].mask1 = active_zxk->zxk[k].mask;
-                     break;
-                  }
+            for (/*char * */s = line; *s == ' '; s++);
+            for (/*unsigned*/ k = 0; k < sizeof zxk / sizeof *zxk; k++) {
+               if (!strnicmp(s, zxk[k].name, strlen(zxk[k].name))) {
+                  inports[i].port1 = zxk[k].port;
+                  inports[i].mask1 = zxk[k].mask;
+                  break;
                }
             }
-            s = strtok(NULL, " ;");
-            if(s) {
-               for (k = 0; k < active_zxk->zxk_size; k++) {
-                  if (!stricmp(s, active_zxk->zxk[k].name)) {
-                     inports[i].port2 = active_zxk->zxk[k].port;
-                     inports[i].mask2 = active_zxk->zxk[k].mask;
-                     break;
-                  }
+            while (isalnum(*s)) s++;
+            while (*s == ' ') s++;
+            for (k = 0; k < sizeof zxk / sizeof *zxk; k++) {
+               if (!strnicmp(s, zxk[k].name, strlen(zxk[k].name))) {
+                  inports[i].port2 = zxk[k].port;
+                  inports[i].mask2 = zxk[k].mask;
+                  break;
                }
             }
             break;

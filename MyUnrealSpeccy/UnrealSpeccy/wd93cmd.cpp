@@ -185,7 +185,6 @@ void WD1793::process()
             if (rqs & DRQ) { status |= WDS_LOST; state = S_IDLE; break; }
             seldrive->optype |= 2;
             state2 = S_WR_TRACK_DATA; getindex();
-            start_crc = 0; //DOBROTA (AFRODITA.TRD)
             end_waiting_am = next + 5*Z80FQ/FDD_RPS;
             break;
 

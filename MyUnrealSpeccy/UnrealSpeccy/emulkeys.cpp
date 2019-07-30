@@ -248,7 +248,6 @@ void m_nmi(ROM_MODE page)
 {
   if(cpu.pch & 0xc0) //0.37
   {
-   comp.nmi_pending = false; //scorpion nmi fix
    set_mode(page);
    sprintf(statusline, "NMI to %s", getrom(page)); statcnt = 50;
    cpu.sp -= 2; z80dbg::wm(cpu.sp, cpu.pcl); z80dbg::wm(cpu.sp+1, cpu.pch);
@@ -260,18 +259,7 @@ void m_nmi(ROM_MODE page)
   };
 }
 void main_nmi() { m_nmi(RM_NOCHANGE); }
-void main_nmidos() {
-//scorpion nmi fix
- if((conf.mem_model == MM_PROFSCORP || conf.mem_model == MM_SCORP) &&
-   (!(comp.flags & CF_TRDOS) /*&& !(comp.p7FFD & 0x10)*/ /*B128 Active*/) &&
-   (cpu.pc < 0x4000))
- {
-   comp.nmi_pending = true;
-   return;
- }
-//~scorpion nmi fix
- m_nmi(RM_DOS); 
-}
+void main_nmidos() { m_nmi(RM_DOS); }
 void main_nmicache() { m_nmi(RM_CACHE); }
 
 void qsave(char *fname) {

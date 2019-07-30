@@ -65,9 +65,6 @@ void reset(ROM_MODE mode)
    hdd.reset();
    input.atm51.reset();
 
-   comp.nmi_pending = false;//scorpion nmi fix
-   comp.turbo = 0;//Alone Coder 0.37.1Cfix
-   
    if ((!conf.trdos_present && mode == RM_DOS) ||
         (!conf.cache && mode == RM_CACHE)) mode = RM_SOS;
    set_mode(mode);

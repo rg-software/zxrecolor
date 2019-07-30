@@ -310,7 +310,6 @@
 #define IDE_VALUE                       1262
 #define IDC_HEX                         1263
 #define IDC_STATUS                      1264
-#define IDC_CHIP_TURBOSLIDER            1265
 
 // Next default values for new objects
 // 
@@ -318,7 +317,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1266
+#define _APS_NEXT_CONTROL_VALUE         1265
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

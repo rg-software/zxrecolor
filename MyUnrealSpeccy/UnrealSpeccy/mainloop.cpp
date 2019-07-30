@@ -30,40 +30,6 @@ void spectrum_frame()
    comp.frame_counter++;
 }
 
-//Alone Coder 0.37.1C
-void do_mem_autoload()
-{
-
-	char tmp[0x200]="c:\autoload.bin";
-	FILE *ff = fopen(/*tmp*/temp.mem_autoload_filename, "rb");
-	unsigned short mem_autoload_shift = 0xffff;
-	unsigned char mem_autoload_page = 0;
-	fread(&mem_autoload_page, 1, 1, ff);
-	fread(&mem_autoload_shift, 1, 2, ff);
-	temp.mem_autoload_addr = mem_autoload_page*PAGE + mem_autoload_shift;
-	if (mem_autoload_shift<0x4000) fread((RAM_BASE_M+temp.mem_autoload_addr), 1, 64*PAGE, ff);
-	fclose(ff);
-}
-
-//Alone Coder 0.37.1CFIX
-void do_mem_autosave()
-{
-
-	char tmp[0x200]="c:\autoload.bin";
-	FILE *ff = fopen(/*tmp*/temp.mem_autosave_filename, "wb");
-	unsigned char mem_autosave_page = 0;
-	unsigned short mem_autosave_shift = 0xffff;
-	unsigned int mem_autosave_addr = 0;
-	unsigned int mem_autosave_size = 0;
-	mem_autosave_page = temp.mem_autosave_addr>>16;
-	mem_autosave_shift = temp.mem_autosave_addr & 0x3fff;
-	mem_autosave_addr = mem_autosave_page*PAGE + mem_autosave_shift;
-    mem_autosave_size = (RAM_BASE_M+mem_autosave_addr)[0]+((RAM_BASE_M+mem_autosave_addr)[1]<<8);
-	if ((mem_autosave_addr+2+mem_autosave_size)<=(64*PAGE))
-		fwrite((RAM_BASE_M+mem_autosave_addr+2), 1, mem_autosave_size, ff);
-	fclose(ff);
-}
-
 // version before frame resampler
 //uncommented by Alone Coder
 void mainloop()
@@ -76,12 +42,6 @@ void mainloop()
       temp.sndblock = !conf.sound.enabled;
       temp.inputblock = 0; //temp.vidblock; //Alone Coder
       spectrum_frame();
-
-	if(temp.mem_autoload) do_mem_autoload(); //Alone Coder 0.37.1C
-	if(temp.mem_autosave) { //Alone Coder 0.37.1CFIX
-	  do_mem_autosave();
-	  if (cpu.halted && !cpu.iff1) break;
-	}
 
       // message handling before flip (they paint to rbuf)
       if (!temp.inputblock) dispatch(conf.atm.xt_kbd? ac_main_xt : ac_main);

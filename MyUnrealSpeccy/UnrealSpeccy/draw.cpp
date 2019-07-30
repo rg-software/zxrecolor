@@ -52,7 +52,6 @@ CACHE_ALIGNED struct {
    };
 
    unsigned char attrtab[0x200]; // pc attribute + bit (pixel on/off) -> palette index
-   //unsigned attrtab[0x200]; //DDp pal // pc attribute + bit (pixel on/off) -> palette index
 
    CACHE_ALIGNED union {
       unsigned p4bpp8[2][0x100];   // ATM EGA screen. EGA byte -> raw video data: 2 pixels (doubled)
@@ -196,15 +195,6 @@ void create_palette()
 
    PALETTE_OPTIONS *pl = &pals[conf.pal];
    unsigned char brights[4] = { pl->ZZ, pl->ZN, pl->NN, pl->BB };
-   unsigned char delta01 = ((pl->ZN) - (pl->ZZ));
-   unsigned char delta12 = ((pl->NN) - (pl->ZN));
-   unsigned char delta23 = ((pl->BB) - (pl->NN));
-   unsigned char brights16[16] = {
-	   pl->ZZ, (pl->ZZ) + (delta01>>2), (pl->ZZ) + (delta01>>1), (pl->ZN) - (delta01>>2),
-	   pl->ZN, (pl->ZN) + (delta12>>2), (pl->ZN) + (delta12>>1), (pl->NN) - (delta12>>2),
-	   pl->NN, (pl->NN) + (delta23>>2), (pl->NN) + (delta23>>1), (pl->BB) - (delta23>>2),
-	   pl->BB, pl->BB, pl->BB, pl->BB
-   }; //DDp pal
    unsigned char brtab[16] =
       //  ZZ      NN      ZZ      BB
       { pl->ZZ, pl->ZN, pl->ZZ, pl->ZB,    // ZZ
@@ -220,9 +210,6 @@ void create_palette()
          b0 = brights[i & 3];
          r0 = brights[(i >> 3) & 3];
          g0 = brights[(i >> 6) & 3];
-		  /*b0 = brights16[i&0x00f]; //DDp pal
-		  r0 = brights16[i&0x0f0];
-		  g0 = brights16[i&0xf00];*/
       } else { // palette index: ygrbYGRB
          b0 = brtab[((i>>0)&1)+((i>>2)&2)+((i>>2)&4)+((i>>4)&8)]; // brtab[ybYB]
          r0 = brtab[((i>>1)&1)+((i>>2)&2)+((i>>3)&4)+((i>>4)&8)]; // brtab[yrYR]
@@ -249,8 +236,8 @@ void make_colortab(char flash_active)
    if (conf.flashcolor) flash_active = 0;
    for (unsigned a = 0; a < 0x100; a++) {
       unsigned char ink = (a&7), paper = (a>>3) & 7, bright = (a>>6) & 1, flash = (a>>7) & 1;
-      /*if (ink)*/ ink += bright*8; // no bright for 0th color
-      /*if (paper)*/ paper += (conf.flashcolor? flash : bright)*8; // no bright for 0th color
+      if (ink) ink += bright*8; // no bright for 0th color
+      if (paper) paper += (conf.flashcolor? flash : bright)*8; // no bright for 0th color
       if (flash_active && flash) { unsigned char t = ink; ink = paper; paper = t; }
       colortab[a] = paper*0x10 + ink;
       colortab_s8[a] = colortab[a] << 8; colortab_s24[a] = colortab[a] << 24;
@@ -348,35 +335,22 @@ void atm_zc_tables() // atm,profi screens (use normal zx-flash)
    // atm palette mapping (port out to palette index)
    for (unsigned i = 0; i < 0x100; i++) {
       unsigned v = i ^ 0xFF, dst;
-	  //DDp pal
       if (conf.mem_model == MM_ATM450)
-         dst = // ATM1: --grbGRB => Gg00Rr00Bb (DDp pal)//Gg0Rr0Bb
+         dst = // ATM1: --grbGRB => Gg0Rr0Bb
                ((v & 0x20) << 1) | // g
                ((v & 0x10) >> 1) | // r
                ((v & 0x08) >> 3) | // b
                ((v & 0x04) << 5) | // G
                ((v & 0x02) << 3) | // R
                ((v & 0x01) << 1);  // B
-               /*((v & 0x20) << 3) | // g //DDp pal
-               ((v & 0x10) >> 0) | // r
-               ((v & 0x08) >> 3) | // b
-               ((v & 0x04) << 7) | // G
-               ((v & 0x02) << 4) | // R
-               ((v & 0x01) << 1);  // B*/
       else
-         dst = // ATM2: grbG--RB => Gg00Rr00Bb (DDp pal)//Gg0Rr0Bb
+         dst = // ATM2: grbG--RB => Gg0Rr0Bb
                ((v & 0x80) >> 1) | // g
                ((v & 0x40) >> 3) | // r
                ((v & 0x20) >> 5) | // b
                ((v & 0x10) << 3) | // G
                ((v & 0x02) << 3) | // R
                ((v & 0x01) << 1);  // B
-               /*((v & 0x80) << 1) | // g //DDp pal
-               ((v & 0x40) >> 2) | // r
-               ((v & 0x20) >> 5) | // b
-               ((v & 0x10) << 5) | // G
-               ((v & 0x02) << 4) | // R
-               ((v & 0x01) << 1);  // B*/
       t.atm_pal_map[i] = dst;
    }
 }
@@ -471,7 +445,7 @@ void pixel_tables()
    attr_tables();
    for (unsigned pass = 0; pass < 2; pass++) {
       for (unsigned at = 0; at < 0x100; at++)
-      { //todo fix for DDp pal
+      {
          unsigned px0 = t.attrtab[at], px1 = t.attrtab[at+0x100];
          unsigned p0 = raw_data(px0, pass, temp.obpp);
          unsigned p1 = raw_data(px1, pass, temp.obpp);

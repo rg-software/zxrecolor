@@ -93,7 +93,7 @@ int loadsnap(char *filename)
 
 int readSNA128()
 {
-//   conf.mem_model = MM_PENTAGON; conf.ramsize = 128; //Alone Coder
+   conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
    hdrSNA128 *hdr = (hdrSNA128*)snbuf;
    reset(hdr->trdos? RM_DOS : RM_SOS);
    cpu.alt.af = hdr->altaf; cpu.alt.bc = hdr->altbc;
@@ -102,7 +102,6 @@ int readSNA128()
    cpu.ix = hdr->ix; cpu.iy = hdr->iy; cpu.sp = hdr->sp; cpu.pc = hdr->pc;
    cpu.i = hdr->i; cpu.r_low = hdr->r; cpu.r_hi = hdr->r & 0x80; cpu.im = hdr->im;
    cpu.iff1 = hdr->iff1?1:0; comp.p7FFD = hdr->p7FFD;
-   comp.pEFF7 |= EFF7_LOCKMEM; //Alone Coder
    comp.pFE = hdr->pFE; comp.border_attr = comp.pFE & 7;
    memcpy(memory+PAGE*5, hdr->page5, PAGE);
    memcpy(memory+PAGE*2, hdr->page2, PAGE);
@@ -118,7 +117,7 @@ int readSNA128()
 
 int readSNA48()
 {
-//   conf.mem_model = MM_PENTAGON; conf.ramsize = 128; //Alone Coder
+   conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
    reset(RM_SOS);
    hdrSNA128 *hdr = (hdrSNA128*)snbuf;
    cpu.alt.af = hdr->altaf; cpu.alt.bc = hdr->altbc;
@@ -138,7 +137,7 @@ int readSNA48()
 
 int readSP()
 {
-//   conf.mem_model = MM_PENTAGON; conf.ramsize = 128; //Alone Coder
+   conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
    reset(RM_SOS);
    hdrSP *hdr = (hdrSP*)snbuf;
    cpu.alt.af = hdr->altaf; cpu.alt.bc = hdr->altbc;
@@ -204,7 +203,7 @@ void unpack_page(unsigned char *dst, int dstlen, unsigned char *src, int srclen)
 
 int readZ80()
 {
-//   conf.mem_model = MM_PENTAGON; conf.ramsize = 128; //Alone Coder
+   conf.mem_model = MM_PENTAGON; conf.ramsize = 128;
    hdrZ80 *hdr = (hdrZ80*)snbuf;
    unsigned char *ptr = snbuf + 30;
    unsigned char model48k = (hdr->model < 3);

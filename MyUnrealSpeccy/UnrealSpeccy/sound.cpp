@@ -159,7 +159,7 @@ void apply_sound()
 
    const SNDCHIP_VOLTAB *voltab = (SNDCHIP_VOLTAB*)&conf.sound.ay_voltab;
    const SNDCHIP_PANTAB *stereo = (SNDCHIP_PANTAB*)&conf.sound.ay_stereo_tab;
-   ay[0].set_volumes(conf.sound.ay, voltab, stereo, conf.sound.TurboSlider); //TurboSound2
+   ay[0].set_volumes(conf.sound.ay, voltab, stereo);
 
    SNDCHIP_PANTAB reversed;
    if (conf.sound.ay_scheme == AY_SCHEME_PSEUDO) {
@@ -167,7 +167,7 @@ void apply_sound()
          reversed.raw[i] = stereo->raw[i^1]; // swap left/right
       stereo = &reversed;
    }
-   ay[1].set_volumes(conf.sound.ay, voltab, stereo, 8192-conf.sound.TurboSlider); //TurboSound2
+   ay[1].set_volumes(conf.sound.ay, voltab, stereo);
 
 
    #ifdef MOD_GS

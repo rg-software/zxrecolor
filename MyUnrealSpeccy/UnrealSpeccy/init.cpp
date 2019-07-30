@@ -59,21 +59,6 @@ void restrict_version(char legacy)
 */
 }
 
-unsigned int unhexdig(char c)
-{
-  return((c<='9')?(c-'0'):(10+((c<'a')?(c-'A'):(c-'a'))));
-}
-
-unsigned int unhex(char* str)
-{
-  return(unhexdig(str[0])<<20)|
-        (unhexdig(str[1])<<16)|
-		(unhexdig(str[2])<<12)|
-		(unhexdig(str[3])<< 8)|
-		(unhexdig(str[4])<< 4)|
-		(unhexdig(str[5])<< 0);
-}
-
 void init_all(int argc, char **argv)
 {
    cpu_info();
@@ -102,36 +87,6 @@ void init_all(int argc, char **argv)
    init_tape();
    init_hdd_cd();
    start_dx();
-
-//Alone Coder 0.37.1C -----
-   temp.mem_autoload=0;
-   for (auto i = 0; i < argc; i++) {
-      if (argv[i][0] != '/' && argv[i][0] != '-') continue;
-      if (!stricmp(argv[i]+1, "c") && (i+1 < argc))
-	  {
-		 temp.mem_autoload=1;
-         //temp.mem_autoload_filename = argv[i+1];
-		 GetFullPathName(argv[i+1], sizeof (temp.mem_autoload_filename), temp.mem_autoload_filename, NULL);
-		 //MessageBox(dlg, temp.mem_autoload_filename, "OK", MB_ICONERROR | MB_OK);
-		 i++;
-	  }
-   }
-//-----
-
-//Alone Coder 0.37.1CFIX -----
-   temp.mem_autosave=0;
-   for (auto i = 0; i < argc; i++) {
-      if (argv[i][0] != '/' && argv[i][0] != '-') continue;
-      if ((argv[i][1]=='s') && (i+1 < argc))
-	  {
-		 temp.mem_autosave=1;
-		 temp.mem_autosave_addr=unhex(argv[i]+2);
-		 GetFullPathName(argv[i+1], sizeof (temp.mem_autosave_filename), temp.mem_autosave_filename, NULL);
-		 printf("auto-saving from %x\n",temp.mem_autosave_addr);
-	  }
-   }
-//-----
-
    applyconfig();
    main_reset();
    autoload();
@@ -140,15 +95,9 @@ void init_all(int argc, char **argv)
    trd_toload = 0;
    *(DWORD*)trd_loaded = 0; // clear loaded flags, don't see autoload'ed images
 
-   if(argc) do {
+   for (; argc; argc--, argv++) {
       if (**argv == '-' || **argv == '/') {
-         //if (argc > 1 && !stricmp(argv[0]+1, "i"))
-         if (argc > 1 && (!stricmp(argv[0]+1, "i") || !stricmp(argv[0]+1, "c") || (argv[0][1]=='s'))) //Alone Coder 0.37.1CFIX
-		 {
-			 //MessageBox(dlg, "a", "OK", MB_ICONERROR | MB_OK);
-			 argc--, argv++;
-			 argc--, argv++;
-		 }
+         if (argc > 1 && !stricmp(argv[0]+1, "i")) argc--, argv++;
          continue;
       }
 
@@ -157,8 +106,7 @@ void init_all(int argc, char **argv)
 
       trd_toload = -1; // auto-select
       if (!loadsnap(fname)) errmsg("error loading <%s>", *argv), load_errors = 1;
-	  argc--, argv++;
-   } while(argc);
+   }
 
    if (load_errors) {
       int code = MessageBox(wnd, "Some files, specified in\r\ncommand line, failed to load\r\n\r\nContinue emulation?", "File loading error", MB_YESNO | MB_ICONWARNING);

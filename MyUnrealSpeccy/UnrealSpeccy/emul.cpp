@@ -9,8 +9,6 @@
 #include "resource.h"
 
 //------- Alone Coder ---------
-//#include <ddraw.h>
-
 #include <winioctl.h> 
 #define INVALID_SET_FILE_POINTER -1
 //__inline unsigned short _byteswap_ushort (unsigned short i){return (i>>8)|(i<<8);}
@@ -50,7 +48,6 @@ void showhelp(char *anchor = 0)
 #include "emul_2203.cpp" //Dexus
 #include "sound.cpp"
 #include "memory.cpp"
-void main_nmidos(); //scorpion nmi fix
 #include "z80.cpp"
 #include "gs.cpp"
 #include "tape.cpp"
@@ -105,7 +102,7 @@ void __declspec(noreturn) __cdecl main(int argc, char **argv)
    printf("Integrated YM2203 version 1.4A by Tatsuyuki Satoh, Jarek Burczynski, Alone Coder\n"); //Dexus
    color();
 //   printf(" *** source code available at http://sourceforge.net/projects/unrealspeccy/ ***\n");
-   printf(" *** source code is available at http://alonecoder.nedopc.com/ ***\n");
+   printf(" *** source code is available at http://alonecoder.narod.ru/ ***\n");
 
    SetUnhandledExceptionFilter(filter);
    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);

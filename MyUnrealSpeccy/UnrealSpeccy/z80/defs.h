@@ -133,7 +133,7 @@ struct Z80
    /*------------------------------*/
    unsigned char im;
    unsigned char tmp0, tmp1, tmp3;
-   void reset() { int_flags = ir_ = pc = 0; im = 0; halted = 0;/*di:halt*/ }
+   void reset() { int_flags = ir_ = pc = 0; im = 0; }
 };
 
 #define CF 0x01

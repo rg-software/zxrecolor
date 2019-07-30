@@ -232,14 +232,11 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    apply_regs();
 }
 
-void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo, const unsigned TurboSlider) //TurboSound2
+void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, const SNDCHIP_PANTAB *stereo)
 {
    for (int j = 0; j < 6; j++)
       for (int i = 0; i < 32; i++)
-         vols[j][i] = (unsigned) (
-		  (((uint64_t)global_vol * voltab->v[i] * stereo->raw[j])/65536) //TurboSound2
-		  *TurboSlider/(100*3 * SNDR_TURBOSLIDER_MAX ) //TurboSound2
-		  );
+         vols[j][i] = (unsigned) (((uint64_t)global_vol * voltab->v[i] * stereo->raw[j])/(65535*100*3));
 }
 
 void SNDCHIP::reset(unsigned timestamp)
@@ -273,7 +270,7 @@ SNDCHIP::SNDCHIP()
    set_timings(SNDR_DEFAULT_SYSTICK_RATE, SNDR_DEFAULT_AY_RATE, SNDR_DEFAULT_SAMPLE_RATE);
    Chip2203 = (YM2203 *) YM2203Init(NULL, 0, conf.sound.ayfq*2, conf.sound.fq /*44100*/); //Dexus
    set_chip(CHIP_YM);
-   set_volumes(0x7FFF, SNDR_VOL_YM, SNDR_PAN_ABC, SNDR_TURBOSLIDER_DEFAULT); //TurboSound2
+   set_volumes(0x7FFF, SNDR_VOL_YM, SNDR_PAN_ABC);
    reset();
 }
 

@@ -24,14 +24,14 @@ void TRKCACHE::seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs)
       h->crc = *(unsigned short*)(trkd+i+6);
       h->c1 = (wd93_crc(trkd+i+1, 5) == h->crc);
       h->data = 0; h->datlen = 0;
-      //if (h->l > 5) continue; //max sector size fix
+      if (h->l > 5) continue;
 
       unsigned end = min(trklen-8, i+8+43); // 43-DD, 30-SD
       for (unsigned j = i+8; j < end; j++) {
          if (trkd[j] != 0xA1 || !test_i(j) || test_i(j+1)) continue;
 
          if (trkd[j+1] == 0xF8 || trkd[j+1] == 0xFB) {
-            h->datlen = 128 << (h->l & 3); //max sector size fix
+            h->datlen = 128 << h->l;
             h->data = trkd+j+2;
             h->c2 = (wd93_crc(h->data-1, h->datlen+1) == *(unsigned short*)(h->data+h->datlen));
          }

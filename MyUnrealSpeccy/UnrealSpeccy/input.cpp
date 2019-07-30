@@ -44,8 +44,7 @@ void K_INPUT::make_matrix()
          if (conf.input.fire) {
             if (!--firedelay)
                firedelay = conf.input.firedelay, firestate ^= 1;
-            zxkeymap *active_zxk = conf.input.active_zxk;
-            if (firestate) *(active_zxk->zxk[conf.input.firenum].port) &= active_zxk->zxk[conf.input.firenum].mask;
+            if (firestate) *(zxk[conf.input.firenum].port) &= zxk[conf.input.firenum].mask;
          }
          break;
 

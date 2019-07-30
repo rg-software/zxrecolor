@@ -35,9 +35,9 @@ BEGIN
     LISTBOX         IDC_LISTBOX,0,0,185,94,LBS_NOINTEGRALHEIGHT | WS_TABSTOP
 END
 
-IDD_CHIP DIALOG DISCARDABLE  0, 0, 195, 116
+IDD_CHIP DIALOGEX 0, 0, 195, 116
 STYLE DS_3DLOOK | WS_CHILD | WS_BORDER
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Stereo Preset",IDC_STATIC,7,10,71,8
     COMBOBOX        IDC_CHIP_STEREO,88,7,100,100,CBS_DROPDOWNLIST | 
@@ -51,14 +51,11 @@ BEGIN
     LTEXT           "&Chip Clock Speed",IDC_STATIC,7,54,63,8
     COMBOBOX        IDC_CHIP_CLK,88,52,100,100,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Bus &Reaction",IDC_STATIC,7,68,57,8
+    LTEXT           "&Bus Reaction",IDC_STATIC,7,68,57,8
     COMBOBOX        IDC_CHIP_BUS,88,67,100,100,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Use &Digital Samples",IDC_CHIP_DIGITAL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,79,10
-    CONTROL         "Slider1",IDC_CHIP_TURBOSLIDER,"msctls_trackbar32",
-                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,88,94,100,15
-    LTEXT           "Turbo Sound &Balance",IDC_STATIC,7,97,81,8
 END
 
 IDD_MEM DIALOGEX 0, 0, 208, 153

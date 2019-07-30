@@ -96,8 +96,6 @@ struct IDE_CONFIG
 
 enum RSM_MODE { RSM_SIMPLE, RSM_FIR0, RSM_FIR1, RSM_FIR2 };
 
-struct zxkeymap ;
-
 struct CONFIG
 {
    unsigned paper;  // start of paper
@@ -165,7 +163,6 @@ struct CONFIG
       VOID_FUNC do_sound;
       unsigned char enabled, gsreset, dsprimary;
       unsigned char ay_chip, ay_scheme, ay_stereo, ay_vols, ay_samples;
-	  unsigned TurboSlider; //TurboSound2
       unsigned ay_stereo_tab[6], ay_voltab[32];
    } sound;
 
@@ -176,7 +173,6 @@ struct CONFIG
       unsigned char mouse, mouseswap, kjoy, keymatrix, joymouse;
       signed char mousescale;
       unsigned char mousewheel; // enum MOUSE_WHEEL_MODE //0.36.6 from 0.35b2
-      zxkeymap *active_zxk;
    } input;
 
    struct {
@@ -231,7 +227,6 @@ struct CONFIG
    #endif
 
    char atariset[64]; // preset for atari mode
-   char zxkeymap[64]; // name of ZX keys map
    char keyset[64]; // short name of keyboard layout
    char appendboot[0x200];
    char workdir[0x200];
@@ -239,13 +234,6 @@ struct CONFIG
 
 struct TEMP
 {
-   unsigned char mem_autoload; //Alone Coder 0.37.1C
-   unsigned int mem_autoload_addr; //Alone Coder 0.37.1C
-   char mem_autoload_filename[0x200]; //Alone Coder 0.37.1C
-   unsigned char mem_autosave; //Alone Coder 0.37.1CFIX
-   unsigned int mem_autosave_addr; //Alone Coder 0.37.1CFIX
-   char mem_autosave_filename[0x200]; //Alone Coder 0.37.1CFIX
-
    unsigned char win9x;// if we have old OS //Dexus
    unsigned rflags;    // render_func flags
    unsigned border_add, border_and;   // for scorpion 4T border update
@@ -382,12 +370,9 @@ struct COMPUTER
 //      SNDRENDER sound; //Alone Coder
    } tape;
    SNDRENDER tape_sound; //Alone Coder
-   //unsigned char atm_pal[0x10];
-   unsigned atm_pal[0x10]; //DDp pal
+   unsigned char atm_pal[0x10];
    unsigned char ide_read, ide_write; // high byte in IDE i/o
    unsigned char profrom_bank;
-   unsigned char nmi_pending; //scorpion nmi fix
-   unsigned char turbo; //Alone Coder 0.37.1Cfix
 };
 
 // bits for COMPUTER::flags
@@ -445,12 +430,6 @@ struct zxkey {
   volatile unsigned char * /*const*/ port; //Alone Coder
   /*const*/ unsigned char mask; //Alone Coder
 };
-
-struct zxkeymap {
-  const char *name;
-  zxkey *zxk;
-  unsigned zxk_size ;
-} ;
 
 struct action {
    const char *name;
