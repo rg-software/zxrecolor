@@ -56,6 +56,8 @@ unsigned dsoffset, dsbuffer_sz;
 
 /* ---------------------- renders ------------------------- */
 
+void __fastcall render_rc(unsigned char *dst, unsigned pitch);
+
 RENDER renders[] =
 {
    { "Normal",                    render_small,   "normal",    RF_DRIVER | RF_1X },
@@ -64,6 +66,7 @@ RENDER renders[] =
    { "Quad size",                 render_quad,    "quad",      RF_DRIVER | RF_4X },
    { "Anti-Text64",               render_text,    "text",      RF_DRIVER | RF_2X | RF_USEFONT },
    { "Frame resampler",           render_rsm,     "resampler", RF_DRIVER | RF_8BPCH },
+   { "Recolor Renderer",          render_rc,      "rcdouble",  RF_DRIVER | RF_2X | RF_32 },
 
    { "TV Emulation",              render_tv,      "tv",        RF_YUY2 | RF_OVR },
    { "Bilinear filter (MMX,fullscr)", render_bil, "bilinear",  RF_2X | RF_PALB },
@@ -802,7 +805,7 @@ void readdevice(VOID *md, DWORD sz, LPDIRECTINPUTDEVICE dev)
       while(r == DIERR_INPUTLOST)
           r = dev->Acquire();
 
-      if(r == DIERR_OTHERAPPHASPRIO) // Приложение находится в background
+      if(r == DIERR_OTHERAPPHASPRIO) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ background
           return;
 
       if (r != DI_OK)
@@ -1170,7 +1173,7 @@ void set_vidmode()
          desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM;
 
          SurfPitch1 = (temp.ox * temp.obpp) >> 3;
-         SurfPitch1 = (SurfPitch1 + 15) & ~15; // Выравнивание на 16
+         SurfPitch1 = (SurfPitch1 + 15) & ~15; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 16
 
          if(SurfMem1)
              _aligned_free(SurfMem1);
@@ -1211,7 +1214,7 @@ void set_vidmode()
       { printrdd("IDirectDraw2::GetAttachedSurface()", r); exit(); }
    }
 
-   // Настраиваем функцию конвертирования из текущего формата в BGR24
+   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ BGR24
    switch(temp.obpp)
    {
    case 8: ConvBgr24 = ConvPal8ToBgr24; break;

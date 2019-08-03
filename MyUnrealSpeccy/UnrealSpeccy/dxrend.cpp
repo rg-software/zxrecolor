@@ -149,6 +149,13 @@ void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
    rend_dbl(dst, pitch);
 }
 
+void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsigned delta, const unsigned *tab);
+
+void __fastcall render_rc(unsigned char *dst, unsigned pitch)
+{
+   recolor_render(rbuf, dst, pitch, temp.scx/4, t.sctab32[0]);
+}
+
 void __fastcall render_3x(unsigned char *dst, unsigned pitch)
 {
    if (conf.noflic) {
