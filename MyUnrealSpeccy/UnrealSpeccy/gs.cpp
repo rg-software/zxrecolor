@@ -1,24 +1,36 @@
+#include "std.h"
+
+#include "emul.h"
+#include "vars.h"
+#include "gs.h"
+#include "gsz80.h"
+#include "vs1001.h"
+
 #ifdef MOD_GS
 
 unsigned gs_vfx[0x41];  // logarithmic + mixed with conf.sound.gs
-struct { unsigned level, attrib; } gsleds[8];
+TGsLed gsleds[8];
 
-void make_gs_volume(unsigned level = 0x3F)
+void make_gs_volume(unsigned level)
 {
    for (int i = 0; i <= 0x40; i++) {
       //const double ln_0x40 = 4.15888308336;
       //gs_vfx[i] = (unsigned)(conf.sound.gs*log((double)(i*level/0x3F+1))/ln_0x40);
-      gs_vfx[i] = conf.sound.gs*i*level/(0x40*0x40);
+      gs_vfx[i] = conf.sound.gs_vol*i*level/(0x40*0x40);
    }
 }
 
+#if defined(MOD_GSZ80) || defined(MOD_GSBASS)
+//#include "snd_bass.cpp"
+#endif
+
 #ifdef MOD_GSZ80
-#include "gsz80.cpp"
+//#include "gsz80.cpp"
 #endif
 
 #ifdef MOD_GSBASS
-#include "gshlbass.cpp"
-#include "gshle.cpp"
+//#include "gshlbass.cpp"
+//#include "gshle.cpp"
 #endif
 
 unsigned char in_gs(unsigned char port)
@@ -81,15 +93,25 @@ void apply_gs()
 
 void init_gs()
 {
+#ifdef MOD_GS
+   if (conf.gs_type != 0)
+       BASS::Load();
+#endif
+
 #ifdef MOD_GSZ80
    make_gs_volume(); // for GS-Z80
 #endif
 
-#ifdef MOD_GSBASS
-   gs.hBass = 0;     // for GS-BASS
-#endif
-
    reset_gs();
+}
+
+void done_gs()
+{
+#ifdef MOD_GS
+   Vs1001.ShutDown();
+   if (conf.gs_type != 0)
+       BASS::Unload();
+#endif
 }
 
 void init_gs_frame()

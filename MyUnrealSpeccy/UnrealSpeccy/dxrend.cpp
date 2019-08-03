@@ -1,54 +1,168 @@
+#include "std.h"
+
+#include "emul.h"
+#include "vars.h"
+#include "dxrend.h"
+#include "dxrcopy.h"
+#include "dxr_512.h"
+#include "dxr_4bpp.h"
+#include "dxr_prof.h"
+#include "dxr_atm.h"
+#include "draw.h"
+#include "util.h"
+
+void rend_small(unsigned char *dst, unsigned pitch)
+{
+    if (temp.obpp == 8)  { rend_copy8 (dst, pitch); return; }
+    if (temp.obpp == 16) { rend_copy16(dst, pitch); return; }
+    if (temp.obpp == 32) { rend_copy32(dst, pitch); return; }
+}
 
 void __fastcall render_small(unsigned char *dst, unsigned pitch)
 {
-   if (conf.noflic) {
+   if (conf.noflic)
+   {
       if (temp.obpp == 8)  { rend_copy8_nf (dst, pitch); }
       if (temp.obpp == 16) { rend_copy16_nf(dst, pitch); }
       if (temp.obpp == 32) { rend_copy32_nf(dst, pitch); }
       memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
-   } else {
-      if (temp.obpp == 8)  { rend_copy8 (dst, pitch); return; }
-      if (temp.obpp == 16) { rend_copy16(dst, pitch); return; }
-      if (temp.obpp == 32) { rend_copy32(dst, pitch); return; }
+      return;
    }
+
+   if (comp.pEFF7 & EFF7_4BPP)
+   {
+       rend_p4bpp_small(dst, pitch);
+       return;
+   }
+
+   if (conf.mem_model == MM_ATM450)
+   {
+       rend_atm_1_small(dst, pitch);
+       return;
+   }
+
+   if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
+   {
+       rend_atm_2_small(dst, pitch);
+       return;
+   }
+   rend_small(dst, pitch);
 }
 
 void rend_dbl(unsigned char *dst, unsigned pitch)
 {
-   if (temp.oy > temp.scy && conf.fast_sl) pitch *= 2;
-   if (conf.noflic) {
-      if (temp.obpp == 8)  { if (conf.fast_sl) rend_copy8d1_nf (dst, pitch); else rend_copy8d_nf (dst, pitch); }
-      if (temp.obpp == 16) { if (conf.fast_sl) rend_copy16d1_nf(dst, pitch); else rend_copy16d_nf(dst, pitch); }
-      if (temp.obpp == 32) { if (conf.fast_sl) rend_copy32d1_nf(dst, pitch); else rend_copy32d_nf(dst, pitch); }
-      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
-   } else {
-      if (temp.obpp == 8)  { if (conf.fast_sl) rend_copy8d1 (dst, pitch); else rend_copy8d (dst, pitch); return; }
-      if (temp.obpp == 16) { if (conf.fast_sl) rend_copy16d1(dst, pitch); else rend_copy16d(dst, pitch); return; }
-      if (temp.obpp == 32) { if (conf.fast_sl) rend_copy32d1(dst, pitch); else rend_copy32d(dst, pitch); return; }
+   if (temp.oy > temp.scy && conf.fast_sl)
+       pitch *= 2;
+
+   if (conf.noflic)
+   {
+      if (temp.obpp == 8)
+      {
+          if (conf.fast_sl)
+              rend_copy8d1_nf (dst, pitch);
+          else
+              rend_copy8d_nf (dst, pitch);
+      }
+      else if (temp.obpp == 16)
+      {
+          if (conf.fast_sl)
+              rend_copy16d1_nf(dst, pitch);
+          else
+              rend_copy16d_nf(dst, pitch);
+      }
+      else if (temp.obpp == 32)
+      {
+          if (conf.fast_sl)
+              rend_copy32d1_nf(dst, pitch);
+          else
+              rend_copy32d_nf(dst, pitch);
+      }
+
+      memcpy(rbuf_s, rbuf, temp.scy * temp.scx / 4);
+   }
+   else
+   {
+      if (temp.obpp == 8)
+      {
+          if (conf.fast_sl)
+              rend_copy8d1 (dst, pitch);
+          else
+              rend_copy8d (dst, pitch);
+          return;
+      }
+      if (temp.obpp == 16)
+      {
+          if (conf.fast_sl)
+              rend_copy16d1(dst, pitch);
+          else
+              rend_copy16d(dst, pitch);
+          return;
+      }
+      if (temp.obpp == 32)
+      {
+          if (conf.fast_sl)
+              rend_copy32d1(dst, pitch);
+          else
+              rend_copy32d(dst, pitch);
+          return;
+      }
    }
 }
 
 void __fastcall render_dbl(unsigned char *dst, unsigned pitch)
 {
    #ifdef MOD_VID_VD
-   if ((comp.pVD & 8) && temp.obpp == 8) { rend_vd8dbl(dst, pitch); return; }
+   if ((comp.pVD & 8) && temp.obpp == 8)
+   {
+       rend_vd8dbl(dst, pitch);
+       return;
+   }
    #endif
 
    // todo: add ini option to show zx-screen with palette or with MC
-   if (comp.pEFF7 & EFF7_512) { rend_512(dst, pitch); return; }
-   if (comp.pEFF7 & EFF7_4BPP) { rend_p4bpp(dst, pitch); return; }
-   if ((comp.pDFFD & 0x80) && conf.mem_model == MM_PROFI) { rend_profi(dst, pitch); return; }
-   if (conf.mem_model == MM_ATM450) { rend_atm_1(dst, pitch); return; }
-   if (conf.mem_model == MM_ATM710) { rend_atm_2(dst, pitch); return; }
+   if (comp.pEFF7 & EFF7_512)
+   {
+       rend_512(dst, pitch);
+       return;
+   }
+   if (comp.pEFF7 & EFF7_4BPP)
+   {
+       rend_p4bpp(dst, pitch);
+       return;
+   }
+   if ((comp.pDFFD & 0x80) && conf.mem_model == MM_PROFI)
+   {
+       rend_profi(dst, pitch);
+       return;
+   }
+   if (conf.mem_model == MM_ATM450)
+   {
+       rend_atm_1(dst, pitch);
+       return;
+   }
+   if (conf.mem_model == MM_ATM710 || conf.mem_model == MM_ATM3)
+   {
+       rend_atm_2(dst, pitch);
+       return;
+   }
 
    rend_dbl(dst, pitch);
 }
 
-void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsigned delta, const unsigned *tab);
-
-void __fastcall render_rc(unsigned char *dst, unsigned pitch)
+void __fastcall render_3x(unsigned char *dst, unsigned pitch)
 {
-   recolor_render(rbuf, dst, pitch, temp.scx/4, t.sctab32[0]);
+   if (conf.noflic) {
+      if (temp.obpp == 8)  rend_copy8t_nf (dst, pitch);
+      if (temp.obpp == 16) rend_copy16t_nf(dst, pitch);
+      if (temp.obpp == 32) rend_copy32t_nf(dst, pitch);
+      memcpy(rbuf_s, rbuf, temp.scy*temp.scx/4);
+   }
+   else
+   {
+      if (temp.obpp == 8)  { rend_copy8t (dst, pitch); return; }
+      if (temp.obpp == 16) { rend_copy16t(dst, pitch); return; }
+      if (temp.obpp == 32) { rend_copy32t(dst, pitch); return; }
+   }
 }
 
 void __fastcall render_quad(unsigned char *dst, unsigned pitch)
@@ -69,11 +183,13 @@ void __fastcall render_quad(unsigned char *dst, unsigned pitch)
 void __fastcall render_scale(unsigned char *dst, unsigned pitch)
 {
    unsigned char *src = rbuf;
-   unsigned dx = temp.scx/4;
+   unsigned dx = temp.scx / 4;
    unsigned char buf[MAX_WIDTH*2];
    unsigned x; //Alone Coder 0.36.7
-   for (unsigned y = 0; y < temp.scy-1; y++) {
-      for (/*unsigned*/ x = 0; x < dx; x+=2) {
+   for (unsigned y = 0; y < temp.scy-1; y++)
+   {
+      for (x = 0; x < dx; x += 2)
+      {
          unsigned xx = (t.dbl[src[x]] << 16) + t.dbl[src[x+2]];
          unsigned yy = (t.dbl[src[x+dx]] << 16) + t.dbl[src[x+dx+2]];
          unsigned x1 = xx | (yy & ((xx>>1) | (xx<<1)));
@@ -98,17 +214,23 @@ void __fastcall render_scale(unsigned char *dst, unsigned pitch)
          *(unsigned*)(buf+x*8+28)   = tab1[(x1>> 0) & 0x0F];
       }
       dst += pitch;
-      for (x = 0; x < temp.ox; x += 4) *(unsigned*)(dst+x) = *(unsigned*)(buf+x);
+      for (x = 0; x < temp.ox; x += 4)
+          *(unsigned*)(dst+x) = *(unsigned*)(buf+x);
       src += dx; dst += pitch;
    }
 }
 
-unsigned __int64 mask49 = 0x4949494949494949;
-unsigned __int64 mask92 = 0x9292929292929292;
-void __declspec(naked) __fastcall _bil_line1(unsigned char *dst, unsigned char *src)
+static u64 mask49 = 0x4949494949494949ULL;
+static u64 mask92 = 0x9292929292929292ULL;
+
+static void /*__declspec(naked)*/ __fastcall _bil_line1(unsigned char *dst, unsigned char *src)
 {
-//      for (j = 0; j < temp.scx; j++, src++)
-//         *dst++ = *src, *dst++ = ((*src + src[1]) >> 1);
+    for (unsigned i = 0; i < temp.scx; i += 2)
+    {
+       dst[i] = src[i];
+       dst[i+1] = ((src[i] + src[i+1]) >> 1);
+    }
+/*
    __asm {
 
       push ebx
@@ -141,16 +263,32 @@ l1:
       pop ebx
       retn
    }
+*/
 }
 
-void __declspec(naked) __fastcall _bil_line2(unsigned char *dst, unsigned char *s1)
+static void /*__declspec(naked)*/ __fastcall _bil_line2(unsigned char *dst, unsigned char *s1)
 {
-//      for (j = 0; j < temp.ox; j+=4) {
-//         unsigned a = *(unsigned*)(s1+j),
-//                  b = *(unsigned*)(s1+j+2*MAX_WIDTH);
-//         *(unsigned*)(dst+j) = (0x49494949 & ((a&b)^((a^b)>>1))) |
-//                               (0x92929292 & ((a&b)|((a|b)&((a&b)<<1))));
-//      }
+      u32 *s = (u32 *)s1;
+      u32 *d = (u32 *)dst;
+
+      for (unsigned j = 0; j < temp.ox/4; j++)
+      {
+          u32 a = s[j];
+          u32 b = s[j+2*MAX_WIDTH/4];
+          u32 x = a & b;
+          u32 y = (a ^ b) >> 1;
+          u32 z = a | b;
+          u32 n = x << 1;
+          u32 v1 = x ^ y;
+          v1 &= 0x49494949;
+          u32 v2 = z & n;
+          v2 |= x;
+          v2 &= 0x92929292;
+
+          d[j] = v1 | v2;
+      }
+
+/*
    __asm {
 
       mov  eax, [temp.ox]
@@ -183,6 +321,7 @@ m2:   movq  mm0, [edx]
 
       retn
    }
+*/
 }
 
 void __fastcall render_bil(unsigned char *dst, unsigned pitch)
@@ -190,36 +329,32 @@ void __fastcall render_bil(unsigned char *dst, unsigned pitch)
    render_small(snbuf, MAX_WIDTH);
 
    unsigned char *src = snbuf;
-   unsigned char l1[MAX_WIDTH*4];
+   unsigned char ATTR_ALIGN(16) l1[MAX_WIDTH*4];
    #define l2 (l1+MAX_WIDTH*2)
    _bil_line1(l1, src); src += MAX_WIDTH;
-   unsigned j; //Alone Coder 0.36.7
-   for (/*unsigned*/ j = 0; j < temp.ox; j+=4)
-      *(unsigned*)(dst+j) = *(unsigned*)(l1+j);
+   memcpy(dst, l1, temp.ox);
    dst += pitch;
 
-   for (unsigned i = temp.scy/2-1; i; i--) {
+   for (unsigned i = temp.scy/2-1; i; i--)
+   {
       _bil_line1(l2, src); src += MAX_WIDTH;
       _bil_line2(dst, l1); dst += pitch;
-      for (j = 0; j < temp.ox; j+=4)
-         *(unsigned*)(dst+j) = *(unsigned*)(l2+j);
+      memcpy(dst, l2, temp.ox);
       dst += pitch;
 
       _bil_line1(l1, src); src += MAX_WIDTH;
       _bil_line2(dst, l1); dst += pitch;
-      for (j = 0; j < temp.ox; j+=4)
-         *(unsigned*)(dst+j) = *(unsigned*)(l1+j);
+      memcpy(dst, l1, temp.ox);
       dst += pitch;
    }
    _bil_line1(l2, src); src += MAX_WIDTH;
    _bil_line2(dst, l1); dst += pitch;
-   for (j = 0; j < temp.ox; j+=4)
-      *(unsigned*)(dst+j) = *(unsigned*)(l2+j);
+   memcpy(dst, l2, temp.ox);
    dst += pitch;
-   for (j = 0; j < temp.ox; j+=4)
-      *(unsigned*)(dst+j) = *(unsigned*)(l2+j);
+   memcpy(dst, l2, temp.ox);
    #undef l2
-   __asm emms
+
+//   _mm_empty();
 }
 
 void __fastcall render_tv(unsigned char *dst, unsigned pitch)

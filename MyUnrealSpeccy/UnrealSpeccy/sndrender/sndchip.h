@@ -60,7 +60,7 @@ class SNDCHIP : public SNDRENDER
    void reset(unsigned timestamp = 0); // call with default parameter, when context outside start_frame/end_frame block
 
    // 'render' is a function that converts array of register writes into PCM-buffer
-   unsigned render(AYOUT *src, unsigned srclen, unsigned clk_ticks, bufptr_t dst);
+//[vv]   unsigned render(AYOUT *src, unsigned srclen, unsigned clk_ticks, bufptr_t dst);
 
    // set of functions that fills buffer in emulation progress
    void start_frame(bufptr_t dst);

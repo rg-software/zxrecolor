@@ -1,8 +1,9 @@
+#pragma once
 
 const int Z80FQ = 3500000; // todo: #define as (conf.frame*conf.intfq)
 const int FDD_RPS = 5; // rotation speed
 
-const int MAX_TRACK_LEN = 7000 /*6400*/; //Alone Coder
+const int MAX_TRACK_LEN = 6250;
 const int MAX_CYLS = 86;            // don't load images with so many tracks
 const int MAX_PHYS_CYL = 86;        // don't seek over it
 const int MAX_SEC = 256;
@@ -38,21 +39,37 @@ struct TRKCACHE
    void set_i(unsigned pos) { trki[pos/8] |= 1 << (pos&7); }
    void clr_i(unsigned pos) { trki[pos/8] &= ~(1 << (pos&7)); }
    unsigned char test_i(unsigned pos) { return trki[pos/8] & (1 << (pos&7)); }
-   void write(unsigned pos, unsigned char byte, char index) { trkd[pos] = byte; if (index) set_i(pos); else clr_i(pos); }
+   void write(unsigned pos, unsigned char byte, char index)
+   {
+       if(!trkd)
+           return;
+
+       trkd[pos] = byte;
+       if (index)
+           set_i(pos);
+       else
+           clr_i(pos);
+   }
 
    void seek(FDD *d, unsigned cyl, unsigned side, SEEK_MODE fs);
    void format(); // before use, call seek(d,c,s,JUST_SEEK), set s and hdr[]
    int write_sector(unsigned sec, unsigned char *data); // call seek(d,c,s,LOAD_SECTORS)
-   SECHDR *get_sector(unsigned sec); // before use, call fill(d,c,s,LOAD_SECTORS)
+   const SECHDR *get_sector(unsigned sec) const; // before use, call fill(d,c,s,LOAD_SECTORS)
 
    void dump();
-   void clear() { drive = 0; trkd = 0; }
+   void clear()
+   {
+       drive = 0;
+       trkd = 0;
+       ts_byte = Z80FQ/(MAX_TRACK_LEN * FDD_RPS);
+   }
    TRKCACHE() { clear(); }
 };
 
 
 struct FDD
 {
+   u8 Id;
    // drive data
 
    __int64 motor;       // 0 - not spinning, >0 - time when it'll stop
@@ -96,25 +113,64 @@ struct FDD
    int read_udi();
    int write_udi(FILE *ff);
 
+   void format_isd();
+   int read_isd();
+   int write_isd(FILE *ff);
+
+   void format_pro();
+   int read_pro();
+   int write_pro(FILE *ff);
+
    ~FDD() { free(); }
 };
 
 
 struct WD1793
 {
+   enum WDSTATE
+   {
+      S_IDLE = 0,
+      S_WAIT,
+
+      S_DELAY_BEFORE_CMD,
+      S_CMD_RW,
+      S_FOUND_NEXT_ID,
+      S_RDSEC,
+      S_READ,
+      S_WRSEC,
+      S_WRITE,
+      S_WRTRACK,
+      S_WR_TRACK_DATA,
+
+      S_TYPE1_CMD,
+      S_STEP,
+      S_SEEKSTART,
+      S_SEEK,
+      S_VERIFY,
+
+      S_RESET
+   };
+
    __int64 next, time;
+   __int64 idx_tmo;
+
    FDD *seldrive;
    unsigned tshift;
 
-   unsigned char state, state2, cmd;
+   WDSTATE state, state2;
+
+   unsigned char cmd;
    unsigned char data, track, sector;
    unsigned char rqs, status;
+   u8 idx_status;
+   u8 sign_status; // Внешние сигналы (пока только HLD)
 
    unsigned drive, side;                // update this with changing 'system'
 
    signed char stepdirection;
    unsigned char system;                // beta128 system register
 
+   unsigned idx_cnt; // idx counter
 
    // read/write sector(s) data
    __int64 end_waiting_am;
@@ -137,36 +193,13 @@ struct WD1793
       CMD_DELAY         = 0x04,
       CMD_SIDE          = 0x08,
       CMD_SIDE_SHIFT    = 3,
-      CMD_MULTIPLE      = 0x10,
-   };
-
-   enum WDSTATE
-   {
-      S_IDLE = 0,
-      S_WAIT,
-
-      S_DELAY_BEFORE_CMD,
-      S_CMD_RW,
-      S_FOUND_NEXT_ID,
-      S_READ,
-      S_WRSEC,
-      S_WRITE,
-      S_WRTRACK,
-      S_WR_TRACK_DATA,
-
-      S_TYPE1_CMD,
-      S_STEP,
-      S_SEEKSTART,
-      S_SEEK,
-      S_VERIFY,
-
-      S_RESET
+      CMD_MULTIPLE      = 0x10
    };
 
    enum BETA_STATUS
    {
       DRQ   = 0x40,
-      INTRQ = 0x80,
+      INTRQ = 0x80
    };
 
    enum WD_STATUS
@@ -186,9 +219,19 @@ struct WD1793
       WDS_NOTRDY    = 0x80
    };
 
+   enum WD_SYS
+   {
+      SYS_HLT       = 0x08
+   };
+
+   enum WD_SIG
+   {
+       SIG_HLD      = 0x01
+   };
 
    unsigned char in(unsigned char port);
    void out(unsigned char port, unsigned char val);
+   u8 RdStatus();
 
    void process();
    void find_marker();
@@ -197,8 +240,17 @@ struct WD1793
    void getindex();
    void trdos_traps();
 
-   TRKCACHE trkcache;
+//   TRKCACHE trkcache;
    FDD fdd[4];
 
-   WD1793() { seldrive = &fdd[0]; }
+   WD1793()
+   {
+       for(unsigned i = 0; i < 4; i++) // [vv] Для удобства отладки
+           fdd[i].Id = i;
+       seldrive = &fdd[0];
+       idx_cnt = 0;
+       idx_status = 0;
+       idx_tmo = LLONG_MAX;
+       sign_status = 0;
+   }
 };

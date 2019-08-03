@@ -1,51 +1,17 @@
+#include "std.h"
 
-struct MON_LABEL { unsigned char *address; unsigned name_offs; };
+#include "resource.h"
 
-struct MON_LABELS
-{
-   MON_LABEL *pairs;
-   unsigned n_pairs;
-   char *names;
-   unsigned names_size;
+#include "emul.h"
+#include "vars.h"
+#include "debug.h"
+#include "dbgpaint.h"
+#include "dbglabls.h"
+#include "memory.h"
+#include "config.h"
+#include "util.h"
 
-   MON_LABELS() { pairs = 0, names = 0, n_pairs = names_size = 0; hNewUserLabels = 0; }
-   ~MON_LABELS() { free(pairs), free(names); stop_watching_labels(); }
-
-   unsigned add_name(char *name);
-   void clear(unsigned char *start, unsigned size);
-   void clear_ram() { clear(RAM_BASE_M, MAX_RAM_PAGES*PAGE); }
-   void sort();
-
-   char *find(unsigned char *address);
-   void add(unsigned char *address, char *name);
-   unsigned load(char *filename, unsigned char *base, unsigned size);
-
-
-   char xas_errstr[80];
-   unsigned char xaspage;
-   void find_xas();
-
-   enum { MAX_ALASM_LTABLES = 16 };
-   char alasm_valid_char[0x100];
-   unsigned alasm_found_tables;
-   unsigned alasm_offset[MAX_ALASM_LTABLES];
-   unsigned alasm_count[MAX_ALASM_LTABLES];
-   unsigned alasm_chain_len(unsigned char *page, unsigned offset, unsigned &end);
-   void find_alasm();
-
-   void import_menu();
-   void import_xas();
-   void import_alasm(unsigned offset, char *caption);
-
-
-   HANDLE hNewUserLabels;
-   char userfile[0x200];
-   void stop_watching_labels();
-   void start_watching_labels();
-   void notify_user_labels();
-   void import_file();
-
-} mon_labels;
+MON_LABELS mon_labels;
 
 void MON_LABELS::start_watching_labels()
 {
@@ -132,7 +98,12 @@ char *MON_LABELS::find(unsigned char *address)
 unsigned MON_LABELS::load(char *filename, unsigned char *base, unsigned size)
 {
    FILE *in = fopen(filename, "rt");
-   if (!in) { errmsg("can't find label file %s", filename); return 0; }
+   if (!in)
+   {
+       errmsg("can't find label file %s", filename);
+       return 0;
+   }
+
    clear(base, size);
    unsigned l_counter = 0, loaded = 0; char *txt = 0;
    int l; //Alone Coder 0.36.7
@@ -143,31 +114,46 @@ unsigned MON_LABELS::load(char *filename, unsigned char *base, unsigned size)
       for (/*int*/ l = strlen(line); l && line[l-1] <= ' '; l--); line[l] = 0;
       if (!l) continue;
       unsigned val = 0, offset = 0;
-      if (l >= 6 && line[4] == ' ') {
-         for (l = 0; l < 4; l++) {
-            if (!ishex(line[l])) goto ll_err;
+      if (l >= 6 && line[4] == ' ')
+      { // адрес без номера банка xxxx label
+         for (l = 0; l < 4; l++)
+         {
+            if (!ishex(line[l]))
+                goto ll_err;
             val = (val * 0x10) + hex(line[l]);
          }
          txt = line+5;
-      } else if (l >= 9 && line[2] == ':' && line[7] == ' ') {
-         for (l = 0; l < 2; l++) {
-            if (!ishex(line[l])) goto ll_err;
+      }
+      else if (l >= 9 && line[2] == ':' && line[7] == ' ')
+      { // адрес сномером банка bb:xxxx label
+         for (l = 0; l < 2; l++)
+         {
+            if (!ishex(line[l]))
+                goto ll_err;
             val = (val * 0x10) + hex(line[l]);
          }
-         for (l = 3; l < 7; l++) {
-            if (!ishex(line[l])) goto ll_err;
+         for (l = 3; l < 7; l++)
+         {
+            if (!ishex(line[l]))
+                goto ll_err;
             offset = (offset * 0x10) + hex(line[l]);
          }
-         val = val*PAGE + offset;
+         val = val*PAGE + (offset & (PAGE-1));
          txt = line+8;
-      } else {
+      }
+      else
+      {
    ll_err:
          color(CONSCLR_ERROR);
          printf("error in %s, line %d\n", filename, l_counter);
          continue;
       }
 
-      if (val < size) add(base+val, txt), loaded++;
+      if (val < size)
+      {
+          add(base+val, txt);
+          loaded++;
+      }
    }
    fclose(in);
    sort();
@@ -325,7 +311,9 @@ void MON_LABELS::import_file()
    FILE *ff = fopen(userfile, "rb"); if (!ff) return; fclose(ff);
    unsigned count = load(userfile, RAM_BASE_M, conf.ramsize * 1024);
    if (!count) return;
-   char tmp[0x200]; sprintf(tmp, "loaded %d labels from\r\n%s", count, userfile);
+   char tmp[0x200];
+   sprintf(tmp, "loaded %d labels from\r\n%s", count, userfile);
+   puts(tmp);
    //MessageBox(GetForegroundWindow(), tmp, "unreal discovered changes in user labels", MB_OK | MB_ICONINFORMATION);//removed by Alone Coder
 }
 
@@ -346,19 +334,24 @@ void ShowLabels()
 
    unsigned ln = strlen(curlabel); lcount = 0;
    char *s; //Alone Coder 0.36.7
-   for (unsigned p = 0; p < 4; p++) {
-      unsigned char *base = am_r(p*0x4000);
-      for (unsigned i = 0; i < mon_labels.n_pairs; i++) {
+   for (unsigned p = 0; p < 4; p++)
+   {
+      unsigned char *base = am_r(p*PAGE);
+      for (unsigned i = 0; i < mon_labels.n_pairs; i++)
+      {
          unsigned char *label = mon_labels.pairs[i].address;
-         if ((unsigned)(label - base) >= 0x4000) continue;
+         if (label < base || label >= base + PAGE)
+             continue;
          char *name = mon_labels.pairs[i].name_offs + mon_labels.names;
-         if (ln) {
+         if (ln)
+         {
             // unfortunately, strstr() is case sensitive, use loop
             for (/*char * */s = name; *s; s++)
                if (!strnicmp(s, curlabel, ln)) break;
             if (!*s) continue;
          }
-         char zz[0x400]; sprintf(zz, "%04X %s", (label - base) + (p * 0x4000), name);
+         char zz[0x400];
+         sprintf(zz, "%04X %s", (label - base) + (p * PAGE), name);
          SendMessage(list, LB_ADDSTRING, 0, (LPARAM)zz); lcount++;
       }
    }
@@ -366,7 +359,7 @@ void ShowLabels()
    SetFocus(list);
 }
 
-BOOL CALLBACK LabelsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+INT_PTR CALLBACK LabelsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    ::dlg = dlg;
    if (msg == WM_INITDIALOG)
@@ -376,7 +369,7 @@ BOOL CALLBACK LabelsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       return 1;
    }
 
-   if (msg == WM_SYSCOMMAND && wp == SC_CLOSE) EndDialog(dlg, 0);
+   if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_CLOSE) EndDialog(dlg, 0);
 
    if (msg == WM_VKEYTOITEM)
    {
@@ -407,7 +400,8 @@ BOOL CALLBACK LabelsDlg(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
       unsigned address; sscanf(zz, "%X", &address);
 
       void push_pos(); push_pos();
-      trace_curs = trace_top = address; activedbg = WNDTRACE;
+      CpuMgr.Cpu().trace_curs = CpuMgr.Cpu().trace_top = address;
+      activedbg = WNDTRACE;
 
       EndDialog(dlg, 1);
       return 1;

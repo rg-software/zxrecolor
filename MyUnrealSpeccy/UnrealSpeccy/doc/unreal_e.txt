@@ -657,6 +657,6 @@ license
         MSVC-specific language constructions, so it's doubtful that
         you can compile it with another compiler)
 
-E-mail of current developer: alone_coder!mail.ru, dmitry.alonecoder!gmail.com
-Send me bug reports, ideas, and changed source lines.
+Send me bug reports, ideas, and changed source lines
+http://dlcorp.ucoz.ru/forum/17-255-1
 

@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by settings.rc
 //
 #define IDD_MEM                         101
@@ -122,6 +122,8 @@
 #define IDC_RENDER                      1098
 #define IDC_LED_TIME_Y                  1099
 #define IDE_FIRERATE                    1099
+#define IDC_RENDER2                     1099
+#define IDC_SCRSHOT                     1099
 #define IDE_VTXNAME                     1100
 #define IDE_HOLD_DELAY                  1100
 #define IDE_VTXAUTH                     1101
@@ -199,6 +201,7 @@
 #define IDC_BIT2                        1165
 #define IDC_VSCALE_TITLE3               1165
 #define IDC_BIT3                        1166
+#define IDC_REND_TITLE2                 1166
 #define IDC_BIT4                        1167
 #define IDC_BIT5                        1168
 #define IDC_BIT6                        1169
@@ -222,6 +225,8 @@
 #define IDC_ALTLOCK                     1181
 #define IDC_ATMPAL                      1181
 #define IDC_ATM_KBD                     1182
+#define IDC_ATMPAL2                     1182
+#define IDC_PROFI_MONOCHROME            1182
 #define IDC_R3039                       1183
 #define IDC_R415A                       1184
 #define IDC_R617A                       1185
@@ -273,9 +278,12 @@
 #define IDC_CMOS_RUS                    1226
 #define IDC_TOTAL_ROM                   1227
 #define IDC_FLOAT_BUS                   1228
+#define IDC_RAM4096                     1228
 #define IDC_FLOAT_DOS                   1229
 #define IDE_BIGROM                      1229
 #define IDC_MEM_R                       1230
+#define IDC_FLOAT_DOS2                  1230
+#define IDC_PORT_FF                     1230
 #define IDC_MEM_W                       1231
 #define IDC_SMUC                        1232
 #define IDC_MOUSE_NONE                  1233
@@ -310,6 +318,10 @@
 #define IDE_VALUE                       1262
 #define IDC_HEX                         1263
 #define IDC_STATUS                      1264
+#define IDC_PC_LAYOUT                   10050
+#define IDC_WHEEL_NONE                  10252
+#define IDC_WHEEL_KEYBOARD              10254
+#define IDC_WHEEL_KEMPSTON              10256
 
 // Next default values for new objects
 // 

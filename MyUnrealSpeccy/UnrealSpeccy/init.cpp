@@ -1,11 +1,40 @@
+#include "std.h"
+
+#include "emul.h"
+#include "vars.h"
+#include "config.h"
+#include "dx.h"
+#include "draw.h"
+#include "iehelp.h"
+#include "gs.h"
+#include "leds.h"
+#include "tape.h"
+#include "emulkeys.h"
+#include "sshot_png.h"
+#include "init.h"
+#include "snapshot.h"
+#include "savesnd.h"
+#include "wd93dat.h"
+#include "z80/tables.h"
+#include "dbgbpx.h"
+
+#include "util.h"
 
 void cpu_info()
 {
-   char idstr[64]; fillCpuString(idstr); trim(idstr);
+   char idstr[64];
+   idstr[0] = 0;
+
+   fillCpuString(idstr);
+
+   trim(idstr);
+
    unsigned cpuver = cpuid(1,0);
    unsigned features = cpuid(1,1);
    temp.mmx = (features >> 23) & 1;
+   temp.sse = (features >> 25) & 1;
    temp.sse2 = (features >> 26) & 1;
+
    temp.cpufq = GetCPUFrequency();
 
    color(CONSCLR_HARDITEM); printf("cpu: ");
@@ -14,9 +43,10 @@ void cpu_info()
    printf("%s ", idstr);
 
    color(CONSCLR_HARDITEM);
-   printf("%d.%d.%d [MMX:%s,SSE2:%s] ",
+   printf("%d.%d.%d [MMX:%s,SSE:%s,SSE2:%s] ",
       (cpuver>>8) & 0x0F, (cpuver>>4) & 0x0F, cpuver & 0x0F,
       temp.mmx ? "YES" : "NO",
+      temp.sse ? "YES" : "NO",
       temp.sse2 ? "YES" : "NO");
 
    color(CONSCLR_HARDINFO);
@@ -27,7 +57,7 @@ void cpu_info()
       color(CONSCLR_WARNING);
       printf("warning: this is an SSE2 build, recompile or download non-P4 version\n");
    }
-#else MOD_SSE2
+#else //MOD_SSE2
    if (temp.sse2) {
       color(CONSCLR_WARNING);
       printf("warning: SSE2 disabled in compile-time, recompile or download P4 version\n");
@@ -72,6 +102,8 @@ void init_all(int argc, char **argv)
       if (argv[i][1] == '9') legacy = 1;
       #endif
    }
+
+   temp.Minimized = false;
    temp.win9x=0; //Dexus
    if (GetVersion() >> 31) restrict_version(legacy);
 
@@ -90,13 +122,28 @@ void init_all(int argc, char **argv)
    applyconfig();
    main_reset();
    autoload();
+   init_bpx();
+   temp.PngSupport = PngInit();
+   if(!temp.PngSupport)
+   {
+       color(CONSCLR_WARNING);
+       printf("warning: libpng12.dll not found or wrong version -> png support disabled\n");
+   }
+   temp.ZlibSupport = ZlibInit();
+   if(!temp.ZlibSupport)
+   {
+       color(CONSCLR_WARNING);
+       printf("warning: zlib1.dll not found or wrong version -> csw 2.0 support disabled\n");
+   }
 
    load_errors = 0;
    trd_toload = 0;
    *(DWORD*)trd_loaded = 0; // clear loaded flags, don't see autoload'ed images
 
-   for (; argc; argc--, argv++) {
-      if (**argv == '-' || **argv == '/') {
+   for (; argc; argc--, argv++)
+   {
+      if (**argv == '-' || **argv == '/')
+      {
          if (argc > 1 && !stricmp(argv[0]+1, "i")) argc--, argv++;
          continue;
       }
@@ -104,7 +151,7 @@ void init_all(int argc, char **argv)
       char fname[0x200], *temp;
       GetFullPathName(*argv, sizeof fname, fname, &temp);
 
-      trd_toload = -1; // auto-select
+      trd_toload = DefaultDrive; // auto-select
       if (!loadsnap(fname)) errmsg("error loading <%s>", *argv), load_errors = 1;
    }
 
@@ -114,24 +161,45 @@ void init_all(int argc, char **argv)
    }
 
    SetCurrentDirectory(conf.workdir);
-   timeBeginPeriod(1);
+   if(conf.HighResolutionTimer)
+       timeBeginPeriod(1);
 }
 
 void __declspec(noreturn) exit()
 {
+//   EnableMenuItem(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE, MF_ENABLED);
    exitflag = 1;
-   if (savesndtype) savesnddialog();
+   if (savesndtype)
+       savesnddialog();  //stop saving sound
+   if(videosaver_state)
+       main_savevideo(); //stop saving video
+
+   if(!normal_exit)
+       done_fdd(false);
    done_tape();
    done_dx();
+   done_gs();
    done_leds();
    save_nv();
    modem.close();
    done_ie_help();
-   timeEndPeriod(1);
+   done_bpx();
+   PngDone();
+   ZlibDone();
+
+   if(conf.HighResolutionTimer)
+       timeEndPeriod(1);
    if (ay[1].Chip2203) YM2203Shutdown(ay[1].Chip2203); //Dexus
    if (ay[0].Chip2203) YM2203Shutdown(ay[0].Chip2203); //Dexus
    color();
-   printf("\nsee you later!");
-   if (!nowait) SetConsoleTitle("press a key..."), getch();
-   ExitProcess(0);
+   printf("\nsee you later!\n");
+   if (!nowait)
+   {
+       SetConsoleTitle("press a key...");
+       FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+       getch();
+   }
+   fflush(stdout);
+   SetConsoleCtrlHandler(ConsoleHandler, FALSE);
+   exit(0);
 }

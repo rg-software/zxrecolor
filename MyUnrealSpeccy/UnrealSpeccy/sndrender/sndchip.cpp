@@ -1,10 +1,15 @@
+#include "../std.h"
+
+#include "../emul.h"
+#include "../vars.h"
+#include "../emul_2203.h"
 /*
    YM-2149F emulator for Unreal Speccy project
    created under public domain license by SMT, jan.2006
 */
 
 #include "sndchip.h"
-
+/* [vv]
 unsigned SNDCHIP::render(AYOUT *src, unsigned srclen, unsigned clk_ticks, bufptr_t dst)
 {
    start_frame(dst);
@@ -15,7 +20,7 @@ unsigned SNDCHIP::render(AYOUT *src, unsigned srclen, unsigned clk_ticks, bufptr
    }
    return end_frame(clk_ticks);
 }
-
+*/
 
 const unsigned MULT_C_1 = 14; // fixed point precision for 'system tick -> ay tick'
 // b = 1+ln2(max_ay_tick/8) = 1+ln2(max_ay_fq/8 / min_intfq) = 1+ln2(10000000/(10*8)) = 17.9
@@ -227,7 +232,7 @@ void SNDCHIP::set_timings(unsigned system_clock_rate, unsigned chip_clock_rate, 
    nextfmtickfloat = 0.; //Alone Coder
    nextfmtick = 0; //Alone Coder
    ayticks_per_fmtick = (float)chip_clock_rate/conf.sound.fq /*44100*/; //Alone Coder
-   FMbufMUL=(UINT16)(((float)conf.sound.ay/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
+   FMbufMUL=(UINT16)(((float)conf.sound.ay_vol/8192 /* =0..1 */)*0.1f*65536); //Alone Coder 0.36.4
 
    apply_regs();
 }
@@ -241,7 +246,9 @@ void SNDCHIP::set_volumes(unsigned global_vol, const SNDCHIP_VOLTAB *voltab, con
 
 void SNDCHIP::reset(unsigned timestamp)
 {
-   for (int i = 0; i < 14; i++) reg[i] = 0;
+   activereg = 0;
+   for (int i = 0; i < 14; i++)
+       reg[i] = 0;
 
    if (Chip2203) YM2203ResetChip((void*)Chip2203); //Dexus
 /*
@@ -256,11 +263,17 @@ void SNDCHIP::reset(unsigned timestamp)
 
 void SNDCHIP::apply_regs(unsigned timestamp)
 {
-   for (unsigned char r = 0; r < 16; r++) {
-      select(r); unsigned char p = reg[r];
+   unsigned char ar = activereg;
+   for (unsigned char r = 0; r < 16; r++)
+   {
+      select(r);
+      unsigned char p = reg[r];
+
       /* clr cached values */
-      write(timestamp, p ^ 1); write(timestamp, p);
+      write(timestamp, p ^ 1);
+      write(timestamp, p);
    }
+   activereg = ar;
 }
 
 SNDCHIP::SNDCHIP()

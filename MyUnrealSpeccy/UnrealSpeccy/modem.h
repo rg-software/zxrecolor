@@ -1,7 +1,10 @@
+#pragma once
 
 struct ISA_MODEM
 {
    HANDLE hPort;
+   OVERLAPPED OvW;
+   OVERLAPPED OvR;
    unsigned char reg[8];
    union {
       unsigned char div[2];
@@ -14,7 +17,7 @@ struct ISA_MODEM
    unsigned rhead, rtail, whead, wtail;
    unsigned char rcbuf[BSIZE], wbuf[BSIZE];
 
-   void open(unsigned char port);
+   void open(int port);
    void close();
    void io();
 

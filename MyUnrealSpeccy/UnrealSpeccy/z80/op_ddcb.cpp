@@ -1,7 +1,13 @@
+#include "defs.h"
+#include "tables.h"
+#include "op_ed.h"
+#include "op_dd.h"
+#include "op_fd.h"
+
 /* DDCB/FDCB opcodes */
 /* note: cpu.t and destination updated in step(), here process 'byte' */
 
-#ifdef Z80_COMMON
+//#ifdef Z80_COMMON
 Z80LOGIC oplx_00(Z80 *cpu, unsigned char byte) { // rlc (ix+nn)
    cpu->f = rlcf[byte]; return rol[byte];
 }
@@ -149,36 +155,36 @@ LOGICFUNC const logic_ix_opcode[0x100] = {
 
 // offsets to b,c,d,e,h,l,<unused>,a  from cpu.c
 unsigned reg_offset[] = { 1,0, 5,4, 9,8, 2,13 };
-#endif
+//#endif
 
-#ifndef Z80_COMMON
+//#ifndef Z80_COMMON
 Z80INLINE void Z80FAST ddfd(Z80 *cpu, unsigned char opcode)
 {
    unsigned char op1; // last DD/FD prefix
    do {
       op1 = opcode;
-      opcode = m1_cycle(cpu);
+      opcode = cpu->m1_cycle();
    } while ((opcode | 0x20) == 0xFD); // opcode == DD/FD
 
    if (opcode == 0xCB) {
 
       unsigned ptr; // pointer to DDCB operand
-      ptr = ((op1 == 0xDD) ? cpu->ix:cpu->iy) + (signed char)rm(cpu->pc++);
+      ptr = ((op1 == 0xDD) ? cpu->ix:cpu->iy) + (signed char)cpu->MemIf->rm(cpu->pc++);
       cpu->memptr = ptr;
       // DDCBnnXX,FDCBnnXX increment R by 2, not 3!
-      opcode = m1_cycle(cpu); cpu->r_low--;
-      unsigned char byte = (logic_ix_opcode[opcode])(cpu, rm(ptr));
+      opcode = cpu->m1_cycle(); cpu->r_low--;
+      unsigned char byte = (logic_ix_opcode[opcode])(cpu, cpu->MemIf->rm(ptr));
       if ((opcode & 0xC0) == 0x40) { cpu->t += 8; return; } // bit n,rm
 
       // select destination register for shift/res/set
       *(&cpu->c + reg_offset[opcode & 7]) = byte;
-      wm(ptr, byte);
+      cpu->MemIf->wm(ptr, byte);
       cpu->t += 11;
       return;
    }
 
    if (opcode == 0xED) {
-      opcode = m1_cycle(cpu);
+      opcode = cpu->m1_cycle();
       (ext_opcode[opcode])(cpu);
       return;
    }
@@ -196,4 +202,4 @@ Z80OPCODE op_FD(Z80 *cpu)
 {
    ddfd(cpu, 0xFD);
 }
-#endif
+//#endif

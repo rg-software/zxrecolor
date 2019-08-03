@@ -1,11 +1,29 @@
+#include "std.h"
+
+#include "emul.h"
+#include "vars.h"
+#include "draw.h"
+#include "dxrframe.h"
+#include "dxrcopy.h"
+#include "dxr_prof.h"
 
 void line8_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 {
-   for (unsigned x = 0; x < 512; x += 64) {
+   for (unsigned x = 0; x < 512; x += 64)
+   {
       unsigned s = *(unsigned*)(src+0x2000);
       unsigned t = *(unsigned*)src;
-      unsigned as = *(unsigned*)(src + 0x2000 + 0x34*PAGE);
-      unsigned at = *(unsigned*)(src + 0x34*PAGE);
+      unsigned as, at;
+      if(conf.profi_monochrome)
+      {
+          as = (comp.border_attr | ((~comp.border_attr)<<3)) & 0x3F;
+          at = as = as | (as<<8) | (as<<16) | (as<<24);
+      }
+      else
+      {
+          as = *(unsigned*)(src + 0x2000 + 0x34*PAGE);
+          at = *(unsigned*)(src + 0x34*PAGE);
+      }
       unsigned *tab = tab0 + ((as << 4) & 0xFF0);
       *(unsigned*)(dst+x)    = tab[((s >> 4)  & 0xF)];
       *(unsigned*)(dst+x+4)  = tab[((s >> 0)  & 0xF)];
@@ -36,11 +54,21 @@ void line8_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 
 void line16_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 {
-   for (unsigned x = 0; x < 1024; x += 128) {
+   for (unsigned x = 0; x < 1024; x += 128)
+   {
       unsigned s = *(unsigned*)(src+0x2000);
       unsigned t = *(unsigned*)src;
-      unsigned as = *(unsigned*)(src + 0x2000 + 0x34*PAGE);
-      unsigned at = *(unsigned*)(src + 0x34*PAGE);
+      unsigned as, at;
+      if(conf.profi_monochrome)
+      {
+          as = (comp.border_attr | ((~comp.border_attr)<<3)) & 0x3F;
+          at = as = as | (as<<8) | (as<<16) | (as<<24);
+      }
+      else
+      {
+          as = *(unsigned*)(src + 0x2000 + 0x34*PAGE);
+          at = *(unsigned*)(src + 0x34*PAGE);
+      }
       unsigned *tab = tab0 + ((as << 2) & 0x3FC);
       *(unsigned*)(dst+x+0x00) = tab[((s >> 6)  & 0x03)];
       *(unsigned*)(dst+x+0x04) = tab[((s >> 4)  & 0x03)];
@@ -87,8 +115,20 @@ void line16_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 
 void line32_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 {
-   for (unsigned x = 0; x < 512*4; x += 64) {
-      unsigned s = src[0x2000], *tab = tab0 + src[0x2000 + 0x34*PAGE];
+   for (unsigned x = 0; x < 512*4; x += 64)
+   {
+      unsigned s = src[0x2000];
+      unsigned char as, at;
+      if(conf.profi_monochrome)
+      {
+          at = as = (comp.border_attr | ((~comp.border_attr)<<3)) & 0x3F;
+      }
+      else
+      {
+          as = src[0x2000 + 0x34*PAGE];
+          at = src[0x34*PAGE];
+      }
+      unsigned *tab = tab0 + as;
       *(unsigned*)(dst+x)    = tab[((s << 1) & 0x100)];
       *(unsigned*)(dst+x+4)  = tab[((s << 2) & 0x100)];
       *(unsigned*)(dst+x+8)  = tab[((s << 3) & 0x100)];
@@ -97,7 +137,8 @@ void line32_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
       *(unsigned*)(dst+x+20) = tab[((s << 6) & 0x100)];
       *(unsigned*)(dst+x+24) = tab[((s << 7) & 0x100)];
       *(unsigned*)(dst+x+28) = tab[((s << 8) & 0x100)];
-      s = src[0]; tab = tab0 + src[0x34*PAGE];
+      s = src[0];
+      tab = tab0 + at;
       *(unsigned*)(dst+x+32) = tab[((s << 1) & 0x100)];
       *(unsigned*)(dst+x+36) = tab[((s << 2) & 0x100)];
       *(unsigned*)(dst+x+40) = tab[((s << 3) & 0x100)];
@@ -112,8 +153,9 @@ void line32_prof(unsigned char *dst, unsigned char *src, unsigned *tab0)
 
 void r_profi_8(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line8_prof(dst, base+t.scrtab[y], t.zctab8[0]);
       dst += pitch;
    }
@@ -121,8 +163,9 @@ void r_profi_8(unsigned char *dst, unsigned pitch, unsigned char *base)
 
 void r_profi_8d(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line8_prof(dst, base+t.scrtab[y], t.zctab8[0]); dst += pitch;
       line8_prof(dst, base+t.scrtab[y], t.zctab8[1]); dst += pitch;
    }
@@ -130,8 +173,9 @@ void r_profi_8d(unsigned char *dst, unsigned pitch, unsigned char *base)
 
 void r_profi_16(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line16_prof(dst, base+t.scrtab[y], t.zctab16[0]);
       dst += pitch;
    }
@@ -139,8 +183,9 @@ void r_profi_16(unsigned char *dst, unsigned pitch, unsigned char *base)
 
 void r_profi_16d(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line16_prof(dst, base+t.scrtab[y], t.zctab16[0]); dst += pitch;
       line16_prof(dst, base+t.scrtab[y], t.zctab16[1]); dst += pitch;
    }
@@ -148,8 +193,9 @@ void r_profi_16d(unsigned char *dst, unsigned pitch, unsigned char *base)
 
 void r_profi_32(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line32_prof(dst, base+t.scrtab[y], t.zctab32[0]);
       dst += pitch;
    }
@@ -157,8 +203,9 @@ void r_profi_32(unsigned char *dst, unsigned pitch, unsigned char *base)
 
 void r_profi_32d(unsigned char *dst, unsigned pitch, unsigned char *base)
 {
-   unsigned max = min(240, temp.scy);
-   for (unsigned y = 0; y < max; y++) {
+   unsigned max = min(240U, temp.scy);
+   for (unsigned y = 0; y < max; y++)
+   {
       line32_prof(dst, base+t.scrtab[y], t.zctab32[0]); dst += pitch;
       line32_prof(dst, base+t.scrtab[y], t.zctab32[1]); dst += pitch;
    }
@@ -167,17 +214,48 @@ void r_profi_32d(unsigned char *dst, unsigned pitch, unsigned char *base)
 void rend_profi(unsigned char *dst, unsigned pitch)
 {
    static unsigned char dffd = -1;
-   if ((comp.pDFFD ^ dffd) & 0x80) {
+   if ((comp.pDFFD ^ dffd) & 0x80)
+   {
       video_color_tables();
-      dffd = comp.pDFFD; needclr = 2;
+      dffd = comp.pDFFD;
+      needclr = 2;
+   }
+
+   if (temp.comp_pal_changed)
+   {
+      pixel_tables();
+      temp.comp_pal_changed = 0;
    }
 
    unsigned char *dst2 = dst + (temp.ox-512)*temp.obpp/16;
-   if (temp.scy > 240) dst2 += (temp.scy-240)/2*pitch * ((temp.oy > temp.scy)?2:1);
-   if (temp.oy > temp.scy && conf.fast_sl) pitch *= 2;
+   if (temp.scy > 240)
+       dst2 += (temp.scy-240)/2*pitch * ((temp.oy > temp.scy)?2:1);
+   if (temp.oy > temp.scy && conf.fast_sl)
+       pitch *= 2;
 
-   unsigned char *base = memory + (comp.p7FFD & 0x08)? 6*PAGE+memory : 4*PAGE+memory;
-   if (temp.obpp == 8)  { if (conf.fast_sl) r_profi_8 (dst2, pitch, base); else r_profi_8d (dst2, pitch, base); return; }
-   if (temp.obpp == 16) { if (conf.fast_sl) r_profi_16(dst2, pitch, base); else r_profi_16d(dst2, pitch, base); return; }
-   if (temp.obpp == 32) { if (conf.fast_sl) r_profi_32(dst2, pitch, base); else r_profi_32d(dst2, pitch, base); return; }
+   unsigned char *base = memory + ((comp.p7FFD & 0x08) ? 6 * PAGE : 4 * PAGE);
+   if (temp.obpp == 8)
+   {
+       if (conf.fast_sl)
+           r_profi_8 (dst2, pitch, base);
+       else
+           r_profi_8d (dst2, pitch, base);
+       return;
+   }
+   if (temp.obpp == 16)
+   {
+       if (conf.fast_sl)
+           r_profi_16(dst2, pitch, base);
+       else
+           r_profi_16d(dst2, pitch, base);
+       return;
+   }
+   if (temp.obpp == 32)
+   {
+       if (conf.fast_sl)
+           r_profi_32(dst2, pitch, base);
+       else
+           r_profi_32d(dst2, pitch, base);
+       return;
+   }
 }

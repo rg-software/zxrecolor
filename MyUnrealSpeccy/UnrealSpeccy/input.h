@@ -1,3 +1,4 @@
+#pragma once
 
 struct ATM_KBD
 {
@@ -17,16 +18,21 @@ struct ATM_KBD
 
 struct K_INPUT
 {
-   union {
-      volatile unsigned char kbd[8];
-      volatile unsigned kbd_x4[2];
-   };
-   union { // without keymatrix effect
-      volatile unsigned char rkbd[8];
-      volatile unsigned rkbd_x4[2];
+#pragma pack(push, 1)
+   union
+   {
+      volatile unsigned char kbd[16];
+      volatile unsigned kbd_x4[4];
    };
 
-   unsigned lastkey, nokb, nomouse;
+   union
+   { // without keymatrix effect
+      volatile unsigned char rkbd[16];
+      volatile unsigned rkbd_x4[4];
+   };
+#pragma pack(pop)
+
+   unsigned lastkey, nomouse;
 
    enum { KM_DEFAULT, KM_KEYSTICK, KM_PASTE_HOLD, KM_PASTE_RELEASE } keymode;
 
@@ -54,10 +60,13 @@ struct K_INPUT
    unsigned char aymouse_rd();
    void aymouse_wr(unsigned char val);
 
-   __inline void clear_zx();
+   void clear_zx();
+   inline void press_zx(unsigned char key);
+   bool process_pc_layout();
    void make_matrix();
    char readdevices();
    unsigned char read(unsigned char scan);
+   u8 read_quorum(u8 scan);
    void paste();
 
    K_INPUT()
@@ -67,6 +76,6 @@ struct K_INPUT
       ay_x0 = msx = 31,
       ay_y0 = msy = 85;
 
-      nokb = nomouse = 0;
+      nomouse = 0;
    }
 };

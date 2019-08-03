@@ -1,3 +1,15 @@
+#include "std.h"
+
+#include "emul.h"
+#include "vars.h"
+#include "dx.h"
+#include "tape.h"
+#include "atm.h"
+#include "memory.h"
+#include "input.h"
+#include "inputpc.h"
+
+#include "util.h"
 
 unsigned char pastekeys[0x80-0x20] =
 {
@@ -17,42 +29,88 @@ unsigned char pastekeys[0x80-0x20] =
 
 unsigned char ruspastekeys[64] =
 {
-	'A','B','W','G','D','E','V','Z','I','J','K','L','M','N','O','P',
-	'R','S','T','U','F','H','C','^','[',']',127,'Y','X','\\',64,'Q',
-	'a','b','w','g','d','e','v','z','i','j','k','l','m','n','o','p',
-	'r','s','t','u','f','h','c','~','{','}','_','y','x','|','`','q'
+    'A','B','W','G','D','E','V','Z','I','J','K','L','M','N','O','P',
+    'R','S','T','U','F','H','C','^','[',']',127,'Y','X','\\',64,'Q',
+    'a','b','w','g','d','e','v','z','i','j','k','l','m','n','o','p',
+    'r','s','t','u','f','h','c','~','{','}','_','y','x','|','`','q'
 }; //Alone Coder
 
-__inline void K_INPUT::clear_zx()
+void K_INPUT::clear_zx()
 {
-   kbd_x4[0] = kbd_x4[1] = -1;
+   int i;
+   for(i = 0; i < _countof(kbd_x4); i++)
+       kbd_x4[i] = -1;
+}
+
+inline void K_INPUT::press_zx(unsigned char key)
+{
+   if (key & 0x08)
+       kbd[0] &= ~1; // caps
+   if (key & 0x80)
+       kbd[7] &= ~2; // sym
+   if (key & 7)
+       kbd[(key >> 4) & 7] &= ~(1 << ((key & 7) - 1));
+}
+
+// #include "inputpc.cpp"
+
+bool K_INPUT::process_pc_layout()
+{
+   for (unsigned i = 0; i < pc_layout_count; i++)
+   {
+      if (kbdpc[pc_layout[i].vkey] & 0x80)
+      {
+         press_zx(((kbdpc[DIK_LSHIFT] | kbdpc[DIK_RSHIFT]) & 0x80) ? pc_layout[i].shifted : pc_layout[i].normal);
+         return true;
+      }
+   }
+   return false;
 }
 
 void K_INPUT::make_matrix()
 {
-   unsigned char altlock = conf.input.altlock? (kbdpc[VK_ALT] | kbdpc[VK_LMENU] | kbdpc[VK_RMENU]) & 0x80 : 0;
+   unsigned char altlock = conf.input.altlock? (kbdpc[DIK_LMENU] | kbdpc[DIK_RMENU]) & 0x80 : 0;
+   int i;
 
    kjoy = 0xFF;
-   switch (keymode) {
+   switch (keymode)
+   {
       case KM_DEFAULT:
-         kbd_x4[0] = kbd_x4[1] = -1;
+         clear_zx();
          if (!altlock)
-            for (int i = 0; i < VK_MAX; i++)
-               if (kbdpc[i] & 0x80)
-                  *(inports[i].port1) &= inports[i].mask1,
-                  *(inports[i].port2) &= inports[i].mask2;
-         if (conf.input.fire) {
+         {
+            if (!conf.input.keybpcmode || !process_pc_layout())
+            {
+                for (i = 0; i < VK_MAX; i++)
+                {
+                   if (kbdpc[i] & 0x80)
+                   {
+                      *(inports[i].port1) &= inports[i].mask1;
+                      *(inports[i].port2) &= inports[i].mask2;
+/*
+   if(kbd[6] == 0xFE)
+       __debugbreak();
+*/
+                   }
+                }
+            }
+         }
+
+         if (conf.input.fire)
+         {
             if (!--firedelay)
                firedelay = conf.input.firedelay, firestate ^= 1;
-            if (firestate) *(zxk[conf.input.firenum].port) &= zxk[conf.input.firenum].mask;
+            zxkeymap *active_zxk = conf.input.active_zxk;
+            if (firestate) *(active_zxk->zxk[conf.input.firenum].port) &= active_zxk->zxk[conf.input.firenum].mask;
          }
          break;
 
       case KM_KEYSTICK:
-         kbd_x4[0] = rkbd_x4[0]; kbd_x4[1] = rkbd_x4[1];
+         for(i = 0; i < _countof(kbd_x4); i++)
+             kbd_x4[i] = rkbd_x4[i];
          if (stick_delay) stick_delay--, altlock = 1;
          if (!altlock)
-            for (int i = 0; i < VK_MAX; i++)
+            for (i = 0; i < VK_MAX; i++)
                if (kbdpc[i] & 0x80)
                   *(inports[i].port1) ^= ~inports[i].mask1,
                   *(inports[i].port2) ^= ~inports[i].mask2;
@@ -61,7 +119,7 @@ void K_INPUT::make_matrix()
 
       case KM_PASTE_HOLD:
       {
-         kbd_x4[0] = kbd_x4[1] = -1;
+         clear_zx();
          if (tdata & 0x08) kbd[0] &= ~1; // caps
          if (tdata & 0x80) kbd[7] &= ~2; // sym
          if (tdata & 7) kbd[(tdata >> 4) & 7] &= ~(1 << ((tdata & 7) - 1));
@@ -74,9 +132,10 @@ void K_INPUT::make_matrix()
 
       case KM_PASTE_RELEASE:
       {
-         kbd_x4[0] = kbd_x4[1] = -1;
+         clear_zx();
          if (tdelay) { tdelay--; break; }
-         if (textsize == textoffset) {
+         if (textsize == textoffset)
+         {
             keymode = KM_DEFAULT;
             free(textbuffer);
             textbuffer = 0;
@@ -84,60 +143,81 @@ void K_INPUT::make_matrix()
          }
          tdelay = conf.input.paste_hold;
          unsigned char kdata = textbuffer[textoffset++];
-         if (kdata == 0x0D) {
+         if (kdata == 0x0D)
+         {
             if (textoffset < textsize && textbuffer[textoffset] == 0x0A) textoffset++;
             tdata = 0x61;
-         } else {
-			if (kdata == 0xA8) kdata = 'E'; //Alone Coder (big YO)
-			if ((kdata >= 0xC0)||(kdata == 0xB8)) //RUS
-			{
-				//pressedit=
-				//0 = press edit, pressedit++, textoffset--
-				//1 = press letter, pressedit++, textoffset--
-				//2 = press edit, pressedit=0
-				switch (pressedit) {
-					case 0: {
-						tdata = 0x39;
-						pressedit++;
-			       		textoffset--;
-						break;
-					};
-					case 1: {
-						if (kdata == 0xB8) kdata = '&';else kdata = ruspastekeys[kdata - 0xC0];
-					    tdata = pastekeys[kdata - 0x20];
-						pressedit++;
-			       		textoffset--;
-						break;
-					}
-					case 2: {
-						tdata = 0x39;
-						pressedit = 0;
-					};
-				};
-				if (!tdata) break; // empty key
-			} //Alone Coder
-			else {
-				if (kdata < 0x20 || kdata >= 0x80) break; // keep release state
-				tdata = pastekeys[kdata - 0x20];
-				if (!tdata) break; // empty key
-			}
+         }
+         else
+         {
+            if (kdata == 0xA8) kdata = 'E'; //Alone Coder (big YO)
+            if ((kdata >= 0xC0)||(kdata == 0xB8)) //RUS
+            {
+                //pressedit=
+                //0 = press edit, pressedit++, textoffset--
+                //1 = press letter, pressedit++, textoffset--
+                //2 = press edit, pressedit=0
+                switch (pressedit)
+                {
+                    case 0:
+                    {
+                        tdata = 0x39;
+                        pressedit++;
+                        textoffset--;
+                        break;
+                    };
+                    case 1:
+                    {
+                        if (kdata == 0xB8) kdata = '&';else kdata = ruspastekeys[kdata - 0xC0];
+                        tdata = pastekeys[kdata - 0x20];
+                        pressedit++;
+                        textoffset--;
+                        break;
+                    }
+                    case 2:
+                    {
+                        tdata = 0x39;
+                        pressedit = 0;
+                    };
+                };
+                if (!tdata)
+                    break; // empty key
+            } //Alone Coder
+            else
+            {
+                if (kdata < 0x20 || kdata >= 0x80) break; // keep release state
+                tdata = pastekeys[kdata - 0x20];
+                if (!tdata) break; // empty key
+            }
          }
          keymode = KM_PASTE_HOLD;
          break;
       }
    }
    kjoy ^= 0xFF;
-   if (conf.input.joymouse) kjoy |= mousejoy;
+   if (conf.input.joymouse)
+       kjoy |= mousejoy;
 
-   rkbd_x4[0] = kbd_x4[0]; rkbd_x4[1] = kbd_x4[1];
-   if (!conf.input.keymatrix) return;
-   for (;;) {
+   for(i = 0; i < _countof(kbd_x4); i++)
+       rkbd_x4[i] = kbd_x4[i];
+   if (!conf.input.keymatrix)
+       return;
+   for (;;)
+   {
       char done = 1;
-      for (int k = 0; k < 7; k++)
-         for (int j = k+1; j < 8; j++)
+      for (int k = 0; k < _countof(kbd) - 1; k++)
+      {
+         for (int j = k+1; j < _countof(kbd); j++)
+         {
             if (((kbd[k] | kbd[j]) != 0xFF) && (kbd[k] != kbd[j]))
-               kbd[k] = kbd[j] = (kbd[k] & kbd[j]), done = 0;
-      if (done) return;
+            {
+               kbd[k] = kbd[j] = (kbd[k] & kbd[j]);
+               done = 0;
+            }
+         }
+      }
+      if (done)
+          return;
    }
 }
 
@@ -145,18 +225,27 @@ __inline int sign_pm(int a) { return (a < 0)? -1 : 1; }
 
 char K_INPUT::readdevices()
 {
-   if (nokb) nokb--;
    if (nomouse) nomouse--;
 
    kbdpc[VK_JLEFT] = kbdpc[VK_JRIGHT] = kbdpc[VK_JUP] = kbdpc[VK_JDOWN] = kbdpc[VK_JFIRE] = 0;
-   if (active && dijoyst) {
-      dijoyst->Poll(); DIJOYSTATE js;
+   int i;
+   for(i = 0; i < 32; i++)
+       kbdpc[VK_JB0 + i] = 0;
+   if (active && dijoyst)
+   {
+      dijoyst->Poll();
+      DIJOYSTATE js;
       readdevice(&js, sizeof js, (LPDIRECTINPUTDEVICE)dijoyst);
       if ((signed short)js.lX < 0) kbdpc[VK_JLEFT] = 0x80;
       if ((signed short)js.lX > 0) kbdpc[VK_JRIGHT] = 0x80;
       if ((signed short)js.lY < 0) kbdpc[VK_JUP] = 0x80;
       if ((signed short)js.lY > 0) kbdpc[VK_JDOWN] = 0x80;
-      if (js.rgbButtons[0] & 0x80) kbdpc[VK_JFIRE] = 0x80;
+
+      for(i = 0; i < 32; i++)
+      {
+          if (js.rgbButtons[i] & 0x80)
+              kbdpc[VK_JB0 + i] = 0x80;
+      }
    }
 
    mbuttons = 0xFF;
@@ -173,40 +262,74 @@ char K_INPUT::readdevices()
       ay_y0 += (cl2-cl1)*sign_pm(msy - msy_prev);
       ay_reset_t = 0;
 
-      DIMOUSESTATE md; readmouse(&md);
-      if (conf.input.mouseswap) { unsigned char t = md.rgbButtons[0]; md.rgbButtons[0] = md.rgbButtons[1]; md.rgbButtons[1] = t; }
-      msx = md.lX, msy = -md.lY;
-      if (conf.input.mousescale >= 0) msx *= (1 << conf.input.mousescale), msy *= (1 << conf.input.mousescale);
-      else msx /= (1 << -conf.input.mousescale), msy /= (1 << -conf.input.mousescale);
+//      printf("%s\n", __FUNCTION__);
+      DIMOUSESTATE md;
+      readmouse(&md);
+      if (conf.input.mouseswap)
+      {
+          unsigned char t = md.rgbButtons[0];
+          md.rgbButtons[0] = md.rgbButtons[1];
+          md.rgbButtons[1] = t;
+      }
+      msx = md.lX; msy = -md.lY;
+      if (conf.input.mousescale >= 0)
+      {
+          msx *= (1 << conf.input.mousescale);
+          msy *= (1 << conf.input.mousescale);
+      }
+      else
+      {
+          msx /= (1 << -conf.input.mousescale);
+          msy /= (1 << -conf.input.mousescale);
+      }
 
-      if (md.rgbButtons[0]) mbuttons &= ~1, kbdpc[VK_LMB] = 0x80;
-      if (md.rgbButtons[1]) mbuttons &= ~2, kbdpc[VK_RMB] = 0x80;
-      if (md.rgbButtons[2]) mbuttons &= ~4, kbdpc[VK_MMB] = 0x80;
+      if (md.rgbButtons[0])
+      {
+          mbuttons &= ~1;
+          kbdpc[VK_LMB] = 0x80;
+      }
+      if (md.rgbButtons[1])
+      {
+          mbuttons &= ~2;
+          kbdpc[VK_RMB] = 0x80;
+      }
+      if (md.rgbButtons[2])
+      {
+          mbuttons &= ~4;
+          kbdpc[VK_MMB] = 0x80;
+      }
 
       int wheel_delta = md.lZ - prev_wheel;
       prev_wheel = md.lZ;
 //      if (wheel_delta < 0) kbdpc[VK_MWD] = 0x80;
 //      if (wheel_delta > 0) kbdpc[VK_MWU] = 0x80;
 //0.36.6 from 0.35b2
-      if (conf.input.mousewheel == MOUSE_WHEEL_KEYBOARD) {
-         if (wheel_delta < 0) kbdpc[VK_MWD] = 0x80;
-         if (wheel_delta > 0) kbdpc[VK_MWU] = 0x80;
+      if (conf.input.mousewheel == MOUSE_WHEEL_KEYBOARD)
+      {
+         if (wheel_delta < 0)
+             kbdpc[VK_MWD] = 0x80;
+         if (wheel_delta > 0)
+             kbdpc[VK_MWU] = 0x80;
       }
-      if (conf.input.mousewheel == MOUSE_WHEEL_KEMPSTON) {
-         if (wheel_delta < 0) wheel -= 0x10;
-         if (wheel_delta > 0) wheel += 0x10;
+
+      if (conf.input.mousewheel == MOUSE_WHEEL_KEMPSTON)
+      {
+         if (wheel_delta < 0)
+             wheel -= 0x10;
+         if (wheel_delta > 0)
+             wheel += 0x10;
          mbuttons = (mbuttons & 0x0F) + (wheel & 0xF0);
       }
 //~
    }
+
    lastkey = process_msgs();
 
-   if (nokb) memset(kbdpc, 0, sizeof kbdpc);
-   else {
-      GetKeyboardState(kbdpc);
-      if (lastkey) kbdpc[lastkey] = 0x80;
-   }
-   if (temp.win9x) {
+   memset(kbdpc, 0, 256); // Мышь и джойстик не очищаем
+   ReadKeyboard(kbdpc);
+/* [vv]
+   if (temp.win9x)
+   {
       kbdpc[VK_LSHIFT]=kbdpcEX[0];
       kbdpc[VK_RSHIFT]=kbdpcEX[1];
       kbdpc[VK_LCONTROL]=kbdpcEX[2];
@@ -214,8 +337,9 @@ char K_INPUT::readdevices()
       kbdpc[VK_LMENU]=kbdpcEX[4];
       kbdpc[VK_RMENU]=kbdpcEX[5];
    } //Dexus
+*/
 
-   return lastkey? 1 : 0;
+   return lastkey ? 1 : 0;
 }
 
 void K_INPUT::aymouse_wr(unsigned char val)
@@ -262,9 +386,36 @@ unsigned char K_INPUT::read(unsigned char scan)
 {
    unsigned char res = 0xBF | (tape_bit() & 0x40);
    kbdled &= scan;
-   if (conf.atm.xt_kbd) return input.atm51.read(scan, res);
+
+   if (conf.atm.xt_kbd)
+       return input.atm51.read(scan, res);
+
    for (int i = 0; i < 8; i++)
-      if (!(scan & (1<<i))) res &= kbd[i];
+   {
+      if (!(scan & (1<<i)))
+          res &= kbd[i];
+   }
+
+/*
+   if(res != 0xFF)
+       __debugbreak();
+*/
+
+   return res;
+}
+
+// read quorum additional keys (port 7E)
+u8 K_INPUT::read_quorum(u8 scan)
+{
+   u8 res = 0xFF;
+   kbdled &= scan;
+
+   for (int i = 0; i < 8; i++)
+   {
+      if (!(scan & (1<<i)))
+          res &= kbd[8+i];
+   }
+
    return res;
 }
 
@@ -350,7 +501,8 @@ unsigned char ATM_KBD::read(unsigned char scan, unsigned char zxdata)
 
    if (scan == 0x55) { R7++; return 0xAA; }
 
-   switch (mode & 3) {
+   switch (mode & 3)
+   {
       case 0:
       {
          unsigned char res = zxdata | 0x1F;
@@ -370,6 +522,7 @@ unsigned char ATM_KBD::read(unsigned char scan, unsigned char zxdata)
       case 3: t = lastscan; lastscan = 0; return t;
    }
    __assume(0);
+   return 0xFF;
 }
 
 void ATM_KBD::processzx(unsigned scancode, unsigned char pressed)
@@ -389,14 +542,25 @@ void ATM_KBD::processzx(unsigned scancode, unsigned char pressed)
       0x4B, 0x84, 0x49, 0x00, 0x00, 0x00, 0xE5, 0x94,
       0x00, 0x00, 0x00
    };
-   scancode = (scancode & 0xFF) - 1; if (scancode >= sizeof L_4B6) return;
+
+   scancode = (scancode & 0xFF) - 1;
+   if (scancode >= sizeof L_4B6)
+       return;
+
    unsigned char x = L_4B6[scancode];
    if (x & 0x08) { if (pressed) zxkeys[0] &= ~1; else zxkeys[0] |= 1; }
    if (x & 0x80) { if (pressed) zxkeys[7] &= ~2; else zxkeys[7] |= 2; }
-   if (!(x & 7)) return;
+
+   if (!(x & 7))
+       return;
+
    unsigned char data = 1 << ((x & 7) - 1);
    x = (x >> 4) & 7;
-   if (pressed) zxkeys[x] &= ~data; else zxkeys[x] |= data;
+
+   if (pressed)
+       zxkeys[x] &= ~data;
+   else
+       zxkeys[x] |= data;
 }
 
 void ATM_KBD::setkey(unsigned scancode, unsigned char pressed)
@@ -406,13 +570,13 @@ void ATM_KBD::setkey(unsigned scancode, unsigned char pressed)
    if (!pressed) { lastscan |= 0x80; return; }
 
    kR3 &= 0x80; // keep rus/lat, clear alt,ctrl,shift, num/scroll/caps lock
-   if ((kbdpc[VK_SHIFT] | kbdpc[VK_LSHIFT] | kbdpc[VK_RSHIFT]) & 0x80) kR3 |= 1;
-   if ((kbdpc[VK_CONTROL] | kbdpc[VK_LCONTROL] | kbdpc[VK_RCONTROL]) & 0x80) kR3 |= 2;
-   if ((kbdpc[VK_MENU] | kbdpc[VK_LMENU] | kbdpc[VK_RMENU]) & 0x80) kR3 |= 4;
-   if (kbdpc[VK_CAPITAL] & 1) kR3 |= 0x10;
-   if (kbdpc[VK_NUMLOCK] & 1) kR3 |= 0x20;
-   if (kbdpc[VK_SCROLL] & 1) kR3 |= 0x40;
-   kR4 = 0; if (kbdpc[VK_RSHIFT] & 0x80) kR4++;
+   if ((kbdpc[DIK_LSHIFT] | kbdpc[DIK_RSHIFT]) & 0x80) kR3 |= 1;
+   if ((kbdpc[DIK_LCONTROL] | kbdpc[DIK_RCONTROL]) & 0x80) kR3 |= 2;
+   if ((kbdpc[DIK_LMENU] | kbdpc[DIK_RMENU]) & 0x80) kR3 |= 4;
+   if (kbdpc[DIK_CAPITAL] & 1) kR3 |= 0x10;
+   if (kbdpc[DIK_NUMLOCK] & 1) kR3 |= 0x20;
+   if (kbdpc[DIK_SCROLL] & 1) kR3 |= 0x40;
+   kR4 = 0; if (kbdpc[DIK_RSHIFT] & 0x80) kR4++;
 
    static const unsigned char L_400[] =
    {

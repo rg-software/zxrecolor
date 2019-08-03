@@ -20,6 +20,8 @@ struct SNDOUT;
 
 const unsigned SNDR_DEFAULT_SYSTICK_RATE = 3500000; // ZX-Spectrum Z80 clock
 const unsigned SNDR_DEFAULT_SAMPLE_RATE = 44100;
+const unsigned TICK_FF = 6;            // oversampling ratio: 2^6 = 64
+const unsigned MULT_C = 12;   // fixed point precision for 'system tick -> sound tick'
 
 #ifdef SND_EXTERNAL_BUFFER
  typedef unsigned bufptr_t;
@@ -40,7 +42,7 @@ class SNDRENDER
 
    // set of functions that fills buffer in emulation progress
    void start_frame(bufptr_t dst);
-   __inline void update(unsigned timestamp, unsigned l, unsigned r);
+   void update(unsigned timestamp, unsigned l, unsigned r);
    unsigned end_frame(unsigned clk_ticks);
    unsigned end_empty_frame(unsigned clk_ticks);
 

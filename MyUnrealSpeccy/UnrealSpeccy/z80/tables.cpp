@@ -1,3 +1,6 @@
+#include "defs.h"
+#include "tables.h"
+
 const unsigned char incf[] =
 {
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08
@@ -33,12 +36,6 @@ const unsigned char incf[] =
        ,0xa0,0xa0,0xa0,0xa0,0xa0,0xa0,0xa0,0xa8
        ,0xa8,0xa8,0xa8,0xa8,0xa8,0xa8,0xa8,0x50
 };
-
-Z80INLINE void inc8(Z80 *cpu, unsigned char &x)
-{
-   cpu->f = incf[x] | (cpu->f & CF);
-   x++;
-}
 
 const unsigned char decf[] =
 {
@@ -76,12 +73,6 @@ const unsigned char decf[] =
        ,0xa2,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa
 };
 
-Z80INLINE void dec8(Z80 *cpu, unsigned char &x)
-{
-   cpu->f = decf[x] | (cpu->f & CF);
-   x--;
-}
-
 unsigned char adcf[0x20000]; // flags for adc and add
 
 void make_adc()
@@ -101,19 +92,6 @@ void make_adc()
 
             adcf[c*0x10000 + x*0x100 + y] = fl;
          }
-}
-
-Z80INLINE void add8(Z80 *cpu, unsigned char src)
-{
-   cpu->f = adcf[cpu->a + src*0x100];
-   cpu->a += src;
-}
-
-Z80INLINE void adc8(Z80 *cpu, unsigned char src)
-{
-   unsigned char carry = ((cpu->f) & CF);
-   cpu->f = adcf[cpu->a + src*0x100 + 0x10000*carry];
-   cpu->a += src + carry;
 }
 
 unsigned char sbcf[0x20000]; // flags for sub and sbc
@@ -142,19 +120,6 @@ void make_sbc()
    }
 }
 
-Z80INLINE void sub8(Z80 *cpu, unsigned char src)
-{
-   cpu->f = sbcf[cpu->a*0x100 + src];
-   cpu->a -= src;
-}
-
-Z80INLINE void sbc8(Z80 *cpu, unsigned char src)
-{
-   unsigned char carry = ((cpu->f) & CF);
-   cpu->f = sbcf[cpu->a*0x100 + src + 0x10000*carry];
-   cpu->a -= src + carry;
-}
-
 unsigned char log_f[0x100];
 void make_log()
 {
@@ -168,63 +133,10 @@ void make_log()
    log_f[0] |= ZF;
 }
 
-Z80INLINE void and8(Z80 *cpu, unsigned char src)
-{
-   cpu->a &= src;
-   cpu->f = log_f[cpu->a] | HF;
-}
-
-Z80INLINE void or8(Z80 *cpu, unsigned char src)
-{
-   cpu->a |= src;
-   cpu->f = log_f[cpu->a];
-}
-
-Z80INLINE void xor8(Z80 *cpu, unsigned char src)
-{
-   cpu->a ^= src;
-   cpu->f = log_f[cpu->a];
-}
-
-Z80INLINE void bit(Z80 *cpu, unsigned char src, unsigned char bit)
-{
-   cpu->f = log_f[src & (1 << bit)] | HF | (cpu->f & CF) | (src & (F3|F5));
-}
-
-Z80INLINE void bitmem(Z80 *cpu, unsigned char src, unsigned char bit)
-{
-   cpu->f = log_f[src & (1 << bit)] | HF | (cpu->f & CF);
-   cpu->f = (cpu->f & ~(F3|F5)) | (cpu->memh & (F3|F5));
-}
-
-Z80INLINE void res(unsigned char &src, unsigned char bit)
-{
-   src &= ~(1 << bit);
-}
-
-Z80INLINE unsigned char resbyte(unsigned char src, unsigned char bit)
-{
-   return src & ~(1 << bit);
-}
-
-Z80INLINE void set(unsigned char &src, unsigned char bit)
-{
-   src |= (1 << bit);
-}
-
-Z80INLINE unsigned char setbyte(unsigned char src, unsigned char bit)
-{
-   return src | (1 << bit);
-}
-
-Z80INLINE void cp8(Z80 *cpu, unsigned char src)
-{
-   cpu->f = cpf[cpu->a*0x100 + src];
-}
-
 unsigned char rlcaf[0x100];
 unsigned char rrcaf[0x100];
-unsigned char rol[0x100], ror[0x100];
+unsigned char rol[0x100];
+unsigned char ror[0x100];
 const unsigned char rlcf[0x100] = // for rlc r. may be for rlca (0x3B mask)
 {
         0x44,0x00,0x00,0x04,0x08,0x0c,0x0c,0x08
