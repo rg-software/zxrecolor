@@ -1,7 +1,7 @@
 #pragma once
-#include <D3DTYPES.H>
 #include <string>
 #include <vector>
+#include "../dx/include/d3dtypes.h"
 
 unsigned const TRANSPARENT_COLOR = RGB_MAKE(242, 10, 242);
 

@@ -63,13 +63,14 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SND_EXTERNAL_BUFFER;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\unreal.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Debug\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>dx\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\src___Win32_Debug\src.tlb</TypeLibraryName>
@@ -87,9 +88,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>.\Debug\unreal.exe</OutputFile>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalLibraryDirectories>dx\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>dx\lib;lib32</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom debug\ &gt; nul
@@ -106,13 +107,14 @@ ver &gt; nul</Command>
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SND_EXTERNAL_BUFFER;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Release\src.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>dx\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom release\ &gt; nul
@@ -137,15 +139,119 @@ ver &gt; nul</Command>
       <SubSystem>Console</SubSystem>
       <OutputFile>Release/unreal.exe</OutputFile>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalLibraryDirectories>dx\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib32;dx\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Emul.cpp" />
+    <ClCompile Include="atm.cpp" />
+    <ClCompile Include="cheat.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="dbgbpx.cpp" />
+    <ClCompile Include="dbgcmd.cpp" />
+    <ClCompile Include="dbglabls.cpp" />
+    <ClCompile Include="dbgmem.cpp" />
+    <ClCompile Include="dbgoth.cpp" />
+    <ClCompile Include="dbgpaint.cpp" />
+    <ClCompile Include="dbgreg.cpp" />
+    <ClCompile Include="dbgrwdlg.cpp" />
+    <ClCompile Include="dbgtrace.cpp" />
+    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="draw.cpp" />
+    <ClCompile Include="drawnomc.cpp" />
+    <ClCompile Include="draw_384.cpp" />
+    <ClCompile Include="dx.cpp" />
+    <ClCompile Include="dxerr.cpp" />
+    <ClCompile Include="dxovr.cpp" />
+    <ClCompile Include="dxrcopy.cpp" />
+    <ClCompile Include="dxrend.cpp" />
+    <ClCompile Include="dxrendch.cpp" />
+    <ClCompile Include="dxrframe.cpp" />
+    <ClCompile Include="dxr_4bpp.cpp" />
+    <ClCompile Include="dxr_512.cpp" />
+    <ClCompile Include="dxr_advm.cpp" />
+    <ClCompile Include="dxr_atm.cpp" />
+    <ClCompile Include="dxr_atm0.cpp" />
+    <ClCompile Include="dxr_atm2.cpp" />
+    <ClCompile Include="dxr_atm4.cpp" />
+    <ClCompile Include="dxr_atm6.cpp" />
+    <ClCompile Include="dxr_atm7.cpp" />
+    <ClCompile Include="dxr_atmf.cpp" />
+    <ClCompile Include="dxr_prof.cpp" />
+    <ClCompile Include="dxr_rsm.cpp" />
+    <ClCompile Include="dxr_text.cpp" />
+    <ClCompile Include="dxr_vd.cpp" />
+    <ClCompile Include="emul.cpp" />
+    <ClCompile Include="emulkeys.cpp" />
+    <ClCompile Include="emul_2203.cpp" />
+    <ClCompile Include="fntsrch.cpp" />
+    <ClCompile Include="font.cpp" />
+    <ClCompile Include="font14.cpp" />
+    <ClCompile Include="font16.cpp" />
+    <ClCompile Include="font8.cpp" />
+    <ClCompile Include="fontatm2.cpp" />
+    <ClCompile Include="fontdata.cpp" />
+    <ClCompile Include="gs.cpp" />
+    <ClCompile Include="gshlbass.cpp" />
+    <ClCompile Include="gshle.cpp" />
+    <ClCompile Include="gsz80.cpp" />
+    <ClCompile Include="gui.cpp" />
+    <ClCompile Include="hdd.cpp" />
+    <ClCompile Include="hddaspi.cpp" />
+    <ClCompile Include="hddio.cpp" />
+    <ClCompile Include="iehelp.cpp" />
+    <ClCompile Include="init.cpp" />
+    <ClCompile Include="input.cpp" />
+    <ClCompile Include="inputpc.cpp" />
+    <ClCompile Include="io.cpp" />
+    <ClCompile Include="keydefs.cpp" />
+    <ClCompile Include="leds.cpp" />
+    <ClCompile Include="mainloop.cpp" />
+    <ClCompile Include="memory.cpp" />
+    <ClCompile Include="modem.cpp" />
+    <ClCompile Include="opendlg.cpp" />
     <ClCompile Include="Recolor\RcImage.cpp" />
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\RcRule.cpp" />
     <ClCompile Include="Recolor\RuleRender.cpp" />
+    <ClCompile Include="savesnd.cpp" />
+    <ClCompile Include="savevid.cpp" />
+    <ClCompile Include="sdcard.cpp" />
+    <ClCompile Include="snapshot.cpp" />
+    <ClCompile Include="sndrender\saa1099.cpp" />
+    <ClCompile Include="sndrender\sndbuffer.cpp" />
+    <ClCompile Include="sndrender\sndchip.cpp" />
+    <ClCompile Include="sndrender\sndcounter.cpp" />
+    <ClCompile Include="sndrender\sndrender.cpp" />
+    <ClCompile Include="snd_bass.cpp" />
+    <ClCompile Include="sound.cpp" />
+    <ClCompile Include="sshot_png.cpp" />
+    <ClCompile Include="std.cpp" />
+    <ClCompile Include="tape.cpp" />
+    <ClCompile Include="util.cpp" />
+    <ClCompile Include="vars.cpp" />
+    <ClCompile Include="vs1001.cpp" />
+    <ClCompile Include="wd93cmd.cpp" />
+    <ClCompile Include="wd93crc.cpp" />
+    <ClCompile Include="wd93dat.cpp" />
+    <ClCompile Include="wd93trk.cpp" />
+    <ClCompile Include="wldr_fdi.cpp" />
+    <ClCompile Include="wldr_isd.cpp" />
+    <ClCompile Include="wldr_pro.cpp" />
+    <ClCompile Include="wldr_td0.cpp" />
+    <ClCompile Include="wldr_trd.cpp" />
+    <ClCompile Include="wldr_udi.cpp" />
+    <ClCompile Include="z80.cpp" />
+    <ClCompile Include="z80asm.cpp" />
+    <ClCompile Include="z80\daa_tabs.cpp" />
+    <ClCompile Include="z80\op_cb.cpp" />
+    <ClCompile Include="z80\op_dd.cpp" />
+    <ClCompile Include="z80\op_ddcb.cpp" />
+    <ClCompile Include="z80\op_ed.cpp" />
+    <ClCompile Include="z80\op_fd.cpp" />
+    <ClCompile Include="z80\op_noprefix.cpp" />
+    <ClCompile Include="z80\tables.cpp" />
+    <ClCompile Include="zc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Res\Cur00000.cur" />
