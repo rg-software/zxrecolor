@@ -15,7 +15,7 @@ public:
 
 	void AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
 	{
-		blitlist.AddElement(x + OffsetX, y + OffsetY, RecoloredImage, Layer);
+		blitlist.AddElement(x + OffsetX - 8 * ZxImage->GetKeyOffsetX(), y + OffsetY - ZxImage->GetKeyOffsetY(), RecoloredImage, Layer);
 	}
 
 	bool IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const;

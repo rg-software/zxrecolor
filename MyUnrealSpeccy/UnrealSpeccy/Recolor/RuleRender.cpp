@@ -44,14 +44,16 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 		unsigned char* curptr = zx_screen + (320/8) * scry;
 		for(unsigned scrx = 0; scrx < 320/8; scrx++)  // every 8 pixels (1 byte)
 		{
-			unsigned short key = MAKEWORD(*(curptr + 320 / 8), *curptr);
-
-			auto endIt = Rules.EndByKey(key);
-			for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
-				if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
-				{
-					p->AddToBlitList(scrx * 8, scry, blitlist);
-				}
+			unsigned short keys[] = { 0,  MAKEWORD(*(curptr + 320 / 8), *curptr) };
+			for(auto key : keys)
+			{
+				auto endIt = Rules.EndByKey(key);
+				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
+					if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
+					{
+						p->AddToBlitList(scrx * 8, scry, blitlist);
+					}
+			}
 			
 			++curptr;
 		}
@@ -72,15 +74,18 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 
 			for(unsigned offset = 0; offset < 8; ++offset) // check all 8 possible offsets
 			{
-				unsigned short key = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
+				unsigned short keys[] = { 0,  HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset)) };
 
-				auto endIt = Rules.EndByKey(key);
-				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
+				for(auto key : keys)	// always handle 0 key
 				{
-					// fix this checking code (prepare the image?)
-					if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8 + offset, scry) && p->IsFoundAt(curptr, offset))
+					auto endIt = Rules.EndByKey(key);
+					for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
 					{
-						p->AddToBlitList(scrx * 8 + offset, scry, blitlist);
+						// fix this checking code (prepare the image?)
+						if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8 + offset, scry) && p->IsFoundAt(curptr, offset))
+						{
+							p->AddToBlitList(scrx * 8 + offset, scry, blitlist);
+						}
 					}
 				}
 			}

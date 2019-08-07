@@ -802,7 +802,7 @@ IDI_ICON2               ICON                    "res\\u1.ico"
 // RT_MANIFEST
 //
 
-1                       RT_MANIFEST             "unreal.manifest"
+// 1                       RT_MANIFEST             "unreal.manifest"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

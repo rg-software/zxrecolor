@@ -9,19 +9,25 @@ RcImage::RcImage(const std::string& bmpName, bool convertZx)
 	Width = bmp.Width;
 	Height = bmp.Height;
 	Data = PlainBMP(bmpName).Data;
-	KeyOffset = 0;
 
 	if(convertZx)
 	{
 		Data = convertToZx(bmp, false);
 		ZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
-		KeyOffset = findKeyOffset();
+		
+		updateKeyData();
+		//KeyOffset = findKeyOffset();
 	}
 }
 
 RcImage::RcImage(std::shared_ptr<RcImage> src_image, unsigned offset)
 {
-	KeyOffset = src_image->KeyOffset;
+	//KeyOffset = src_image->KeyOffset;
+	Key = src_image->Key;
+	//KeyFound = src_image->KeyFound;
+	KeyOffsetX = src_image->KeyOffsetX;
+	KeyOffsetY = src_image->KeyOffsetY;
+
 	copyData(src_image, Data);
 	copyData(src_image, ZxMaskData);
 
@@ -48,7 +54,8 @@ void RcImage::copyData(std::shared_ptr<RcImage> src_image, std::vector<uint8_t>&
 bool RcImage::IsFoundAt(const uint8_t* curptr) const
 {
 	unsigned WidthBytes = Width / 8;
-	const uint8_t* realCurPtr = curptr - KeyOffset;
+	const uint8_t* realCurPtr = curptr -(320 / 8) * KeyOffsetY - KeyOffsetX;
+	//const uint8_t* realCurPtr = curptr - (320 / 8) *  int(KeyOffset / WBone) - (KeyOffset % WBone);
 
 	for (unsigned y = 0; y < Height; ++y)
 	{
@@ -175,18 +182,28 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 	return NewData;
 }
 
-unsigned RcImage::findKeyOffset() const
+void RcImage::updateKeyData()
 {
-	return 0;
-	/*
+	Key = KeyOffsetX = KeyOffsetY = 0;
+
+	// find an appropriate key fragment with no masked pixels and non-zero/non-65535 value
 	auto WidthBytes = Width / 8;
 	for (unsigned i = 0; i < ZxMaskData.size() - WidthBytes; ++i)
-		if (ZxMaskData[i] == 0xFF && ZxMaskData[i + WidthBytes] == 0xFF &&
-			MAKEWORD(Data[i + WidthBytes], Data[i]) != 0 && MAKEWORD(Data[i + WidthBytes], Data[i]) != 0xFFFF)
+		if (ZxMaskData[i] == 0xFF && ZxMaskData[i + WidthBytes] == 0xFF)
 		{
-			return i;
+			auto curKey = MAKEWORD(Data[i + WidthBytes], Data[i]);
+
+			if(curKey != 0 && curKey != 0xFFFF)
+			{
+				Key = curKey;
+				KeyOffsetX = i % WidthBytes;
+				KeyOffsetY = i / WidthBytes;
+
+				printf("%s: key %d found at (%d, %d)\n", BmpName.c_str(), Key, KeyOffsetX, KeyOffsetY);
+				return;
+			}
 		}
 
-	throw std::runtime_error("Cannot find a key in the file " + BmpName);*/
+	printf("%s: zero key assigned\n", BmpName.c_str());
 }
 

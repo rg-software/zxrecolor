@@ -75,6 +75,7 @@ RcRule::RcRule(const std::string& line)
 
 bool RcRule::IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const
 {
+	// $mm double-check with new "auto-key finding" option
 	if (!MatchColor)
 		return true;
 
