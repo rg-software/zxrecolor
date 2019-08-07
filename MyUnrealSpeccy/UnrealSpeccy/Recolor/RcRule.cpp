@@ -57,20 +57,20 @@ RcRule::RcRule(const std::string& line)
 		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-	ZxImage.Load(orig_pic, true);
+	ZxImage = std::make_shared<RcImage>(orig_pic, true);
 
-	for(unsigned i = 0; i < 8; ++i)
-		ZxImages[i].CopyWithShift(ZxImage, i);
+	for (unsigned i = 0; i < 8; ++i)
+		ZxImages.push_back(std::make_shared<RcImage>(ZxImage, i));
 
-	RecoloredImage.Load(new_pic);
+	RecoloredImage = std::make_unique<RcImage>(new_pic);
 
 	if(type == "block")
 		Type = BLOCK;
 	else if(type == "pixel")
 		Type = PIXEL;
 
-	ZxHeight = ZxImage.GetHeight();
-	ZxWidth = ZxImage.GetWidth();
+	ZxHeight = ZxImage->GetHeight();
+	ZxWidth = ZxImage->GetWidth();
 }
 
 bool RcRule::IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const
@@ -82,12 +82,12 @@ bool RcRule::IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsign
 	return *dst_buff == Color;
 }
 
-bool RcRule::IsFoundAt(uint8_t* curptr) const
+bool RcRule::IsFoundAt(const uint8_t* curptr) const
 {
-	return ZxImage.IsFoundAt(curptr);
+	return ZxImage->IsFoundAt(curptr);
 }
 
-bool RcRule::IsFoundAt(uint8_t* curptr, unsigned offset) const
+bool RcRule::IsFoundAt(const uint8_t* curptr, unsigned offset) const
 {
-	return ZxImages[offset].IsFoundAt(curptr);
+	return ZxImages[offset]->IsFoundAt(curptr);
 }

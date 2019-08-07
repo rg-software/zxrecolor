@@ -1,22 +1,27 @@
 #include "RcImage.h"
 #include <cassert>
 
-void RcImage::Load(const std::string& bmpName, bool convertZx)
+RcImage::RcImage(const std::string& bmpName, bool convertZx)
 {
+	BmpName = bmpName;
+
 	PlainBMP bmp(bmpName);
 	Width = bmp.Width;
 	Height = bmp.Height;
 	Data = PlainBMP(bmpName).Data;
+	KeyOffset = 0;
 
 	if(convertZx)
 	{
 		Data = convertToZx(bmp, false);
 		ZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
+		KeyOffset = findKeyOffset();
 	}
 }
 
-void RcImage::CopyWithShift(const RcImage& src_image, unsigned offset)
+RcImage::RcImage(std::shared_ptr<RcImage> src_image, unsigned offset)
 {
+	KeyOffset = src_image->KeyOffset;
 	copyData(src_image, Data);
 	copyData(src_image, ZxMaskData);
 
@@ -27,26 +32,27 @@ void RcImage::CopyWithShift(const RcImage& src_image, unsigned offset)
 	}
 }
 
-void RcImage::copyData(const RcImage& src_image, std::vector<uint8_t>& data)
+void RcImage::copyData(std::shared_ptr<RcImage> src_image, std::vector<uint8_t>& data)
 {
-	Width = src_image.Width + 8;
-	Height = src_image.Height;
+	Width = src_image->Width + 8;
+	Height = src_image->Height;
 	unsigned size = Width * Height / 8;
 	data.resize(size);
 	std::fill(data.begin(), data.end(), 0);
 
-	for (unsigned x = 0; x < src_image.Width / 8; ++x)
-		for (unsigned y = 0; y < src_image.Height; ++y)
-			data[x + (Width / 8) * y] = src_image.Data[x + (src_image.Width / 8) * y];
+	for (unsigned x = 0; x < src_image->Width / 8; ++x)
+		for (unsigned y = 0; y < src_image->Height; ++y)
+			data[x + (Width / 8) * y] = src_image->Data[x + (src_image->Width / 8) * y];
 }
 
-bool RcImage::IsFoundAt(uint8_t* curptr) const
+bool RcImage::IsFoundAt(const uint8_t* curptr) const
 {
 	unsigned WidthBytes = Width / 8;
+	const uint8_t* realCurPtr = curptr - KeyOffset;
 
 	for (unsigned y = 0; y < Height; ++y)
 	{
-		const uint8_t* x_buff = curptr + (320 / 8) * y;
+		const uint8_t* x_buff = realCurPtr + (320 / 8) * y;
 		const uint8_t* x_databuff = &Data[0] + WidthBytes * y;
 		const uint8_t* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
 
@@ -168,3 +174,19 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 
 	return NewData;
 }
+
+unsigned RcImage::findKeyOffset() const
+{
+	return 0;
+	/*
+	auto WidthBytes = Width / 8;
+	for (unsigned i = 0; i < ZxMaskData.size() - WidthBytes; ++i)
+		if (ZxMaskData[i] == 0xFF && ZxMaskData[i + WidthBytes] == 0xFF &&
+			MAKEWORD(Data[i + WidthBytes], Data[i]) != 0 && MAKEWORD(Data[i + WidthBytes], Data[i]) != 0xFFFF)
+		{
+			return i;
+		}
+
+	throw std::runtime_error("Cannot find a key in the file " + BmpName);*/
+}
+

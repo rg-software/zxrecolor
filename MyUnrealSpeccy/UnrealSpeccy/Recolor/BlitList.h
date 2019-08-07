@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include "RcImage.h"
@@ -9,14 +10,15 @@ public:
 	struct BlitListElement
 	{
 		unsigned x, y;
-		const RcImage* image;
+		std::shared_ptr<RcImage> image;
 		int layer;
-		BlitListElement(unsigned x_, unsigned y_, const RcImage* image_, int layer_) : x(x_), y(y_), image(image_), layer(layer_) {}
+		BlitListElement(unsigned x_, unsigned y_, std::shared_ptr<RcImage> image_, int layer_) 
+			: x(x_), y(y_), image(std::move(image_)), layer(layer_) {}
 
 		bool operator<(const BlitListElement& rhs) const { return layer < rhs.layer; }
 	};
 
-	void AddElement(unsigned x, unsigned y, const RcImage* image, int layer)
+	void AddElement(unsigned x, unsigned y, std::shared_ptr<RcImage> image, int layer)
 	{
 		blitlist.emplace_back(x * 2, y * 2, image, layer);
 	}
