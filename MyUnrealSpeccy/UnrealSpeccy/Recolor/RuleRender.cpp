@@ -44,7 +44,8 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 		unsigned char* curptr = zx_screen + (320/8) * scry;
 		for(unsigned scrx = 0; scrx < 320/8; scrx++)  // every 8 pixels (1 byte)
 		{
-			unsigned short keys[] = { 0,  MAKEWORD(*(curptr + 320 / 8), *curptr) };
+			unsigned short curKey = MAKEWORD(*(curptr + 320 / 8), *curptr);
+			unsigned short keys[] = { 0,  curKey == 0 ? 0xFFFF : curKey }; // we don't have sprites with 0xFFFF key, so it will be skipped
 			for(auto key : keys)
 			{
 				auto endIt = Rules.EndByKey(key);
@@ -74,7 +75,8 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 
 			for(unsigned offset = 0; offset < 8; ++offset) // check all 8 possible offsets
 			{
-				unsigned short keys[] = { 0,  HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset)) };
+				unsigned short curKey = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
+				unsigned short keys[] = { 0, curKey == 0 ? 0xFFFF : curKey };
 
 				for(auto key : keys)	// always handle 0 key
 				{

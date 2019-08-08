@@ -199,7 +199,7 @@ void RcImage::updateKeyData()
 				KeyOffsetX = i % WidthBytes;
 				KeyOffsetY = i / WidthBytes;
 
-				printf("%s: key %d found at (%d, %d)\n", BmpName.c_str(), Key, KeyOffsetX, KeyOffsetY);
+				//printf("%s: key %d found at (%d, %d)\n", BmpName.c_str(), Key, KeyOffsetX, KeyOffsetY);
 				return;
 			}
 		}
