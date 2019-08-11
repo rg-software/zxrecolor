@@ -1,7 +1,11 @@
 #include "RcImage.h"
 #include <cassert>
 
-RcImage::RcImage(const std::string& bmpName, bool convertZx)
+RcImage::RcImage(const std::string& bmpName) : RcImage(bmpName, false, false)
+{
+}
+
+RcImage::RcImage(const std::string& bmpName, bool convertZx, bool pixelAutoKey)
 {
 	BmpName = bmpName;
 
@@ -15,7 +19,7 @@ RcImage::RcImage(const std::string& bmpName, bool convertZx)
 		Data = convertToZx(bmp, false);
 		ZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
 		
-		updateKeyData();
+		updateKeyData(pixelAutoKey);
 		//KeyOffset = findKeyOffset();
 	}
 }
@@ -182,18 +186,22 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 	return NewData;
 }
 
-void RcImage::updateKeyData()
+void RcImage::updateKeyData(bool pixelAutoKey)
 {
 	Key = KeyOffsetX = KeyOffsetY = 0;
 
 	// find an appropriate key fragment with no masked pixels and non-zero/non-65535 value
 	auto WidthBytes = Width / 8;
+	
 	for (unsigned i = 0; i < ZxMaskData.size() - WidthBytes; ++i)
+	{
+		if (!pixelAutoKey && (i / WidthBytes) % 8 != 0)
+			continue;
 		if (ZxMaskData[i] == 0xFF && ZxMaskData[i + WidthBytes] == 0xFF)
 		{
 			auto curKey = MAKEWORD(Data[i + WidthBytes], Data[i]);
 
-			if(curKey != 0 && curKey != 0xFFFF)
+			if (curKey != 0 && curKey != 0xFFFF)
 			{
 				Key = curKey;
 				KeyOffsetX = i % WidthBytes;
@@ -203,6 +211,7 @@ void RcImage::updateKeyData()
 				return;
 			}
 		}
+	}
 
 	printf("%s: zero key assigned\n", BmpName.c_str());
 }

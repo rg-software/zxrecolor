@@ -6,7 +6,8 @@
 class RcImage
 {
 public:
-	RcImage(const std::string& bmpName, bool convertZx = false);	// load 24-bit bmp
+	RcImage(const std::string& bmpName);	// load 24-bit bmp
+	RcImage(const std::string& bmpName, bool convertZx, bool pixelAutoKey);	// load 24-bit bmp
 	RcImage(std::shared_ptr<RcImage> src_image, unsigned offset);	// copy from another image
 
 	bool IsFoundAt(const uint8_t* curptr) const;
@@ -39,7 +40,7 @@ private:
 	static unsigned const TRANSPARENT_COLOR = RGB_MAKE(242, 10, 242);			// $mm const
 	static std::vector<uint8_t> convertToZx(const PlainBMP& bmp, bool asMask);
 
-	void updateKeyData();
+	void updateKeyData(bool pixelAutoKey);
 	void copyData(std::shared_ptr<RcImage> src_image, std::vector<uint8_t>& data);
 	void shiftData(std::vector<uint8_t>& data);
 };

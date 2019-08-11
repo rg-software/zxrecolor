@@ -57,17 +57,20 @@ RcRule::RcRule(const std::string& line)
 		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-	ZxImage = std::make_shared<RcImage>(orig_pic, true);
+
+	if (type == "block")
+		Type = BLOCK;
+	else if (type == "pixel")
+		Type = PIXEL;
+	else
+		throw std::runtime_error("Unknown rule type " + type);
+
+	ZxImage = std::make_shared<RcImage>(orig_pic, true, Type == PIXEL);
 
 	for (unsigned i = 0; i < 8; ++i)
 		ZxImages.push_back(std::make_shared<RcImage>(ZxImage, i));
 
 	RecoloredImage = std::make_unique<RcImage>(new_pic);
-
-	if(type == "block")
-		Type = BLOCK;
-	else if(type == "pixel")
-		Type = PIXEL;
 
 	ZxHeight = ZxImage->GetHeight();
 	ZxWidth = ZxImage->GetWidth();
