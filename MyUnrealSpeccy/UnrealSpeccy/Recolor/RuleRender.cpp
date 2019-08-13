@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <stdio.h>
 #include <direct.h>
 #include <iostream>
@@ -14,10 +13,8 @@
 #include "RcRuleset.h"
 #include "BlitList.h"
 
-enum class DisplayMode { NORMAL, RECOLOR_OFF };
 
 std::map<RcRule::RuleType, RcRuleset> AllRules;
-DisplayMode CurrentDisplayMode = DisplayMode::NORMAL;
 
 void LoadRules()
 {
@@ -100,17 +97,6 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 	}
 }
 
-void AdjustDisplayMode()
-{
-	if (!(GetKeyState(VK_CONTROL) >> 15))	// high bit is not set
-		return;
-		
-	if (GetKeyState('1') & 0x8000)
-		CurrentDisplayMode = DisplayMode::NORMAL;
-	if (GetKeyState('2') & 0x8000)
-		CurrentDisplayMode = DisplayMode::RECOLOR_OFF;
-}
-
 void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen)
 {
 	static bool firstRun = true;
@@ -120,12 +106,6 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 		LoadRules(); 
 		firstRun = false;
 	}
-
-	AdjustDisplayMode();
-	
-	if (CurrentDisplayMode == DisplayMode::RECOLOR_OFF)
-		return;
-
 
 	BlitList blitlist;
 
