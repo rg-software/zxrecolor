@@ -26,14 +26,16 @@ RcImage::RcImage(const std::string& bmpName, bool convertZx, bool pixelAutoKey)
 
 RcImage::RcImage(std::shared_ptr<RcImage> src_image, unsigned offset)
 {
-	//KeyOffset = src_image->KeyOffset;
 	Key = src_image->Key;
-	//KeyFound = src_image->KeyFound;
 	KeyOffsetX = src_image->KeyOffsetX;
 	KeyOffsetY = src_image->KeyOffsetY;
+	BmpName = src_image->BmpName;
 
-	copyData(src_image, Data);
-	copyData(src_image, ZxMaskData);
+	Width = src_image->Width + 8;
+	Height = src_image->Height;
+
+	copyData(src_image, src_image->Data, Data);
+	copyData(src_image, src_image->ZxMaskData, ZxMaskData);
 
 	for (unsigned i = 0; i < offset; ++i)
 	{
@@ -42,17 +44,15 @@ RcImage::RcImage(std::shared_ptr<RcImage> src_image, unsigned offset)
 	}
 }
 
-void RcImage::copyData(std::shared_ptr<RcImage> src_image, std::vector<uint8_t>& data)
+void RcImage::copyData(std::shared_ptr<RcImage> src_image, const std::vector<uint8_t>& src_data, std::vector<uint8_t>& dst_data)
 {
-	Width = src_image->Width + 8;
-	Height = src_image->Height;
 	unsigned size = Width * Height / 8;
-	data.resize(size);
-	std::fill(data.begin(), data.end(), 0);
+	dst_data.resize(size);
+	std::fill(dst_data.begin(), dst_data.end(), 0);
 
 	for (unsigned x = 0; x < src_image->Width / 8; ++x)
 		for (unsigned y = 0; y < src_image->Height; ++y)
-			data[x + (Width / 8) * y] = src_image->Data[x + (src_image->Width / 8) * y];
+			dst_data[x + (Width / 8) * y] = src_data[x + (src_image->Width / 8) * y];
 }
 
 bool RcImage::IsFoundAt(const uint8_t* curptr) const

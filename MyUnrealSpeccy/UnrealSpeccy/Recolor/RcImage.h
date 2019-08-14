@@ -41,6 +41,6 @@ private:
 	static std::vector<uint8_t> convertToZx(const PlainBMP& bmp, bool asMask);
 
 	void updateKeyData(bool pixelAutoKey);
-	void copyData(std::shared_ptr<RcImage> src_image, std::vector<uint8_t>& data);
+	void copyData(std::shared_ptr<RcImage> src_image, const std::vector<uint8_t>& src_data, std::vector<uint8_t>& dst_data);
 	void shiftData(std::vector<uint8_t>& data);
 };
