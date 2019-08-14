@@ -1,35 +1,15 @@
-
-/* (begin) ready screen  -- for debug */
-/*void create_my_line(unsigned char *dst, unsigned char *src, unsigned *tab, bool isbw)
-{
-	unsigned ink = 0x00000000, paper = 0x00FFFFFF;
-
-	for (unsigned x = 0; x < temp.scx * 4; x += 32)
-	{
-		unsigned char byte = *src++; // a bit sequence of 8 pixels
-		unsigned *tt = tab + *src++; // attributes
-
-		for (unsigned i = 0; i < 8; ++i)
-			*(unsigned*)(dst + x + i * 4) = isbw ? (((byte << i) & 128) ? ink : paper) : tt[(byte << (i + 1)) & 0x100];
-	}
-}
-
-
-void create_my_screen(unsigned char *dst, unsigned pitch, bool isbw)
-{
-	unsigned char *src = rbuf; unsigned delta = temp.scx / 4;
-	for (unsigned y = 0; y < temp.scy; y++)
-	{
-		create_my_line(dst, src, t.sctab32[0], isbw);
-		dst += pitch;
-		src += delta;
-	}
-}*/
-/* (end) ready screen  -- for debug */
-
 #include <exception>
 #include <cstdio>
 #include <windows.h>
+
+// for sound adjustment -- todo
+// #include "../sdk/ddk.h"
+// #include "../emul.h"
+// #include "../sound.h"
+//extern CONFIG conf;
+//conf.sound.beeper_vol = 0;
+//conf.sound.ay_vol = 0;
+//apply_sound();
 
 void create_zxline(unsigned char *dst, unsigned char *src, const unsigned *tab)
 {
