@@ -1,11 +1,12 @@
 #include "RcImage.h"
+#include "SoundTrack.h"
 #include "BlitList.h"
 #include <map>
 
 class RcRule
 {
 public:
-	enum RuleType { BLOCK, PIXEL };
+	enum RuleType { BLOCK, PIXEL, SOUND };
 	
 	RcRule(const std::string& line);
 
@@ -42,6 +43,7 @@ private:
 	std::vector<std::shared_ptr<RcImage>> ZxImages; // old is always small-screen (x1)
 	std::shared_ptr<RcImage> ZxImage;		// maybe we should eventually keep ZxImages only
 	std::shared_ptr<RcImage> RecoloredImage;
+	std::shared_ptr<SoundTrack> Sound;
 
-	static 	std::map<std::string, unsigned> mNameRGB;
+	static std::map<std::string, unsigned> mNameRGB;
 };

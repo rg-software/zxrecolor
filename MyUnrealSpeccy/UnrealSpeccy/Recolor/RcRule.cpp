@@ -62,6 +62,8 @@ RcRule::RcRule(const std::string& line)
 		Type = BLOCK;
 	else if (type == "pixel")
 		Type = PIXEL;
+	else if (type == "sound")
+		Type = SOUND;
 	else
 		throw std::runtime_error("Unknown rule type " + type);
 
@@ -70,7 +72,10 @@ RcRule::RcRule(const std::string& line)
 	for (unsigned i = 0; i < 8; ++i)
 		ZxImages.push_back(std::make_shared<RcImage>(ZxImage, i));
 
-	RecoloredImage = std::make_unique<RcImage>(new_pic);
+	if (Type == SOUND)
+		Sound = std::make_shared<SoundTrack>(new_pic);
+	else
+		RecoloredImage = std::make_shared<RcImage>(new_pic);
 
 	ZxHeight = ZxImage->GetHeight();
 	ZxWidth = ZxImage->GetWidth();

@@ -2,15 +2,6 @@
 #include <cstdio>
 #include <windows.h>
 
-// for sound adjustment -- todo
-// #include "../sdk/ddk.h"
-// #include "../emul.h"
-// #include "../sound.h"
-//extern CONFIG conf;
-//conf.sound.beeper_vol = 0;
-//conf.sound.ay_vol = 0;
-//apply_sound();
-
 void create_zxline(unsigned char *dst, unsigned char *src, const unsigned *tab)
 {
 	for (unsigned x = 0; x < 320 / 8; ++x)

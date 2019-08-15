@@ -97,6 +97,12 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 	}
 }
 
+void RunSoundRules()
+{
+	RcRuleset& Rules = AllRules[RcRule::SOUND];
+
+}
+
 void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen)
 {
 	static bool firstRun = true;
@@ -111,6 +117,7 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 
 	RunBlockRules(dst, pitch, zx_screen, blitlist);
 	RunPixelRules(dst, pitch, zx_screen, blitlist);
+	RunSoundRules();
 
 	blitlist.SortAndBlit(pitch, dst);
 }

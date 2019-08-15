@@ -348,6 +348,9 @@
     <ClCompile Include="z80\tables.cpp">
       <Filter>Source Files\z80</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\SoundTrack.cpp">
+      <Filter>Source Files\Recolor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -399,6 +402,9 @@
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
     <ClInclude Include="Recolor\RcRuleset.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\SoundTrack.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
   </ItemGroup>

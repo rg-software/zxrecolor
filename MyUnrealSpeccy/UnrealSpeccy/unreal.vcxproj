@@ -95,6 +95,7 @@
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom debug\ &gt; nul
 echo n | copy /-y roms\*.ini debug\ &gt; nul
+echo n | copy /-y roms\*.dll debug\ &gt; nul
 ver &gt; nul</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -119,6 +120,7 @@ ver &gt; nul</Command>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom release\ &gt; nul
 echo n | copy /-y roms\*.ini release\ &gt; nul
+echo n | copy /-y roms\*.dll release\ &gt; nul
 ver &gt; nul</Command>
       <Message>
       </Message>
@@ -214,6 +216,7 @@ ver &gt; nul</Command>
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\RcRule.cpp" />
     <ClCompile Include="Recolor\RuleRender.cpp" />
+    <ClCompile Include="Recolor\SoundTrack.cpp" />
     <ClCompile Include="savesnd.cpp" />
     <ClCompile Include="savevid.cpp" />
     <ClCompile Include="sdcard.cpp" />
@@ -275,6 +278,7 @@ ver &gt; nul</Command>
     <ClInclude Include="Recolor\RcImage.h" />
     <ClInclude Include="Recolor\RcRule.h" />
     <ClInclude Include="Recolor\RcRuleset.h" />
+    <ClInclude Include="Recolor\SoundTrack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

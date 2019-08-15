@@ -38,6 +38,7 @@ TChannelIsActive ChannelIsActive;
 
 TStreamCreate        StreamCreate;
 TStreamCreateFileUser StreamCreateFileUser;
+TStreamCreateFile StreamCreateFile;
 TStreamFree          StreamFree;
 
 HMODULE Bass = 0;
@@ -81,6 +82,7 @@ void Load()
 
    StreamCreate = (TStreamCreate)GetProcAddress(Bass, "BASS_StreamCreate");
    StreamCreateFileUser = (TStreamCreateFileUser)GetProcAddress(Bass, "BASS_StreamCreateFileUser");
+   StreamCreateFile = (TStreamCreateFile)GetProcAddress(Bass, "BASS_StreamCreateFile");
    StreamFree = (TStreamFree)GetProcAddress(Bass, "BASS_StreamFree");
 
    if (!Init)
@@ -127,6 +129,8 @@ void Load()
        errexit("can't import BASS API: BASS_ErrorGetCode");
    if (!StreamCreate)
        errexit("can't import BASS API: BASS_StreamCreate");
+   if (!StreamCreateFile)
+       errexit("can't import BASS API: BASS_StreamCreateFile");
    if (!StreamCreateFileUser)
        errexit("can't import BASS API: BASS_StreamCreateFileUser");
    if (!StreamFree)
