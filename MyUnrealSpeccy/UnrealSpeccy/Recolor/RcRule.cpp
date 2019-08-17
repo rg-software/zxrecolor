@@ -81,7 +81,7 @@ RcRule::RcRule(const std::string& line)
 	ZxWidth = ZxImage->GetWidth();
 }
 
-bool RcRule::IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const
+bool RcRule::IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const
 {
 	// $mm double-check with new "auto-key finding" option
 	if (!MatchColor)

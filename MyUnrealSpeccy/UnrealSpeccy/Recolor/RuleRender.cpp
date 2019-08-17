@@ -35,25 +35,20 @@ void LoadRules()
 }
 
 // find a list of found zx-images (only perfect matches within 8*8 blocks are found)
-void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, BlitList& blitlist)
+template<typename Op> void RunBlockRules(const RcRuleset& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
 {
-	RcRuleset& Rules = AllRules[RcRule::BLOCK];
-
 	for(unsigned scry = 0; scry < 240 - 8; scry += 8) // every 8 pixels
 	{
 		unsigned char* curptr = zx_screen + (320/8) * scry;
 		for(unsigned scrx = 0; scrx < 320/8; scrx++)  // every 8 pixels (1 byte)
 		{
-			unsigned short curKey = MAKEWORD(*(curptr + 320 / 8), *curptr);
-			unsigned short keys[] = { 0,  curKey == 0 ? 0xFFFF : curKey }; // we don't have sprites with 0xFFFF key, so it will be skipped
+			unsigned curKey = MAKEWORD(*(curptr + 320 / 8), *curptr);
+			unsigned keys[] = { 0,  curKey == 0 ? 0xFFFF : curKey }; // we don't have sprites with 0xFFFF key, so it will be skipped
 			for(auto key : keys)
 			{
 				auto endIt = Rules.EndByKey(key);
 				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
-					if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8, scry) && p->IsFoundAt(curptr))
-					{
-						p->AddToBlitList(scrx * 8, scry, blitlist);
-					}
+					op(scry, scrx * 8, dst, *p, curptr);
 			}
 			
 			++curptr;
@@ -61,10 +56,8 @@ void RunBlockRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 	}
 }
 
-void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, BlitList& blitlist)
+template<typename Op> void RunPixelRules(const RcRuleset& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
 {
-	RcRuleset& Rules = AllRules[RcRule::PIXEL];
-
 	for(unsigned scry = 0; scry < 240 - 8; ++scry) // every pixel
 	{
 		unsigned char* curptr = zx_screen + (320/8) * scry;
@@ -75,20 +68,14 @@ void RunPixelRules(unsigned char *dst, unsigned pitch, unsigned char* zx_screen,
 
 			for(unsigned offset = 0; offset < 8; ++offset) // check all 8 possible offsets
 			{
-				unsigned short curKey = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
-				unsigned short keys[] = { 0, curKey == 0 ? 0xFFFF : curKey };
+				unsigned curKey = HIBYTE((curptr_v << offset)) * 256 + HIBYTE((curptr_next_v << offset));
+				unsigned keys[] = { 0, curKey == 0 ? 0xFFFF : curKey };
 
 				for(auto key : keys)	// always handle 0 key
 				{
 					auto endIt = Rules.EndByKey(key);
 					for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
-					{
-						// fix this checking code (prepare the image?)
-						if (scry + p->GetZxHeight() < 240 && p->IsFoundColor(dst, pitch, scrx * 8 + offset, scry) && p->IsFoundAt(curptr, offset))
-						{
-							p->AddToBlitList(scrx * 8 + offset, scry, blitlist);
-						}
-					}
+						op(scry, scrx * 8, offset, dst, *p, curptr);
 				}
 			}
 
@@ -115,8 +102,19 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 
 	BlitList blitlist;
 
-	RunBlockRules(dst, pitch, zx_screen, blitlist);
-	RunPixelRules(dst, pitch, zx_screen, blitlist);
+	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, const RcRule& rule, unsigned char* curptr)
+			{
+				if (y + rule.GetZxHeight() < 240 && rule.IsFoundColor(dst, x, y) && rule.IsFoundAt(curptr))
+					rule.AddToBlitList(x, y, blitlist);
+			});
+
+	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned char *dst, const RcRule& rule, unsigned char* curptr)
+			{
+				if (y + rule.GetZxHeight() < 240 && rule.IsFoundColor(dst, x + offset, y) && rule.IsFoundAt(curptr, offset))
+					rule.AddToBlitList(x + offset, y, blitlist);
+			});
+
+
 	RunSoundRules();
 
 	blitlist.SortAndBlit(pitch, dst);

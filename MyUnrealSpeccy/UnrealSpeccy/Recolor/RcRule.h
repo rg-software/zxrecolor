@@ -19,7 +19,7 @@ public:
 		blitlist.AddElement(x + OffsetX - 8 * ZxImage->GetKeyOffsetX(), y + OffsetY - ZxImage->GetKeyOffsetY(), RecoloredImage, Layer);
 	}
 
-	bool IsFoundColor(unsigned char *dst, unsigned pitch, unsigned x, unsigned y) const;
+	bool IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const;
 	bool IsFoundAt(const uint8_t* curptr, unsigned offset) const;
 	bool IsFoundAt(const uint8_t* curptr) const;
 

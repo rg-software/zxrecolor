@@ -1,9 +1,0 @@
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\bin\Release\ZXColor.exe
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\bin\Release\ZXColor.pdb
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.csprojAssemblyReference.cache
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.MainForm.resources
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.Properties.Resources.resources
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.csproj.GenerateResource.cache
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.csproj.CoreCompileInputs.cache
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.exe
-s:\Projects\ZXRecolor2019\ZXColorTool\ZXColor\obj\Release\ZXColor.pdb
