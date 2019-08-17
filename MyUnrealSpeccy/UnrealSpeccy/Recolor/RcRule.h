@@ -6,7 +6,7 @@
 class RcRule
 {
 public:
-	enum RuleType { BLOCK, PIXEL, SOUND };
+	enum RuleType { BLOCK, PIXEL, SOUND_BLOCK, SOUND_PIXEL };
 	
 	RcRule(const std::string& line);
 
