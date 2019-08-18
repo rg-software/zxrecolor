@@ -216,6 +216,7 @@ ver &gt; nul</Command>
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\RcRule.cpp" />
     <ClCompile Include="Recolor\RuleRender.cpp" />
+    <ClCompile Include="Recolor\SoundEvents.cpp" />
     <ClCompile Include="Recolor\SoundTrack.cpp" />
     <ClCompile Include="savesnd.cpp" />
     <ClCompile Include="savevid.cpp" />
@@ -274,10 +275,11 @@ ver &gt; nul</Command>
     <Image Include="Res\U1.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Recolor\BlitList.h" />
+    <ClInclude Include="Recolor\Blitlist.h" />
     <ClInclude Include="Recolor\RcImage.h" />
     <ClInclude Include="Recolor\RcRule.h" />
-    <ClInclude Include="Recolor\RcRuleset.h" />
+    <ClInclude Include="Recolor\RcRuleVector.h" />
+    <ClInclude Include="Recolor\SoundEvents.h" />
     <ClInclude Include="Recolor\SoundTrack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

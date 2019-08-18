@@ -1,6 +1,9 @@
 #include "RcRule.h"
 #include <string>
 #include <sstream>
+#include <set>
+
+unsigned RcRule::mRuleCount = 0;
 
 std::map<std::string, unsigned> RcRule::mNameRGB = 
 {
@@ -22,11 +25,9 @@ std::map<std::string, unsigned> RcRule::mNameRGB =
 	{"white+", RGB_MAKE(0xFE, 0xFE, 0xFE)}
 };
 
-RcRule::RcRule(const std::string& line)
+RcRule::RcRule(const std::string& line) : AppearsFlag(false), DisappearsFlag(false), MuteAyFlag(false), MuteBeeperFlag(false), MatchColor(false), OffsetX(0), OffsetY(0)
 {
-	MatchColor = false;
-	OffsetX = OffsetY = 0;
-	
+	ID = ++mRuleCount;
 	std::string type, orig_pic, new_pic;
 
 	std::istringstream iss(line);
@@ -81,6 +82,19 @@ RcRule::RcRule(const std::string& line)
 
 	ZxHeight = ZxImage->GetHeight();
 	ZxWidth = ZxImage->GetWidth();
+
+	std::set<std::string> soundFlags;
+	while(iss)
+	{
+		std::string flagstr;
+		iss >> flagstr;
+		soundFlags.insert(flagstr);
+	}
+		
+	AppearsFlag = soundFlags.find("appears") != soundFlags.end();
+	DisappearsFlag = soundFlags.find("disappears") != soundFlags.end();
+	MuteAyFlag = soundFlags.find("mute_ay") != soundFlags.end();
+	MuteBeeperFlag = soundFlags.find("mute_beeper") != soundFlags.end();
 }
 
 bool RcRule::IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const

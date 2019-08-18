@@ -1,25 +1,25 @@
 #pragma once
 
-class RcRuleset
+class RcRuleVector
 {
 public:
-	RcRuleset()
+	RcRuleVector()
 	{
 		std::fill_n(Index, 256*256, 0);
 		std::fill_n(IndexCount, 256*256, 0);
 	}
 
-	void Add(const RcRule& rule)
+	void Add(std::shared_ptr<RcRule> rule)
 	{
 		Rules.push_back(rule);
 	}
 
-	std::vector<RcRule>::const_iterator BeginByKey(uint16_t key) const
+	std::vector<std::shared_ptr<RcRule>>::const_iterator BeginByKey(uint16_t key) const
 	{
 		return Rules.begin() + Index[key];
 	}
 
-	std::vector<RcRule>::const_iterator EndByKey(uint16_t key) const
+	std::vector<std::shared_ptr<RcRule>>::const_iterator EndByKey(uint16_t key) const
 	{
 		return Rules.begin() + Index[key] + IndexCount[key];
 	}
@@ -30,7 +30,7 @@ public:
 		
 		for(unsigned i = 0; i < Rules.size(); ++i)
 		{
-			unsigned short key = Rules[i].GetZxKey();
+			unsigned short key = Rules[i]->GetZxKey();
 			if(IndexCount[key] == 0)
 				Index[key] = i;		// start index of key-rules
 			IndexCount[key]++;
@@ -46,5 +46,5 @@ public:
 private:
 	uint16_t Index[256 * 256]{};			// start index of the rule specified by key in Rules[]
 	uint16_t IndexCount[256 * 256]{};		// number of rules specified by key
-	std::vector<RcRule> Rules;			// all rules of the same kind
+	std::vector<std::shared_ptr<RcRule>> Rules;			// all rules of the same kind
 };

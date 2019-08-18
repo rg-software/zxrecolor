@@ -7,14 +7,18 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <set>
 
 #include "RcImage.h"
 #include "RcRule.h"
-#include "RcRuleset.h"
-#include "BlitList.h"
+#include "RcRuleVector.h"
+#include "Blitlist.h"
+#include "SoundEvents.h"
+#include <iterator>
 
-
-std::map<RcRule::RuleType, RcRuleset> AllRules;
+typedef std::set<std::shared_ptr<RcRule>> RuleSet;
+std::map<RcRule::RuleType, RcRuleVector> AllRules;
+RuleSet PrevMatchedRules;
 
 void LoadRules()
 {
@@ -26,8 +30,8 @@ void LoadRules()
 		if(line.empty() || line[0] == ';' || line[0] == '\r' || line[0] == '\n') 
 			continue;
 
-		RcRule rule(line);
-		AllRules[rule.GetType()].Add(rule);
+		std::shared_ptr<RcRule> rule = std::make_shared<RcRule>(line);
+		AllRules[rule->GetType()].Add(rule);
 	}
 
 	for(auto& e : AllRules)
@@ -35,7 +39,7 @@ void LoadRules()
 }
 
 // find a list of found zx-images (only perfect matches within 8*8 blocks are found)
-template<typename Op> void RunBlockRules(const RcRuleset& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
+template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
 {
 	for(unsigned scry = 0; scry < 240 - 8; scry += 8) // every 8 pixels
 	{
@@ -56,7 +60,7 @@ template<typename Op> void RunBlockRules(const RcRuleset& Rules, unsigned char *
 	}
 }
 
-template<typename Op> void RunPixelRules(const RcRuleset& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
+template<typename Op> void RunPixelRules(const RcRuleVector& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
 {
 	for(unsigned scry = 0; scry < 240 - 8; ++scry) // every pixel
 	{
@@ -86,7 +90,7 @@ template<typename Op> void RunPixelRules(const RcRuleset& Rules, unsigned char *
 
 void RunSoundRules()
 {
-	RcRuleset& Rules = AllRules[RcRule::SOUND];
+	//RcRuleset& Rules = AllRules[RcRule::SOUND];
 
 }
 
@@ -101,21 +105,48 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 	}
 
 	BlitList blitlist;
+	SoundEvents soundevents;
+	RuleSet MatchedRules;
 
-	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, const RcRule& rule, unsigned char* curptr)
+	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 			{
-				if (y + rule.GetZxHeight() < 240 && rule.IsFoundColor(dst, x, y) && rule.IsFoundAt(curptr))
-					rule.AddToBlitList(x, y, blitlist);
+				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))
+					rule->AddToBlitList(x, y, blitlist);
 			});
 
-	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned char *dst, const RcRule& rule, unsigned char* curptr)
+	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 			{
-				if (y + rule.GetZxHeight() < 240 && rule.IsFoundColor(dst, x + offset, y) && rule.IsFoundAt(curptr, offset))
-					rule.AddToBlitList(x + offset, y, blitlist);
+				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))
+					rule->AddToBlitList(x + offset, y, blitlist);
 			});
 
 
-	RunSoundRules();
+	RunBlockRules(AllRules[RcRule::SOUND_BLOCK], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	{
+		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))	// $mm to refactor
+			MatchedRules.insert(rule);
+	});
+	
+	RunPixelRules(AllRules[RcRule::SOUND_PIXEL], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	{
+		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))	// $mm to refactor
+			MatchedRules.insert(rule);
+	});
 
 	blitlist.SortAndBlit(pitch, dst);
+
+	RuleSet appeared, disappeared;
+	
+	std::set_difference(MatchedRules.begin(), MatchedRules.end(), PrevMatchedRules.begin(), PrevMatchedRules.end(), std::inserter(appeared, appeared.begin()));
+	std::set_difference(PrevMatchedRules.begin(), PrevMatchedRules.end(), MatchedRules.begin(), MatchedRules.end(), std::inserter(disappeared, disappeared.begin()));
+	
+	for (auto rule : appeared)
+		rule->AddToSoundEvents(true, false, soundevents);
+
+	for (auto rule : disappeared)
+		rule->AddToSoundEvents(false, true, soundevents);
+
+	soundevents.Apply();
+
+	PrevMatchedRules = MatchedRules;
 }

@@ -351,6 +351,9 @@
     <ClCompile Include="Recolor\SoundTrack.cpp">
       <Filter>Source Files\Recolor</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\SoundEvents.cpp">
+      <Filter>Source Files\Recolor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -392,19 +395,22 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Recolor\BlitList.h">
-      <Filter>Source Files\Recolor</Filter>
-    </ClInclude>
     <ClInclude Include="Recolor\RcImage.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
     <ClInclude Include="Recolor\RcRule.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
-    <ClInclude Include="Recolor\RcRuleset.h">
+    <ClInclude Include="Recolor\SoundTrack.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
-    <ClInclude Include="Recolor\SoundTrack.h">
+    <ClInclude Include="Recolor\SoundEvents.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\Blitlist.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\RcRuleVector.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
   </ItemGroup>

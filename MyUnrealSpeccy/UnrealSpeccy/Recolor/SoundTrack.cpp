@@ -33,8 +33,8 @@ SoundTrack::SoundTrack(const std::string& soundName)
 
 void SoundTrack::Play()
 {
-	if (BASS::ChannelIsActive(SoundHandle) == BASS_ACTIVE_PLAYING)	// $mm do we need this check here?
-		return;
+	//if (BASS::ChannelIsActive(SoundHandle) == BASS_ACTIVE_PLAYING)	// $mm do we need this check here?
+	//	return;
 
 	BASS::ChannelPlay(SoundHandle, true);
 }

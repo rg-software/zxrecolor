@@ -1,6 +1,7 @@
 #include "RcImage.h"
 #include "SoundTrack.h"
-#include "BlitList.h"
+#include "Blitlist.h"
+#include "SoundEvents.h"
 #include <map>
 
 class RcRule
@@ -13,6 +14,15 @@ public:
 	RuleType GetType() const { return Type; }
 	int GetZxHeight() const { return ZxHeight; }
 	int GetZxWidth() const { return ZxWidth; }
+
+	void AddToSoundEvents(bool appears, bool disappears, SoundEvents& events) const
+	{
+		if(AppearsFlag && appears)
+			events.AddElement(MuteAyFlag, MuteBeeperFlag, ID, Layer, Sound);
+
+		if(DisappearsFlag && disappears)
+			events.AddElement(MuteAyFlag, MuteBeeperFlag, ID, Layer, Sound);
+	}
 
 	void AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
 	{
@@ -32,13 +42,19 @@ public:
 
 private:
 	RuleType Type;
+	int ID;
 	int ZxHeight;
 	int ZxWidth;
 	bool MatchColor;
 	int OffsetX, OffsetY;
 	int ColorX, ColorY;
 	unsigned Color;
-	int Layer;
+	int Layer;	// or channel
+
+	bool AppearsFlag;
+	bool DisappearsFlag;
+	bool MuteAyFlag;
+	bool MuteBeeperFlag;
 
 	std::vector<std::shared_ptr<RcImage>> ZxImages; // old is always small-screen (x1)
 	std::shared_ptr<RcImage> ZxImage;		// maybe we should eventually keep ZxImages only
@@ -46,4 +62,5 @@ private:
 	std::shared_ptr<SoundTrack> Sound;
 
 	static std::map<std::string, unsigned> mNameRGB;
+	static unsigned mRuleCount;
 };
