@@ -70,7 +70,7 @@ RcRule::RcRule(const std::string& line) : AppearsFlag(false), DisappearsFlag(fal
 	else 
 		throw std::runtime_error("Unknown rule type " + type);
 
-	ZxImage = std::make_shared<RcImage>(orig_pic, true, Type == PIXEL);
+	ZxImage = std::make_shared<RcImage>(orig_pic, true, Type == PIXEL || Type == SOUND_PIXEL);
 
 	for (unsigned i = 0; i < 8; ++i)
 		ZxImages.push_back(std::make_shared<RcImage>(ZxImage, i));

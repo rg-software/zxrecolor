@@ -26,7 +26,7 @@ public:
 	
 	void BuildIndex()
 	{
-		std::sort(Rules.begin(), Rules.end()); // sort rules by key
+		std::sort(Rules.begin(), Rules.end(), [](auto lhs, auto rhs) { return *lhs < *rhs; }); // sort rules by key
 		
 		for(unsigned i = 0; i < Rules.size(); ++i)
 		{
