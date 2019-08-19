@@ -7,38 +7,38 @@
 #include "../sound.h"
 extern CONFIG conf;
 
-bool SoundTrack::BassInitialized = false;
+bool SoundTrack::mBassInitialized = false;
 
 void SoundTrack::initializeBass()
 {
-	if (BassInitialized)
+	if (mBassInitialized)
 		return;
 	if(!BASS::Init(-1, conf.sound.fq, BASS_DEVICE_LATENCY, 0, 0))
 		throw std::runtime_error("Cannot initialize BASS");
-	BassInitialized = true;
+	mBassInitialized = true;
 }
 
 SoundTrack::SoundTrack(const std::string& soundName)
 {
 	initializeBass();
-	SoundName = soundName;
-	SoundHandle = BASS::StreamCreateFile(false, (void*)soundName.c_str(), 0, 0, 0);
-	if(!SoundHandle)
+	mSoundName = soundName;
+	mSoundHandle = BASS::StreamCreateFile(false, (void*)soundName.c_str(), 0, 0, 0);
+	if(!mSoundHandle)
 		throw std::runtime_error("Cannot load " + soundName);
 	// $mm todo: deinitialize on exit
 }
 
 void SoundTrack::Play() const
 {
-	BASS::ChannelPlay(SoundHandle, true);
+	BASS::ChannelPlay(mSoundHandle, true);
 }
 
 bool SoundTrack::IsPlaying() const
 {
-	return BASS::ChannelIsActive(SoundHandle) == BASS_ACTIVE_PLAYING;
+	return BASS::ChannelIsActive(mSoundHandle) == BASS_ACTIVE_PLAYING;
 }
 
 void SoundTrack::Stop() const
 {
-	BASS::ChannelStop(SoundHandle);
+	BASS::ChannelStop(mSoundHandle);
 }

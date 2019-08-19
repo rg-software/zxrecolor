@@ -12,10 +12,10 @@ public:
 	void Stop() const;
 
 private:
-	std::string SoundName;	// primarily for debug
-	DWORD SoundHandle;
+	std::string mSoundName;	// primarily for debug
+	DWORD mSoundHandle;
 	
-	static bool BassInitialized;
+	static bool mBassInitialized;
 	static void initializeBass();
 };
 
