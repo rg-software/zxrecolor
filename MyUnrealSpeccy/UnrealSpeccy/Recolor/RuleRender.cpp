@@ -18,6 +18,7 @@
 
 typedef std::set<std::shared_ptr<RcRule>> RuleSet;
 std::map<RcRule::RuleType, RcRuleVector> AllRules;
+SoundEvents::ActiveSoundsMap ActiveSounds;
 RuleSet PrevMatchedRules;
 
 void LoadRules()
@@ -30,7 +31,7 @@ void LoadRules()
 		if(line.empty() || line[0] == ';' || line[0] == '\r' || line[0] == '\n') 
 			continue;
 
-		std::shared_ptr<RcRule> rule = std::make_shared<RcRule>(line);
+		auto rule = std::make_shared<RcRule>(line);
 		AllRules[rule->GetType()].Add(rule);
 	}
 
@@ -88,12 +89,6 @@ template<typename Op> void RunPixelRules(const RcRuleVector& Rules, unsigned cha
 	}
 }
 
-void RunSoundRules()
-{
-	//RcRuleset& Rules = AllRules[RcRule::SOUND];
-
-}
-
 void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen)
 {
 	static bool firstRun = true;
@@ -105,7 +100,7 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 	}
 
 	BlitList blitlist;
-	SoundEvents soundevents;
+	SoundEvents soundevents(ActiveSounds);
 	RuleSet MatchedRules;
 
 	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
@@ -140,13 +135,14 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 	std::set_difference(MatchedRules.begin(), MatchedRules.end(), PrevMatchedRules.begin(), PrevMatchedRules.end(), std::inserter(appeared, appeared.begin()));
 	std::set_difference(PrevMatchedRules.begin(), PrevMatchedRules.end(), MatchedRules.begin(), MatchedRules.end(), std::inserter(disappeared, disappeared.begin()));
 	
-	for (auto rule : appeared)
+	for (const auto& rule : appeared)
 		rule->AddToSoundEvents(true, false, soundevents);
 
-	for (auto rule : disappeared)
+	for (const auto& rule : disappeared)
 		rule->AddToSoundEvents(false, true, soundevents);
 
 	soundevents.Apply();
+	soundevents.Update();
 
 	PrevMatchedRules = MatchedRules;
 }

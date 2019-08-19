@@ -6,9 +6,6 @@
 #include "../emul.h"
 #include "../sound.h"
 extern CONFIG conf;
-//conf.sound.beeper_vol = 0;
-///conf.sound.ay_vol = 0;
-//apply_sound();
 
 bool SoundTrack::BassInitialized = false;
 
@@ -31,15 +28,17 @@ SoundTrack::SoundTrack(const std::string& soundName)
 	// $mm todo: deinitialize on exit
 }
 
-void SoundTrack::Play()
+void SoundTrack::Play() const
 {
-	//if (BASS::ChannelIsActive(SoundHandle) == BASS_ACTIVE_PLAYING)	// $mm do we need this check here?
-	//	return;
-
 	BASS::ChannelPlay(SoundHandle, true);
 }
 
-void SoundTrack::Stop()
+bool SoundTrack::IsPlaying() const
+{
+	return BASS::ChannelIsActive(SoundHandle) == BASS_ACTIVE_PLAYING;
+}
+
+void SoundTrack::Stop() const
 {
 	BASS::ChannelStop(SoundHandle);
 }

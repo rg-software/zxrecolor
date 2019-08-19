@@ -7,8 +7,9 @@ class SoundTrack
 {
 public:
 	SoundTrack(const std::string& soundName);
-	void Play();
-	void Stop();
+	void Play() const;
+	bool IsPlaying() const;
+	void Stop() const;
 
 private:
 	std::string SoundName;	// primarily for debug

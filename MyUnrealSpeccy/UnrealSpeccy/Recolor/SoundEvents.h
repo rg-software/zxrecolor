@@ -6,41 +6,28 @@
 class SoundEvents
 {
 public:
+	struct ActiveSoundsMapElement
+	{
+		std::shared_ptr<SoundTrack> Sound;
+		bool MuteAY;
+		bool MuteBeeper;
+
+		ActiveSoundsMapElement(std::shared_ptr<SoundTrack> sound_, bool muteay_, bool mutebeeper_)
+			: Sound(sound_), MuteAY(muteay_), MuteBeeper(mutebeeper_)
+		{
+		}
+	};
+	typedef std::map<unsigned, ActiveSoundsMapElement> ActiveSoundsMap;
+
+	explicit SoundEvents(ActiveSoundsMap& soundsMap);
+
 	void AddElement(bool mute_ay_, bool mute_beeper_, unsigned ruleId_, unsigned channel_, std::shared_ptr<SoundTrack> sound_)
 	{
 		mEvents.emplace(mute_ay_, mute_beeper_, ruleId_, channel_, sound_);
 	}
 
-	void Apply()
-	{
-		for(auto e : mEvents)
-		{
-			// we must stop playing any soundtrack on the given channel
-			// channel 0 means "stop all"
-			
-			if(e.Channel == 0)
-			{
-				for (auto& it : mActiveSounds)
-					it.second->Stop();
-				mActiveSounds.clear();
-				break;
-			}
-			
-			auto it = mActiveSounds.find(e.Channel);
-			if (it != mActiveSounds.end())
-			{
-				it->second->Stop();
-				mActiveSounds.erase(it);
-			}
-		}
-
-		for (auto e : mEvents)
-		{
-			// $mm: MuteAY, MuteBeeper: to be implemented
-
-			e.Sound->Play();
-		}
-	}
+	void Apply();
+	void Update();
 
 private:
 	struct SoundEventsElement
@@ -60,6 +47,6 @@ private:
 	};
 
 	std::set<SoundEventsElement> mEvents;
-
-	static std::map<unsigned, std::shared_ptr<SoundTrack>> mActiveSounds;
+	unsigned mAyVolume, mBeeperVolume;
+	ActiveSoundsMap& mActiveSounds;
 };
