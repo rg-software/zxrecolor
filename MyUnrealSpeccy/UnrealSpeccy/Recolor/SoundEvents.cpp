@@ -7,10 +7,9 @@
 #include "../sound.h"
 extern CONFIG conf;
 
-SoundEvents::SoundEvents(ActiveSoundsMap& soundsMap): mActiveSounds(soundsMap)
+SoundEvents::SoundEvents(unsigned beeperVolume, unsigned ayVolume, ActiveSoundsMap& soundsMap)
+: mBeeperVolume(beeperVolume), mAyVolume(ayVolume), mActiveSounds(soundsMap)
 {
-	mAyVolume = 8192;		// $mm TODO: get from INI file (intialize on the first run only)
-	mBeeperVolume = 8192;
 }
 
 void SoundEvents::Apply()

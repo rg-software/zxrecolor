@@ -16,10 +16,18 @@
 #include "SoundEvents.h"
 #include <iterator>
 
+#include "../bass.h"
+#include "../snd_bass.h"
+#include "../sdk/ddk.h"
+#include "../emul.h"
+#include "../sound.h"
+extern CONFIG conf;
+
 typedef std::set<std::shared_ptr<RcRule>> RuleSet;
 std::map<RcRule::RuleType, RcRuleVector> AllRules;
 SoundEvents::ActiveSoundsMap ActiveSounds;
 RuleSet PrevMatchedRules;
+unsigned AyVolume, BeeperVolume;
 
 void LoadRules()
 {
@@ -95,12 +103,14 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 	
 	if(firstRun)
 	{
+		BeeperVolume = conf.sound.beeper_vol;
+		AyVolume = conf.sound.ay_vol;
 		LoadRules(); 
 		firstRun = false;
 	}
 
 	BlitList blitlist;
-	SoundEvents soundevents(ActiveSounds);
+	SoundEvents soundevents(BeeperVolume, AyVolume, ActiveSounds);
 	RuleSet MatchedRules;
 
 	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)

@@ -19,7 +19,7 @@ public:
 	};
 	typedef std::map<unsigned, ActiveSoundsMapElement> ActiveSoundsMap;
 
-	explicit SoundEvents(ActiveSoundsMap& soundsMap);
+	SoundEvents(unsigned beeperVolume, unsigned ayVolume, ActiveSoundsMap& soundsMap);
 
 	void AddElement(bool mute_ay_, bool mute_beeper_, unsigned ruleId_, unsigned channel_, std::shared_ptr<SoundTrack> sound_)
 	{
