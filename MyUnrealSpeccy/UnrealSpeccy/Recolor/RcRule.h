@@ -11,22 +11,22 @@ public:
 	
 	RcRule(const std::string& line);
 
-	RuleType GetType() const { return Type; }
-	int GetZxHeight() const { return ZxHeight; }
-	int GetZxWidth() const { return ZxWidth; }
+	RuleType GetType() const { return mType; }
+	int GetZxHeight() const { return mZxHeight; }
+	int GetZxWidth() const { return mZxWidth; }
 
 	void AddToSoundEvents(bool appears, bool disappears, SoundEvents& events) const
 	{
-		if(AppearsFlag && appears)
-			events.AddElement(MuteAyFlag, MuteBeeperFlag, ID, Layer, Sound);
+		if(mAppearsFlag && appears)
+			events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sound);
 
-		if(DisappearsFlag && disappears)
-			events.AddElement(MuteAyFlag, MuteBeeperFlag, ID, Layer, Sound);
+		if(mDisappearsFlag && disappears)
+			events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sound);
 	}
 
 	void AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
 	{
-		blitlist.AddElement(x + OffsetX - 8 * ZxImage->GetKeyOffsetX(), y + OffsetY - ZxImage->GetKeyOffsetY(), RecoloredImage, Layer);
+		blitlist.AddElement(x + mOffsetX - 8 * ZxImage->GetKeyOffsetX(), y + mOffsetY - ZxImage->GetKeyOffsetY(), RecoloredImage, mLayer);
 	}
 
 	bool IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const;
@@ -41,20 +41,20 @@ public:
 	}
 
 private:
-	RuleType Type;
-	int ID;
-	int ZxHeight;
-	int ZxWidth;
-	bool MatchColor;
-	int OffsetX, OffsetY;
-	int ColorX, ColorY;
-	unsigned Color;
-	int Layer;	// or channel
+	RuleType mType;
+	int mID;
+	int mZxHeight;
+	int mZxWidth;
+	bool mMatchColor;
+	int mOffsetX, mOffsetY;
+	int mColorX, mColorY;
+	unsigned mColor;
+	int mLayer;	// or channel
 
-	bool AppearsFlag;
-	bool DisappearsFlag;
-	bool MuteAyFlag;
-	bool MuteBeeperFlag;
+	bool mAppearsFlag;
+	bool mDisappearsFlag;
+	bool mMuteAyFlag;
+	bool mMuteBeeperFlag;
 
 	std::vector<std::shared_ptr<RcImage>> ZxImages; // old is always small-screen (x1)
 	std::shared_ptr<RcImage> ZxImage;		// maybe we should eventually keep ZxImages only

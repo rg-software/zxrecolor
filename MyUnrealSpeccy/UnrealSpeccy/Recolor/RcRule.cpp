@@ -25,27 +25,27 @@ std::map<std::string, unsigned> RcRule::mNameRGB =
 	{"white+", RGB_MAKE(0xFE, 0xFE, 0xFE)}
 };
 
-RcRule::RcRule(const std::string& line) : AppearsFlag(false), DisappearsFlag(false), MuteAyFlag(false), MuteBeeperFlag(false), MatchColor(false), OffsetX(0), OffsetY(0)
+RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(false), mMuteAyFlag(false), mMuteBeeperFlag(false), mMatchColor(false), mOffsetX(0), mOffsetY(0)
 {
-	ID = ++mRuleCount;
+	mID = ++mRuleCount;
 	std::string type, orig_pic, new_pic;
 
 	std::istringstream iss(line);
-	iss >> Layer >> type >> orig_pic >> new_pic;
+	iss >> mLayer >> type >> orig_pic >> new_pic;
 
 	if(orig_pic.find('|') != std::string::npos) // color part is found (orig_pic|color_part)
 	{
 		std::string color_part = orig_pic.substr(orig_pic.find('|') + 1);
 		orig_pic = orig_pic.substr(0, orig_pic.find('|'));
 
-		MatchColor = true; // color_part = "x,y,color_name"
-		ColorX = atoi(color_part.substr(0, color_part.find(',')).c_str());
+		mMatchColor = true; // color_part = "x,y,color_name"
+		mColorX = atoi(color_part.substr(0, color_part.find(',')).c_str());
 		color_part = color_part.substr(color_part.find(',') + 1);
-		ColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
+		mColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
 		color_part = color_part.substr(color_part.find(',') + 1);
 		if(mNameRGB.find(color_part) == mNameRGB.end())
 			throw std::runtime_error("Incorrect color name"); // should never happen
-		Color = mNameRGB[color_part];
+		mColor = mNameRGB[color_part];
 	}
 
 	if(new_pic.find('|') != std::string::npos)
@@ -53,35 +53,35 @@ RcRule::RcRule(const std::string& line) : AppearsFlag(false), DisappearsFlag(fal
 		std::string xy_part = new_pic.substr(new_pic.find('|') + 1);
 		new_pic = new_pic.substr(0, new_pic.find('|'));
 
-		OffsetX = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
+		mOffsetX = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 		xy_part = xy_part.substr(xy_part.find(',') + 1);
-		OffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
+		mOffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
 
 	if (type == "block")
-		Type = BLOCK;
+		mType = BLOCK;
 	else if (type == "pixel")
-		Type = PIXEL;
+		mType = PIXEL;
 	else if (type == "sound-block")
-		Type = SOUND_BLOCK;
+		mType = SOUND_BLOCK;
 	else if (type == "sound-pixel")
-		Type = SOUND_PIXEL;
+		mType = SOUND_PIXEL;
 	else 
 		throw std::runtime_error("Unknown rule type " + type);
 
-	ZxImage = std::make_shared<RcImage>(orig_pic, true, Type == PIXEL || Type == SOUND_PIXEL);
+	ZxImage = std::make_shared<RcImage>(orig_pic, true, mType == PIXEL || mType == SOUND_PIXEL);
 
 	for (unsigned i = 0; i < 8; ++i)
 		ZxImages.push_back(std::make_shared<RcImage>(ZxImage, i));
 
-	if (Type == SOUND_BLOCK || Type == SOUND_PIXEL)
+	if (mType == SOUND_BLOCK || mType == SOUND_PIXEL)
 		Sound = std::make_shared<SoundTrack>(new_pic);
 	else
 		RecoloredImage = std::make_shared<RcImage>(new_pic);
 
-	ZxHeight = ZxImage->GetHeight();
-	ZxWidth = ZxImage->GetWidth();
+	mZxHeight = ZxImage->GetHeight();
+	mZxWidth = ZxImage->GetWidth();
 
 	std::set<std::string> soundFlags;
 	while(iss)
@@ -91,20 +91,20 @@ RcRule::RcRule(const std::string& line) : AppearsFlag(false), DisappearsFlag(fal
 		soundFlags.insert(flagstr);
 	}
 		
-	AppearsFlag = soundFlags.find("appears") != soundFlags.end();
-	DisappearsFlag = soundFlags.find("disappears") != soundFlags.end();
-	MuteAyFlag = soundFlags.find("mute_ay") != soundFlags.end();
-	MuteBeeperFlag = soundFlags.find("mute_beeper") != soundFlags.end();
+	mAppearsFlag = soundFlags.find("appears") != soundFlags.end();
+	mDisappearsFlag = soundFlags.find("disappears") != soundFlags.end();
+	mMuteAyFlag = soundFlags.find("mute_ay") != soundFlags.end();
+	mMuteBeeperFlag = soundFlags.find("mute_beeper") != soundFlags.end();
 }
 
 bool RcRule::IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const
 {
 	// $mm double-check with new "auto-key finding" option
-	if (!MatchColor)
+	if (!mMatchColor)
 		return true;
 
-	unsigned* dst_buff = (unsigned*)dst + (x * 2 + ColorX) + 640 * (y * 2 + ColorY);	// $mm CONST
-	return *dst_buff == Color;
+	unsigned* dst_buff = (unsigned*)dst + (x * 2 + mColorX) + 640 * (y * 2 + mColorY);	// $mm CONST
+	return *dst_buff == mColor;
 }
 
 bool RcRule::IsFoundAt(const uint8_t* curptr) const
