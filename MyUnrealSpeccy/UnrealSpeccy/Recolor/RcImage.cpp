@@ -7,17 +7,17 @@ RcImage::RcImage(const std::string& bmpName) : RcImage(bmpName, false, false)
 
 RcImage::RcImage(const std::string& bmpName, bool convertZx, bool pixelAutoKey)
 {
-	BmpName = bmpName;
+	mBmpName = bmpName;
 
 	PlainBMP bmp(bmpName);
-	Width = bmp.Width;
-	Height = bmp.Height;
-	Data = PlainBMP(bmpName).Data;
+	mWidth = bmp.Width;
+	mHeight = bmp.Height;
+	mData = PlainBMP(bmpName).Data;
 
 	if(convertZx)
 	{
-		Data = convertToZx(bmp, false);
-		ZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
+		mData = convertToZx(bmp, false);
+		mZxMaskData = convertToZx(bmp, true);	// it will be the only mask in the future!
 		
 		updateKeyData(pixelAutoKey);
 		//KeyOffset = findKeyOffset();
@@ -26,46 +26,46 @@ RcImage::RcImage(const std::string& bmpName, bool convertZx, bool pixelAutoKey)
 
 RcImage::RcImage(std::shared_ptr<RcImage> src_image, unsigned offset)
 {
-	Key = src_image->Key;
-	KeyOffsetX = src_image->KeyOffsetX;
-	KeyOffsetY = src_image->KeyOffsetY;
-	BmpName = src_image->BmpName;
+	mKey = src_image->mKey;
+	mKeyOffsetX = src_image->mKeyOffsetX;
+	mKeyOffsetY = src_image->mKeyOffsetY;
+	mBmpName = src_image->mBmpName;
 
-	Width = src_image->Width + 8;
-	Height = src_image->Height;
+	mWidth = src_image->mWidth + 8;
+	mHeight = src_image->mHeight;
 
-	copyData(src_image, src_image->Data, Data);
-	copyData(src_image, src_image->ZxMaskData, ZxMaskData);
+	copyData(src_image, src_image->mData, mData);
+	copyData(src_image, src_image->mZxMaskData, mZxMaskData);
 
 	for (unsigned i = 0; i < offset; ++i)
 	{
-		shiftData(Data);
-		shiftData(ZxMaskData);
+		shiftData(mData);
+		shiftData(mZxMaskData);
 	}
 }
 
 void RcImage::copyData(std::shared_ptr<RcImage> src_image, const std::vector<uint8_t>& src_data, std::vector<uint8_t>& dst_data)
 {
-	unsigned size = Width * Height / 8;
+	unsigned size = mWidth * mHeight / 8;
 	dst_data.resize(size);
 	std::fill(dst_data.begin(), dst_data.end(), 0);
 
-	for (unsigned x = 0; x < src_image->Width / 8; ++x)
-		for (unsigned y = 0; y < src_image->Height; ++y)
-			dst_data[x + (Width / 8) * y] = src_data[x + (src_image->Width / 8) * y];
+	for (unsigned x = 0; x < src_image->mWidth / 8; ++x)
+		for (unsigned y = 0; y < src_image->mHeight; ++y)
+			dst_data[x + (mWidth / 8) * y] = src_data[x + (src_image->mWidth / 8) * y];
 }
 
 bool RcImage::IsFoundAt(const uint8_t* curptr) const
 {
-	unsigned WidthBytes = Width / 8;
-	const uint8_t* realCurPtr = curptr -(320 / 8) * KeyOffsetY - KeyOffsetX;
+	unsigned WidthBytes = mWidth / 8;
+	const uint8_t* realCurPtr = curptr -(320 / 8) * mKeyOffsetY - mKeyOffsetX;
 	//const uint8_t* realCurPtr = curptr - (320 / 8) *  int(KeyOffset / WBone) - (KeyOffset % WBone);
 
-	for (unsigned y = 0; y < Height; ++y)
+	for (unsigned y = 0; y < mHeight; ++y)
 	{
 		const uint8_t* x_buff = realCurPtr + (320 / 8) * y;
-		const uint8_t* x_databuff = &Data[0] + WidthBytes * y;
-		const uint8_t* x_maskbuff = &ZxMaskData[0] + WidthBytes * y;
+		const uint8_t* x_databuff = &mData[0] + WidthBytes * y;
+		const uint8_t* x_maskbuff = &mZxMaskData[0] + WidthBytes * y;
 
 		for (unsigned x = 0; x < WidthBytes; ++x)
 		{
@@ -79,10 +79,10 @@ bool RcImage::IsFoundAt(const uint8_t* curptr) const
 
 void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 {
-	unsigned wx = Width, wy = Height;
+	unsigned wx = mWidth, wy = mHeight;
 
 	uint8_t* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
-	auto UData = reinterpret_cast<const unsigned*>(&Data[0]);
+	auto UData = reinterpret_cast<const unsigned*>(&mData[0]);
 	unsigned uc = 1;
 	bool is_tr_color = false;
 	unsigned c = 0;
@@ -98,10 +98,10 @@ void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 				uc = 4;
 			}
 
-			unsigned color = Data[c++];
+			unsigned color = mData[c++];
 
 			if(!is_tr_color)
-				*(dst_buff + xc) = color; //Data[c++];
+				*(dst_buff + xc) = color; //mData[c++];
 		}
 		dst_buff += pitch;
 	}
@@ -109,19 +109,19 @@ void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 
 void RcImage::shiftData(std::vector<uint8_t>& data)
 {
-	for(unsigned y = 0; y < Height; ++y)
+	for(unsigned y = 0; y < mHeight; ++y)
 	{
-		char lobit = data[0 + (Width / 8) * y] & 1;
-		data[0 + (Width / 8) * y] >>= 1;
+		char lobit = data[0 + (mWidth / 8) * y] & 1;
+		data[0 + (mWidth / 8) * y] >>= 1;
 
-		for(unsigned x = 1; x < (Width / 8); ++x)
+		for(unsigned x = 1; x < (mWidth / 8); ++x)
 		{
 			char old_lobit = lobit;
-			lobit = data[x + (Width / 8) * y] & 1;
+			lobit = data[x + (mWidth / 8) * y] & 1;
 
-			data[x + (Width / 8) * y] >>= 1;
+			data[x + (mWidth / 8) * y] >>= 1;
 			if(old_lobit)
-				data[x + (Width / 8) * y] |= 128; // 1000 0000
+				data[x + (mWidth / 8) * y] |= 128; // 1000 0000
 		}
 	}
 }
@@ -188,31 +188,31 @@ std::vector<uint8_t> RcImage::convertToZx(const PlainBMP& bmp, bool asMask)
 
 void RcImage::updateKeyData(bool pixelAutoKey)
 {
-	Key = KeyOffsetX = KeyOffsetY = 0;
+	mKey = mKeyOffsetX = mKeyOffsetY = 0;
 
 	// find an appropriate key fragment with no masked pixels and non-zero/non-65535 value
-	auto WidthBytes = Width / 8;
+	auto WidthBytes = mWidth / 8;
 	
-	for (unsigned i = 0; i < ZxMaskData.size() - WidthBytes; ++i)
+	for (unsigned i = 0; i < mZxMaskData.size() - WidthBytes; ++i)
 	{
 		if (!pixelAutoKey && (i / WidthBytes) % 8 != 0)
 			continue;
-		if (ZxMaskData[i] == 0xFF && ZxMaskData[i + WidthBytes] == 0xFF)
+		if (mZxMaskData[i] == 0xFF && mZxMaskData[i + WidthBytes] == 0xFF)
 		{
-			auto curKey = MAKEWORD(Data[i + WidthBytes], Data[i]);
+			auto curKey = MAKEWORD(mData[i + WidthBytes], mData[i]);
 
 			if (curKey != 0 && curKey != 0xFFFF)
 			{
-				Key = curKey;
-				KeyOffsetX = i % WidthBytes;
-				KeyOffsetY = i / WidthBytes;
+				mKey = curKey;
+				mKeyOffsetX = i % WidthBytes;
+				mKeyOffsetY = i / WidthBytes;
 
-				//printf("%s: key %d found at (%d, %d)\n", BmpName.c_str(), Key, KeyOffsetX, KeyOffsetY);
+				//printf("%s: key %d found at (%d, %d)\n", mBmpName.c_str(), mKey, mKeyOffsetX, mKeyOffsetY);
 				return;
 			}
 		}
 	}
 
-	printf("%s: zero key assigned\n", BmpName.c_str());
+	printf("%s: zero key assigned\n", mBmpName.c_str());
 }
 

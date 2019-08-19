@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include "RcImage.h"
+#include <tuple>
 
 class BlitList
 {
