@@ -6,14 +6,11 @@
 #include "../emul.h"
 #include "../sound.h"
 extern CONFIG conf;
-//conf.sound.beeper_vol = 0;
-///conf.sound.ay_vol = 0;
-//apply_sound();
 
 SoundEvents::SoundEvents(ActiveSoundsMap& soundsMap): mActiveSounds(soundsMap)
 {
-	mAyVolume = conf.sound.ay_vol;
-	mBeeperVolume = conf.sound.beeper_vol;
+	mAyVolume = 8192;		// $mm TODO: get from INI file (intialize on the first run only)
+	mBeeperVolume = 8192;
 }
 
 void SoundEvents::Apply()
@@ -67,5 +64,6 @@ void SoundEvents::Update()
 		if (e.second.MuteAY)
 			conf.sound.ay_vol = 0;
 	}
+
 	apply_sound();
 }
