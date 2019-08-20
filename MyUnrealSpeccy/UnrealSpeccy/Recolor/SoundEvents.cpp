@@ -53,6 +53,9 @@ void SoundEvents::Update()
 	for(auto channel : inactiveChannels)
 		mActiveSounds.erase(channel);
 
+	auto prev_beeper_vol = conf.sound.beeper_vol;
+	auto prev_ay_vol = conf.sound.ay_vol;
+
 	conf.sound.beeper_vol = mBeeperVolume;
 	conf.sound.ay_vol = mAyVolume;
 
@@ -64,5 +67,6 @@ void SoundEvents::Update()
 			conf.sound.ay_vol = 0;
 	}
 
-	apply_sound();
+	if(prev_beeper_vol != conf.sound.beeper_vol || prev_ay_vol != conf.sound.ay_vol)
+		apply_sound();
 }
