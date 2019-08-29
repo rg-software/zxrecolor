@@ -110,10 +110,10 @@ bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const
 		return true;
 
 	for(const auto& [mColorX, mColorY, mColor] : mXYColor)
-		if(ZxImage->IsFoundColor(dst + 2 * (x + mColorX + 640 * (y + mColorY)), mColor))
-			return true;
+		if(!ZxImage->IsFoundColor(dst + 2 * (x + mColorX + 640 * (y + mColorY)), mColor))
+			return false;
 	
-	return false;
+	return true;
 }
 
 bool RcRule::IsFoundAt(const uint8_t* curptr) const
