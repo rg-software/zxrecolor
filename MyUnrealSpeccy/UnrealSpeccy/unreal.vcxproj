@@ -71,6 +71,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <AdditionalOptions>/std:c++17 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Midl>
       <TypeLibraryName>.\src___Win32_Debug\src.tlb</TypeLibraryName>
@@ -116,6 +117,7 @@ ver &gt; nul</Command>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <AdditionalOptions>/std:c++17 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <PostBuildEvent>
       <Command>echo n | copy /-y roms\*.rom release\ &gt; nul

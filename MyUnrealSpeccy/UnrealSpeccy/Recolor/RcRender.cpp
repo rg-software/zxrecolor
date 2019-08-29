@@ -57,11 +57,13 @@ void blackwhite_render(unsigned char *src, unsigned char *dst, unsigned delta, u
 
 
 void rend_dbl(unsigned char *dst, unsigned pitch);
-void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen);
+void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen);
 void __declspec(noreturn) errexit(const char *err, const char *str = 0);
 
 enum class DisplayMode { NORMAL, BLACKWHITE, RECOLOR_OFF };
 DisplayMode CurrentDisplayMode = DisplayMode::NORMAL;
+
+bool Debug = false;
 
 void AdjustDisplayMode()
 {
@@ -74,6 +76,9 @@ void AdjustDisplayMode()
 		CurrentDisplayMode = DisplayMode::RECOLOR_OFF;
 	if (GetKeyState('3') & 0x8000)
 		CurrentDisplayMode = DisplayMode::BLACKWHITE;
+
+	Debug = GetKeyState('4') & 0x8000;
+
 }
 
 void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsigned delta, const unsigned *tab)
@@ -92,11 +97,11 @@ void recolor_render(unsigned char *src, unsigned char *dst, unsigned pitch, unsi
 
 	create_zxscreen(src, zx_screen, delta, tab);
 	rend_dbl(dst, pitch); // standard 2D renderer
-	
+
 	try
 	{
 		if (CurrentDisplayMode == DisplayMode::NORMAL)
-			recolor_render_impl(dst, pitch, zx_screen, nullptr); // recoloring
+			recolor_render_impl((unsigned*)dst, pitch, zx_screen, nullptr); // recoloring
 	}
 	catch(const std::exception& e)
 	{

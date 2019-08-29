@@ -59,7 +59,6 @@ bool RcImage::IsFoundAt(const uint8_t* curptr) const
 {
 	unsigned WidthBytes = mWidth / 8;
 	const uint8_t* realCurPtr = curptr -(320 / 8) * mKeyOffsetY - mKeyOffsetX;
-	//const uint8_t* realCurPtr = curptr - (320 / 8) *  int(KeyOffset / WBone) - (KeyOffset % WBone);
 
 	for (unsigned y = 0; y < mHeight; ++y)
 	{
@@ -77,16 +76,23 @@ bool RcImage::IsFoundAt(const uint8_t* curptr) const
 	return true;
 }
 
+bool RcImage::IsFoundColor(unsigned* dst, unsigned color) const	
+{
+	return color == *(dst - 2*(640 * mKeyOffsetY - mKeyOffsetX));
+}
+
 void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 {
 	unsigned wx = mWidth, wy = mHeight;
 
-	uint8_t* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
+	uint8_t* dst_buff = dst + x * 3 + pitch * y; // why x*3 ?.. 3 bytes per point?; pitch is 320*2*4 (640 pixels, unsigned elements)
 	auto UData = reinterpret_cast<const unsigned*>(&mData[0]);
 	unsigned uc = 1;
 	bool is_tr_color = false;
 	unsigned c = 0;
 
+	// image data consists of "unsigned" (4-byte) values
+	// the fourth byte is not used, and "transparency" is a special color (TRANSPARENT_COLOR)
 	for(unsigned yc = y; yc < y + wy; ++yc)
 	{
 		for(unsigned xc = x; xc < x + wx * 4; ++xc)
@@ -101,7 +107,7 @@ void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 			unsigned color = mData[c++];
 
 			if(!is_tr_color)
-				*(dst_buff + xc) = color; //mData[c++];
+				*(dst_buff + xc) = color; // write four bytes
 		}
 		dst_buff += pitch;
 	}

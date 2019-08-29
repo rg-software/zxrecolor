@@ -3,6 +3,7 @@
 #include "Blitlist.h"
 #include "SoundEvents.h"
 #include <map>
+#include <tuple>
 
 class RcRule
 {
@@ -29,7 +30,7 @@ public:
 		blitlist.AddElement(x + mOffsetX - 8 * ZxImage->GetKeyOffsetX(), y + mOffsetY - ZxImage->GetKeyOffsetY(), RecoloredImage, mLayer);
 	}
 
-	bool IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const;
+	bool IsFoundColor(unsigned* dst, unsigned x, unsigned y) const;
 	bool IsFoundAt(const uint8_t* curptr, unsigned offset) const;
 	bool IsFoundAt(const uint8_t* curptr) const;
 
@@ -47,8 +48,9 @@ private:
 	int mZxWidth;
 	bool mMatchColor;
 	int mOffsetX, mOffsetY;
-	int mColorX, mColorY;
-	unsigned mColor;
+	std::vector<std::tuple<int, int, unsigned>> mXYColor;
+	//int mColorX, mColorY;
+	//unsigned mColor;
 	int mLayer;	// or channel
 
 	bool mAppearsFlag;

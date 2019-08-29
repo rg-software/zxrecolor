@@ -35,17 +35,24 @@ RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(f
 
 	if(orig_pic.find('|') != std::string::npos) // color part is found (orig_pic|color_part)
 	{
-		std::string color_part = orig_pic.substr(orig_pic.find('|') + 1);
+		std::string full_color_part = orig_pic.substr(orig_pic.find('|') + 1);
 		orig_pic = orig_pic.substr(0, orig_pic.find('|'));
 
-		mMatchColor = true; // color_part = "x,y,color_name"
-		mColorX = atoi(color_part.substr(0, color_part.find(',')).c_str());
-		color_part = color_part.substr(color_part.find(',') + 1);
-		mColorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
-		color_part = color_part.substr(color_part.find(',') + 1);
-		if(mNameRGB.find(color_part) == mNameRGB.end())
-			throw std::runtime_error("Incorrect color name"); // should never happen
-		mColor = mNameRGB[color_part];
+		mMatchColor = true; // color_part = "x,y,color_name" (repeated, |-delimited)
+
+		std::stringstream ss(full_color_part);
+		std::string color_part;
+		while (std::getline(ss, color_part, '|'))
+		{
+			auto colorX = atoi(color_part.substr(0, color_part.find(',')).c_str());
+			color_part = color_part.substr(color_part.find(',') + 1);
+			auto colorY = atoi(color_part.substr(0, color_part.find(',')).c_str());
+			color_part = color_part.substr(color_part.find(',') + 1);
+			if (mNameRGB.find(color_part) == mNameRGB.end())
+				throw std::runtime_error("Incorrect color name"); // should never happen
+			auto color = mNameRGB[color_part];
+			mXYColor.emplace_back(colorX, colorY, color);
+		}
 	}
 
 	if(new_pic.find('|') != std::string::npos)
@@ -97,14 +104,16 @@ RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(f
 	mMuteBeeperFlag = soundFlags.find("mute_beeper") != soundFlags.end();
 }
 
-bool RcRule::IsFoundColor(unsigned char *dst, unsigned x, unsigned y) const
+bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const
 {
-	// $mm double-check with new "auto-key finding" option
 	if (!mMatchColor)
 		return true;
 
-	unsigned* dst_buff = (unsigned*)dst + (x * 2 + mColorX) + 640 * (y * 2 + mColorY);	// $mm CONST
-	return *dst_buff == mColor;
+	for(const auto& [mColorX, mColorY, mColor] : mXYColor)
+		if(ZxImage->IsFoundColor(dst + 2 * (x + mColorX + 640 * (y + mColorY)), mColor))
+			return true;
+	
+	return false;
 }
 
 bool RcRule::IsFoundAt(const uint8_t* curptr) const

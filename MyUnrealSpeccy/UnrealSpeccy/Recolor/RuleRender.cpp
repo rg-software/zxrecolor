@@ -48,7 +48,7 @@ void LoadRules()
 }
 
 // find a list of found zx-images (only perfect matches within 8*8 blocks are found)
-template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
+template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned* dst, unsigned char* zx_screen, Op op)
 {
 	for(unsigned scry = 0; scry < 240 - 8; scry += 8) // every 8 pixels
 	{
@@ -57,6 +57,11 @@ template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned cha
 		{
 			unsigned curKey = MAKEWORD(*(curptr + 320 / 8), *curptr);
 			unsigned keys[] = { 0,  curKey == 0 ? 0xFFFF : curKey }; // we don't have sprites with 0xFFFF key, so it will be skipped
+			
+			//unsigned* curdst = (unsigned*)dst + 320 * scry + scrx;	// $mm to fix: unsigned char* -> unsigned*
+//			uint8_t* dst_buff = dst + x * 3 + pitch * y; // for some reason x*3
+			//unsigned char* curdst = dst + scrx * 3 + 320*2*4 * scry;
+
 			for(auto key : keys)
 			{
 				auto endIt = Rules.EndByKey(key);
@@ -69,7 +74,7 @@ template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned cha
 	}
 }
 
-template<typename Op> void RunPixelRules(const RcRuleVector& Rules, unsigned char *dst, unsigned char* zx_screen, Op op)
+template<typename Op> void RunPixelRules(const RcRuleVector& Rules, unsigned* dst, unsigned char* zx_screen, Op op)
 {
 	for(unsigned scry = 0; scry < 240 - 8; ++scry) // every pixel
 	{
@@ -97,7 +102,7 @@ template<typename Op> void RunPixelRules(const RcRuleVector& Rules, unsigned cha
 	}
 }
 
-void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen)
+void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen, unsigned char* color_screen)
 {
 	static bool firstRun = true;
 	
@@ -113,32 +118,32 @@ void recolor_render_impl(unsigned char *dst, unsigned pitch, unsigned char* zx_s
 	SoundEvents soundevents(BeeperVolume, AyVolume, ActiveSounds);
 	RuleSet MatchedRules;
 
-	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 			{
 				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))
 					rule->AddToBlitList(x, y, blitlist);
 			});
 
-	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 			{
 				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))
 					rule->AddToBlitList(x + offset, y, blitlist);
 			});
 
 
-	RunBlockRules(AllRules[RcRule::SOUND_BLOCK], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	RunBlockRules(AllRules[RcRule::SOUND_BLOCK], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
 		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))	// $mm to refactor
 			MatchedRules.insert(rule);
 	});
 	
-	RunPixelRules(AllRules[RcRule::SOUND_PIXEL], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned char *dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	RunPixelRules(AllRules[RcRule::SOUND_PIXEL], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
 		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))	// $mm to refactor
 			MatchedRules.insert(rule);
 	});
 
-	blitlist.SortAndBlit(pitch, dst);
+	blitlist.SortAndBlit(pitch, (unsigned char*)dst);
 
 	RuleSet appeared, disappeared;
 	
