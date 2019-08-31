@@ -25,7 +25,8 @@ std::map<std::string, unsigned> RcRule::mNameRGB =
 	{"white+", RGB_MAKE(0xFE, 0xFE, 0xFE)}
 };
 
-RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(false), mMuteAyFlag(false), mMuteBeeperFlag(false), mMatchColor(false), mOffsetX(0), mOffsetY(0)
+RcRule::RcRule(const std::string& line) 
+: mAppearsFlag(false), mDisappearsFlag(false), mMuteAyFlag(false), mMuteBeeperFlag(false), mMatchColor(false), mProtectedFlag(false), mOffsetX(0), mOffsetY(0)
 {
 	mID = ++mRuleCount;
 	std::string type, orig_pic, new_pic;
@@ -65,7 +66,6 @@ RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(f
 		mOffsetY = atoi(xy_part.substr(0, xy_part.find(',')).c_str());
 	}
 
-
 	if (type == "block")
 		mType = BLOCK;
 	else if (type == "pixel")
@@ -90,18 +90,40 @@ RcRule::RcRule(const std::string& line) : mAppearsFlag(false), mDisappearsFlag(f
 	mZxHeight = ZxImage->GetHeight();
 	mZxWidth = ZxImage->GetWidth();
 
-	std::set<std::string> soundFlags;
+	std::set<std::string> flags;
 	while(iss)
 	{
 		std::string flagstr;
 		iss >> flagstr;
-		soundFlags.insert(flagstr);
+		flags.insert(flagstr);
 	}
 		
-	mAppearsFlag = soundFlags.find("appears") != soundFlags.end();
-	mDisappearsFlag = soundFlags.find("disappears") != soundFlags.end();
-	mMuteAyFlag = soundFlags.find("mute_ay") != soundFlags.end();
-	mMuteBeeperFlag = soundFlags.find("mute_beeper") != soundFlags.end();
+	mAppearsFlag = flags.find("appears") != flags.end();
+	mDisappearsFlag = flags.find("disappears") != flags.end();
+	mMuteAyFlag = flags.find("mute_ay") != flags.end();
+	mMuteBeeperFlag = flags.find("mute_beeper") != flags.end();
+
+	auto protectedIt = std::find_if(flags.begin(), flags.end(), [](const std::string& v) { return v.find("protected") != std::string::npos; });
+	if(protectedIt != flags.end())
+	{
+		mProtectedFlag = true;
+		mProtectedPixels = atoi(protectedIt->substr(protectedIt->find('|') + 1).c_str());
+	}
+}
+
+void RcRule::AddToSoundEvents(bool appears, bool disappears, SoundEvents& events) const
+{
+	if(mAppearsFlag && appears)
+		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sound);
+
+	if(mDisappearsFlag && disappears)
+		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sound);
+}
+
+void RcRule::AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
+{
+	blitlist.AddElement(x + mOffsetX - 8 * ZxImage->GetKeyOffsetX(), y + mOffsetY - ZxImage->GetKeyOffsetY(),
+	                    RecoloredImage, mLayer);
 }
 
 bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const
@@ -116,12 +138,29 @@ bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const
 	return true;
 }
 
-bool RcRule::IsFoundAt(const uint8_t* curptr) const
+bool RcRule::IsApproximateMatch(const uint8_t* curptr, unsigned offset) const
 {
-	return ZxImage->IsFoundAt(curptr);
+	auto count = (mType == BLOCK || mType == SOUND_BLOCK ? ZxImage->MatchingPixelsCount(curptr) : ZxImages[offset]->MatchingPixelsCount(curptr));
+	return count >= mProtectedPixels;
+}
+
+bool RcRule::IsProtected() const
+{
+	return mProtectedFlag;
+}
+
+unsigned short RcRule::GetZxKey() const
+{
+	return ZxImage->GetZxKey();
+}
+
+bool RcRule::operator<(const RcRule& rhs) const
+{
+	return GetZxKey() < rhs.GetZxKey();
 }
 
 bool RcRule::IsFoundAt(const uint8_t* curptr, unsigned offset) const
 {
-	return ZxImages[offset]->IsFoundAt(curptr);
+	// $mm NOTE: we list explict block types here, should eventually refactor it
+	return mType == BLOCK || mType == SOUND_BLOCK ? ZxImage->IsFoundAt(curptr) : ZxImages[offset]->IsFoundAt(curptr);
 }

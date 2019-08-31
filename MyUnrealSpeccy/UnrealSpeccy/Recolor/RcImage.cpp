@@ -55,6 +55,39 @@ void RcImage::copyData(std::shared_ptr<RcImage> src_image, const std::vector<uin
 			dst_data[x + (mWidth / 8) * y] = src_data[x + (src_image->mWidth / 8) * y];
 }
 
+unsigned RcImage::MatchingPixelsCount(const uint8_t* curptr) const	// $mm NOTE: this is almost a copy of IsFoundAt(), refactor it
+{
+	unsigned WidthBytes = mWidth / 8;
+	const uint8_t* realCurPtr = curptr - (320 / 8) * mKeyOffsetY - mKeyOffsetX;
+	unsigned count = 0;
+
+	for (unsigned y = 0; y < mHeight; ++y)
+	{
+		const uint8_t* x_buff = realCurPtr + (320 / 8) * y;
+		const uint8_t* x_databuff = &mData[0] + WidthBytes * y;
+		const uint8_t* x_maskbuff = &mZxMaskData[0] + WidthBytes * y;
+
+		for (unsigned x = 0; x < WidthBytes; ++x)
+		{
+			auto x_byte = *x_buff, x_maskbyte = *x_maskbuff, x_databyte = *x_databuff;
+			for (unsigned i = 0; i < 8; ++i)
+			{
+				if ((x_maskbyte & 1) == 1 && (x_byte & 1) == (x_databyte & 1))	// this is not a mask, check it
+					count++;
+
+				x_byte >>= 1;
+				x_maskbyte >>= 1;
+				x_databyte >>= 1;
+			}
+			x_buff++;
+			x_maskbuff++;
+			x_databuff++;
+		}
+	}
+
+	return count;
+}
+
 bool RcImage::IsFoundAt(const uint8_t* curptr) const
 {
 	unsigned WidthBytes = mWidth / 8;

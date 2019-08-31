@@ -24,9 +24,11 @@
 extern CONFIG conf;
 
 typedef std::set<std::shared_ptr<RcRule>> RuleSet;
+typedef std::set<std::tuple<unsigned, unsigned, unsigned, unsigned char*, std::shared_ptr<RcRule>>> RuleLocSet;	// y, x, offset, ptr, rule
 std::map<RcRule::RuleType, RcRuleVector> AllRules;
 SoundEvents::ActiveSoundsMap ActiveSounds;
 RuleSet PrevMatchedRules;
+RuleLocSet PrevMatchedProtectedRules;
 unsigned AyVolume, BeeperVolume;
 
 void LoadRules()
@@ -66,7 +68,7 @@ template<typename Op> void RunBlockRules(const RcRuleVector& Rules, unsigned* ds
 			{
 				auto endIt = Rules.EndByKey(key);
 				for (auto p = Rules.BeginByKey(key); p != endIt; ++p)
-					op(scry, scrx * 8, dst, *p, curptr);
+					op(scry, scrx * 8, 0, dst, *p, curptr);
 			}
 			
 			++curptr;
@@ -117,31 +119,42 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 	BlitList blitlist;
 	SoundEvents soundevents(BeeperVolume, AyVolume, ActiveSounds);
 	RuleSet MatchedRules;
+	RuleLocSet MatchedProtectedRules;
 
-	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
-			{
-				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))
-					rule->AddToBlitList(x, y, blitlist);
-			});
-
-	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, [&blitlist](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
-			{
-				if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))
-					rule->AddToBlitList(x + offset, y, blitlist);
-			});
-
-
-	RunBlockRules(AllRules[RcRule::SOUND_BLOCK], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+	auto blitLambda = [&blitlist, &MatchedProtectedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
-		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x, y) && rule->IsFoundAt(curptr))	// $mm to refactor
-			MatchedRules.insert(rule);
-	});
-	
-	RunPixelRules(AllRules[RcRule::SOUND_PIXEL], dst, zx_screen, [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
+		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))
+		{
+			rule->AddToBlitList(x + offset, y, blitlist);
+			if (rule->IsProtected())
+				MatchedProtectedRules.insert(std::make_tuple(y, x, offset, curptr, rule));	// $mm TOFIX: offset is missing here!
+		}
+	};
+
+	RunBlockRules(AllRules[RcRule::BLOCK], dst, zx_screen, blitLambda);
+	RunPixelRules(AllRules[RcRule::PIXEL], dst, zx_screen, blitLambda);
+
+	auto blitSound = [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
 		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))	// $mm to refactor
 			MatchedRules.insert(rule);
-	});
+	};
+
+	RunBlockRules(AllRules[RcRule::SOUND_BLOCK], dst, zx_screen, blitSound);
+	RunPixelRules(AllRules[RcRule::SOUND_PIXEL], dst, zx_screen, blitSound);
+
+	RuleLocSet disappeared_protected;
+	std::set_difference(PrevMatchedProtectedRules.begin(), PrevMatchedProtectedRules.end(), MatchedProtectedRules.begin(), MatchedProtectedRules.end(), std::inserter(disappeared_protected, disappeared_protected.begin()));
+
+	for(const auto& loc_rule : disappeared_protected)
+	{
+		const auto&[y, x, offset, ptr, rule] = loc_rule;
+		if(rule->IsApproximateMatch(ptr, offset))
+		{
+			rule->AddToBlitList(x + offset, y, blitlist);
+			MatchedProtectedRules.insert(loc_rule);
+		}
+	}
 
 	blitlist.SortAndBlit(pitch, (unsigned char*)dst);
 
@@ -160,4 +173,5 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 	soundevents.Update();
 
 	PrevMatchedRules = MatchedRules;
+	PrevMatchedProtectedRules = MatchedProtectedRules;
 }

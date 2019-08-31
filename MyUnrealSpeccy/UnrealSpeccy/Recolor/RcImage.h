@@ -11,6 +11,7 @@ public:
 	RcImage(std::shared_ptr<RcImage> src_image, unsigned offset);			// copy from another image
 
 	bool IsFoundAt(const uint8_t* curptr) const;
+	unsigned MatchingPixelsCount(const uint8_t* curptr) const;
 	bool IsFoundColor(unsigned* dst, unsigned color) const;
 
 	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const;
