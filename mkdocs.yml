@@ -1,0 +1,5 @@
+theme: mkdocs
+site_name: ZX Recoloring Project
+docs_dir: 'Docs_Source'
+site_dir: 'Docs'
+use_directory_urls: false

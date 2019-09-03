@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CallCmd">
+
+<PropertyGroup>
+	<Configuration>Release</Configuration>
+	<Cmd>Build</Cmd>
+</PropertyGroup>
+
+<Target Name="CallCmd">
+	<Exec Command="make_hqx.bat" WorkingDirectory="hqx" /> 
+	<MSBuild Projects="ZxColorTool/ZXColor.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
+	<MSBuild Projects="MyUnrealSpeccy/UnrealSpeccy.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
+</Target>
+
+</Project>
