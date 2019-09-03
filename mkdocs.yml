@@ -3,3 +3,10 @@ site_name: ZX Recoloring Project
 docs_dir: 'Docs_Source'
 site_dir: 'Docs'
 use_directory_urls: false
+nav:
+  - 'index.md'
+  - 'hello-world.md'
+  - 'rules-syntax.md'
+  - 'handy-tools.md'
+  - 'tips-and-tricks.md'
+  

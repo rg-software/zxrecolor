@@ -1,5 +1,5 @@
 # Writing rules
-This section is intended to be a succint yet complete description of rule types and rule syntax. It might be a bit difficult to read due to lack of practical examples, so make sure to read [Tips and tricks](tips-tricks.md) section as well.
+This section is intended to be a succint yet complete description of rule types and rule syntax. It might be a bit difficult to read it due to lack of practical examples, so make sure to check out [Tips and tricks](tips-and-tricks.md) section as well.
 
 ## Settings file
 
@@ -10,6 +10,8 @@ All required game transformations are performed by means of rules, listed in the
 
 <here-comes-my-first-rule>
 ```
+
+Rules are case-sensitive.
 
 ## Sprite replacement rules
 
@@ -23,7 +25,7 @@ Each sprite replacement rule can substitute an original ZX Spectrum sprite found
 
 If a game has non-blank background, it is necessary to ensure that foreground images (such as game characters) are drawn over the background rather than behind it. This can be achieved with layers: each subsequent layer is drawn only after the previous layer is complete. For example, all the sprites on the layer 1 will be drawn after all the sprites on the layer 0. The `layer-number` element should be an integer.
 
-### Rule types
+### Replacement rule types
 
 Currently there are two types of sprite replacement rules: `block` and `pixel`. ZX Spectrum screen is logically divided into 8x8-pixel blocks, having independent color palettes. In practice it means that immovable background elements are typically aligned with the borders of such blocks.
 
@@ -83,3 +85,40 @@ In effect, this technique allows to match immovable background objects when othe
 
 ## Sound rules
 
+Sound rules let you add your own music and sound effects to the game. Their basic syntax is similar to the syntax of sprite replacement rules:
+
+```
+<channel-number> <rule-type> <original-sprite> <sound-sample-file> <event> [flags] 
+```
+
+### Channels
+
+Every playback event is associated with an integer channel number. A single channel cannot be shared between two active playback events. If you start playback on the given channel, the previously active playback session of this channel will be interrupted.
+
+Zero channel is "exclusive": initiating a playback on the channel 0 will interrupt all other active playback events.
+
+### Sound rule types
+
+Sound rules are triggered with the same pattern matching routines as sprite replacement rules. Hence, there are two types of sound rules: `sound-block` and `sound-pixel`. The `<original-sprite>` declaration also follows the syntax used in replacement rules.
+
+### Events
+
+Sound playback is initiated when a specified events occurs. Currently, there are two types of sound events:
+
+- `appears`: occurs when the given sprite appears on the screen (it is found now, but was not found on the previous frame);
+- `disappears`: occurs when the given sprite disappears from the screen (it is not found now, but was found on the previous frame).
+
+Events are used to initiate a playback; there are no dedicated means for stopping a playback. However, it is possible to play an empty/silent sound file on the given channel to achieve the same outcome.
+
+### Sound samples
+
+A sound sample is a conventional audio file. A variety of formats are supported, including MP3, WAV, and OGG.
+
+### Flags
+
+You may want to mute regular Spectrum sound output while playing your custom samples. This is achieved with `mute_ay` and `mute_beeper` flags:
+
+- `mute_ay`: AY sound processor will be turned off while the rule is active;
+- `mute_beeper`: regular ZX beeper will be turned off while the rule is active.
+
+This way, regular sound system of Spectrum will be turned on only if there are no active rules with these flags set.
