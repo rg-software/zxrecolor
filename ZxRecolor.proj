@@ -10,8 +10,9 @@
 <Target Name="CallCmd">
 	<Exec Command="make_hqx.bat" WorkingDirectory="hqx" /> 
 	<MSBuild Projects="ZxColorTool/ZXColor.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
-	<MSBuild Projects="MyUnrealSpeccy/UnrealSpeccy.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
+	<MSBuild Projects="ZXColorEmul/UnrealSpeccy.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
 	<Exec Command="make_docs.bat" /> 
+	<Exec Command="copy_bins.bat" />
 </Target>
 
 </Project>

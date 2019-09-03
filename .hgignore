@@ -3,11 +3,11 @@ ZXColorTool/.vs/**
 ZXColorTool/ZXColor/bin/**
 ZXColorTool/ZXColor/obj/**
 ZXColorTool/ZXColor/ZXColor.csproj.user
-MyUnrealSpeccy/.vs/**
-MyUnrealSpeccy/UnrealSpeccy/.vs/**
-MyUnrealSpeccy/UnrealSpeccy/Debug/**
-MyUnrealSpeccy/UnrealSpeccy/Release/**
-MyUnrealSpeccy/UnrealSpeccy/unreal.vcxproj.user
+ZXColorEmul/.vs/**
+ZXColorEmul/UnrealSpeccy/.vs/**
+ZXColorEmul/UnrealSpeccy/Debug/**
+ZXColorEmul/UnrealSpeccy/Release/**
+ZXColorEmul/UnrealSpeccy/unreal.vcxproj.user
 hqx/.vs/**
 hqx/ALL_BUILD.vcxproj
 hqx/ALL_BUILD.vcxproj.filters
@@ -28,3 +28,4 @@ hqx/cmake_install.cmake
 hqx/hqx.exe
 Docs/**
 index.html
+bin/**
