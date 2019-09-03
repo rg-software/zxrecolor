@@ -11,6 +11,7 @@
 	<Exec Command="make_hqx.bat" WorkingDirectory="hqx" /> 
 	<MSBuild Projects="ZxColorTool/ZXColor.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
 	<MSBuild Projects="MyUnrealSpeccy/UnrealSpeccy.sln" Properties="Configuration=$(Configuration);UseEnv=true" Targets="$(Cmd)"/>
+	<Exec Command="make_docs.bat" /> 
 </Target>
 
 </Project>

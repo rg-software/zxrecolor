@@ -27,3 +27,4 @@ hqx/ZERO_CHECK.vcxproj.filters
 hqx/cmake_install.cmake
 hqx/hqx.exe
 Docs/**
+index.html

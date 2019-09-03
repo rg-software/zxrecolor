@@ -1,4 +1,4 @@
-# Hello, World!
+# Hello, world!
 
 For starters, let's try to recolor a couple of sprites in a small game titled [I, Ball II](http://www.worldofspectrum.org/infoseek.cgi?regexp=^I%2c+Ball+2%3a+Quest+for+the+Past$&loadpics=3).
 
