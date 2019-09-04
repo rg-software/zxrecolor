@@ -19,8 +19,6 @@ Many emulators improve video output by means of [hqx filter](https://en.wikipedi
 
 TODO
 <!-- A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:
-
-
 The main purpose of the tool is extraction of individual sprites out of a specifically marked-up image. It is quite hard to work with dozens of separate drawings. It is much easier to collect them into a single screen and to draw borders manually. Then ZX Color Tool will be able to save screen fragments as independent sprites automatically. Let's consider elements of the tool's main form:
 
 The Load Image button loads an image with sprites for further processing. In ZX mode the tool doubles the size of the image before displaying it (assuming that a user wants to load a ZX Spectrum screenshot with original-sized sprites).
@@ -40,6 +38,5 @@ Update the sprites in the file pc_game.bmp.
 Now it is possible to extract individual sprites from the collections using Split button.
 
 While updating the graphics, it is neccessary to make sure that each new sprite covers its original counterpart completely. Otherwise some fragments of original sprites would be visible on the screen, too. It is generally not recommended to depart too much from the original palette of moving objects. If the system would be unable to find a sprite due to some reason (for example, if the sprite is heavily covered with other objects), the displayed original sprite would be not so noticeable.
-
 
 -->
