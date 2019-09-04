@@ -41,6 +41,5 @@ Now it is possible to extract individual sprites from the collections using Spli
 
 While updating the graphics, it is neccessary to make sure that each new sprite covers its original counterpart completely. Otherwise some fragments of original sprites would be visible on the screen, too. It is generally not recommended to depart too much from the original palette of moving objects. If the system would be unable to find a sprite due to some reason (for example, if the sprite is heavily covered with other objects), the displayed original sprite would be not so noticeable.
 
-HQX
 
 -->
