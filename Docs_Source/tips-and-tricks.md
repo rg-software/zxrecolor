@@ -1,3 +1,0 @@
-# Tips and tricks
-
-TODO
