@@ -1,8 +1,24 @@
 # Handy tools
 
-ZX Color Tool
+While you can manage any recoloring project solely with the help of your favorite graphics editor, there are additional tools aimed to make this job easier. Please check them out.
 
-A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:
+## UnrealSpeccy Emulator
+
+UnrealSpeccy includes numerous developer-oriented instruments, and some additional means are added to our customized version. Here is a very incomplete list:
+
+- `Ctrl+1`, `Ctrl+2`, `Ctrl+3`: switch between recolored, original, and black-and-white rendering.
+- `Alt+F8`: take a screenshot.
+- `Ctrl+8`: record a video clip (you will need to have [ffmpeg.exe](files/ffmpeg.zip) in the emulator folder). You can change target video format in `unreal.ini`: search for "ffmpeg encoding options". Also note that the resulting video will be placed into the "current folder", which is `game` if you have already created it.
+
+
+## hqx
+
+Many emulators improve video output by means of [hqx filter](https://en.wikipedia.org/wiki/Hqx). Hqx-processed screenshots can be a good start for subsequent recoloring work. ZX Recoloring project includes a precompiled version of hqx command line tool. Run it with the original (unscaled) ZX Spectrum screenshot as an input argument to generate a double-sized hqx-improved `output.bmp`
+
+## ZX Color Tool
+
+TODO
+<!-- A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:
 
 
 The main purpose of the tool is extraction of individual sprites out of a specifically marked-up image. It is quite hard to work with dozens of separate drawings. It is much easier to collect them into a single screen and to draw borders manually. Then ZX Color Tool will be able to save screen fragments as independent sprites automatically. Let's consider elements of the tool's main form:
@@ -27,3 +43,4 @@ While updating the graphics, it is neccessary to make sure that each new sprite 
 
 HQX
 
+-->
