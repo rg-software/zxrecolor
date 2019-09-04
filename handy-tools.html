@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Handy tools - ZX Recoloring Project</title>
+        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="index.html">ZX Recoloring Project</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="index.html">About</a>
+                            </li>
+                            <li >
+                                <a href="hello-world.html">Hello, world!</a>
+                            </li>
+                            <li >
+                                <a href="rules-syntax.html">Writing rules</a>
+                            </li>
+                            <li class="active">
+                                <a href="handy-tools.html">Handy tools</a>
+                            </li>
+                            <li >
+                                <a href="tips-and-tricks.html">Tips and tricks</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="rules-syntax.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="tips-and-tricks.html">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#handy-tools">Handy tools</a></li>
+            <li><a href="#unrealspeccy-emulator">UnrealSpeccy Emulator</a></li>
+            <li><a href="#hqx">hqx</a></li>
+            <li><a href="#zx-color-tool">ZX Color Tool</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="handy-tools">Handy tools</h1>
+<p>While you can manage any recoloring project solely with the help of your favorite graphics editor, there are additional tools aimed to make this job easier. Please check them out.</p>
+<h2 id="unrealspeccy-emulator">UnrealSpeccy Emulator</h2>
+<p>UnrealSpeccy includes numerous developer-oriented instruments, and some additional means are added to our customized version. Here is a very incomplete list:</p>
+<ul>
+<li><code>Ctrl+1</code>, <code>Ctrl+2</code>, <code>Ctrl+3</code>: switch between recolored, original, and black-and-white rendering.</li>
+<li><code>Alt+F8</code>: take a screenshot.</li>
+<li><code>Ctrl+8</code>: record a video clip (you will need to have <a href="files/ffmpeg.zip">ffmpeg.exe</a> in the emulator folder). You can change target video format in <code>unreal.ini</code>: search for "ffmpeg encoding options". Also note that the resulting video will be placed into the "current folder", which is <code>game</code> if you have already created it.</li>
+</ul>
+<h2 id="hqx">hqx</h2>
+<p>Many emulators improve video output by means of <a href="https://en.wikipedia.org/wiki/Hqx">hqx filter</a>. Hqx-processed screenshots can be a good start for subsequent recoloring work. ZX Recoloring project includes a precompiled version of hqx command line tool. Run it with the original (unscaled) ZX Spectrum screenshot as an input argument to generate a double-sized hqx-improved <code>output.bmp</code></p>
+<h2 id="zx-color-tool">ZX Color Tool</h2>
+<p>TODO
+&lt;!-- A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:</p>
+<p>The main purpose of the tool is extraction of individual sprites out of a specifically marked-up image. It is quite hard to work with dozens of separate drawings. It is much easier to collect them into a single screen and to draw borders manually. Then ZX Color Tool will be able to save screen fragments as independent sprites automatically. Let's consider elements of the tool's main form:</p>
+<p>The Load Image button loads an image with sprites for further processing. In ZX mode the tool doubles the size of the image before displaying it (assuming that a user wants to load a ZX Spectrum screenshot with original-sized sprites).
+The button with an arrow (&gt;) adds a new object to the objects collection. The object name should be specified in the textfield to the left of the button.
+If a certain object is selected in the Objects list, the bounds of the corresponding screen sprite can be adjusted by left (left-up corner) and right (right-down corner) mouse clicks.
+The work with objects list is performed with Del (delete object), New (clear objects list), Load (load another objects list) and Save (save objects list) buttons.
+The Split button runs the process of sprites splitting. The ready images will be saved in the subfolder Output.
+Since original ZX sprites are rescaled while displaying on the ZX Color Tool's main form, the same objects list can be used both for image with original sprites, and for image with thir recolored counterparts.</p>
+<p>In general, the process of game modernization can look as follows:</p>
+<p>Place all original Spectrum sprites into zx_game.bmp file.
+Double the dimensions of this image and save it as pc_game.bmp.
+Using ZX Color Tool, mark-up the original sprites of zx_game.bmp. The name of each object is reasonable to start with prefix zx_. The objects list should be saved in file zx_objects.txt.
+Copy the contents of the file zx_objects.txt into the file pc_objects.txt. Edit the file pc_objects.txt by replacing all occurrences of the substring zx_ with the string pc_.
+Update the sprites in the file pc_game.bmp.
+Now it is possible to extract individual sprites from the collections using Split button.</p>
+<p>While updating the graphics, it is neccessary to make sure that each new sprite covers its original counterpart completely. Otherwise some fragments of original sprites would be visible on the screen, too. It is generally not recommended to depart too much from the original palette of moving objects. If the system would be unable to find a sprite due to some reason (for example, if the sprite is heavily covered with other objects), the displayed original sprite would be not so noticeable.</p>
+<p>--&gt;</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
