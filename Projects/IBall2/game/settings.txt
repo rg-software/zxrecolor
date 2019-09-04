@@ -1,0 +1,34 @@
+; layer, substitution type, what to search, new image
+0 pixel zx_tcloss.bmp pc_zxrecolor_logo.bmp|-53,-60
+;
+0 block zx_exit.bmp pc_exit.bmp
+;0 block zx_yellowball.bmp pc_yellowball.bmp
+0 block zx_bigblock.bmp pc_bigblock.bmp
+0 block zx_fuel.bmp pc_fuel.bmp
+0 block zx_pinkbrick.bmp pc_pinkbrick.bmp
+0 block zx_key.bmp pc_key.bmp
+;
+; blue red magenta green cyan yellow white
+0 pixel zx_graybrick.bmp|1,1,white pc_graybrick.bmp|0,0
+;0 pixel zx_graybrick.bmp pc_graybrick.bmp
+0 pixel zx_badball1.bmp pc_badball1.bmp
+0 pixel zx_badball2.bmp pc_badball2.bmp
+0 pixel zx_badball3.bmp pc_badball3.bmp
+0 pixel zx_badball4.bmp pc_badball4.bmp
+0 pixel zx_croc_r1.bmp pc_croc_r1.bmp
+0 pixel zx_croc_r2.bmp pc_croc_r2.bmp
+0 pixel zx_croc_r3.bmp pc_croc_r3.bmp
+0 pixel zx_croc_r4.bmp pc_croc_r4.bmp
+0 pixel zx_croc_l1.bmp pc_croc_l1.bmp
+0 pixel zx_croc_l2.bmp pc_croc_l2.bmp
+0 pixel zx_croc_l3.bmp pc_croc_l3.bmp
+0 pixel zx_croc_l4.bmp pc_croc_l4.bmp
+0 pixel zx_ball_l1.bmp pc_ball_l1.bmp
+0 pixel zx_ball_l2.bmp pc_ball_l2.bmp
+0 pixel zx_ball_l3.bmp pc_ball_l3.bmp
+0 pixel zx_ball_l4.bmp pc_ball_l4.bmp
+0 pixel zx_ball_r1.bmp pc_ball_r1.bmp
+0 pixel zx_ball_r2.bmp pc_ball_r2.bmp
+0 pixel zx_ball_r3.bmp pc_ball_r3.bmp
+0 pixel zx_ball_r4.bmp pc_ball_r4.bmp
+;
