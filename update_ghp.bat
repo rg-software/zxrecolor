@@ -5,9 +5,9 @@ copy /y update_ghp.bat "%TEMP%"\update_ghp.bat
 hg up default
 call make_docs.bat
 del index.html
-hg up gh-pages
+hg up docs
 robocopy Docs/ .  /s /move
 hg addremove *
 hg commit -m "Documentation update"
-rem hg bookmark -r gh-pages gh-pages
+hg bookmark -r docs gh-pages
 hg up default
