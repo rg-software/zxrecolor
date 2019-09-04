@@ -6,6 +6,6 @@ At least, this kind of logic is apparent in many great remakes like [Head over H
 
 ![](images/head_over_heels_spec_remake.png)
 
-If a game is playable enough, and it doesn't require a complete rewrite, can we upgrade it with less effort? ZX Recoloring Project aims to provide a toolset exactly for this purpose. There is no ambition to provide a solution for implementing all sorts of ideas in all sorts of games. The main focus is on simplicity of use: you can make your favorite game noticeably different less than in an hour, and keep adding new improvements gradually.
+If a game is playable enough, and it doesn't require a complete rewrite, can we upgrade it with less effort? [ZX Recoloring Project](https://github.com/rg-software/zxrecolor) aims to provide a toolset exactly for this purpose. There is no ambition to provide a solution for implementing all sorts of ideas in all sorts of games. The main focus is on simplicity of use: you can make your favorite game noticeably different less than in an hour, and keep adding new improvements gradually.
 
 The project is maintaned by [Maxim Mozgovoy](mailto:mozgovoy@u-aizu.ac.jp) in frustratingly rare moments of his spare time.

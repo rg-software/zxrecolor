@@ -15,7 +15,7 @@ Unlike [Spec256](http://www.emulatronia.com/emusdaqui/spec256/index-eng.htm), ZX
 
 This approach has certain obvious limitations: it won't work for games based on scalable vector graphics (such as [3D Tank Duel](http://www.worldofspectrum.org/infoseekid.cgi?id=0005136)), and handling overlapping sprites require additional efforts. However, very nice-looking results can be achieved in most cases.
 
-So, grab the tools, check out [documentation] and start recoloring your favorite games!
+So, grab the tools, check out [documentation](https://rg-software.github.io/zxrecolor/index.html) and start recoloring your favorite games!
 
 # Building
 The toolset can be built with MS Visual Studio 2017. Open `Developer Command Prompt for VS 2017`, navigate to the project folder and run 
