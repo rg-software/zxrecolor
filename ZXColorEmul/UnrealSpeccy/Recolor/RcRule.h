@@ -19,6 +19,7 @@ public:
 	void AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const;
 	bool IsFoundColor(unsigned* dst, unsigned x, unsigned y) const;
 	bool IsFoundAt(const uint8_t* curptr, unsigned offset) const;
+	bool IsValidPosition(unsigned x, unsigned y) const;
 	bool IsApproximateMatch(const uint8_t* curptr, unsigned offset) const;
 	bool IsProtected() const;
 	unsigned short GetZxKey() const;
@@ -31,6 +32,8 @@ private:
 	int mZxWidth;
 	bool mMatchColor;
 	int mOffsetX, mOffsetY;
+	unsigned mRuleX, mRuleY;
+	bool mUseRuleXY;
 	std::vector<std::tuple<int, int, unsigned>> mXYColor;
 	int mLayer;	// or channel
 

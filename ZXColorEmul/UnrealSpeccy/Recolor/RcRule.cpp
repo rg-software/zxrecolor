@@ -26,13 +26,25 @@ std::map<std::string, unsigned> RcRule::mNameRGB =
 };
 
 RcRule::RcRule(const std::string& line) 
-: mAppearsFlag(false), mDisappearsFlag(false), mMuteAyFlag(false), mMuteBeeperFlag(false), mMatchColor(false), mProtectedFlag(false), mOffsetX(0), mOffsetY(0)
+: mAppearsFlag(false), mDisappearsFlag(false), mMuteAyFlag(false), mMuteBeeperFlag(false), 
+  mMatchColor(false), mProtectedFlag(false), mOffsetX(0), mOffsetY(0), mUseRuleXY(false), mRuleX(0), mRuleY(0)
 {
 	mID = ++mRuleCount;
 	std::string type, orig_pic, new_pic;
 
 	std::istringstream iss(line);
 	iss >> mLayer >> type >> orig_pic >> new_pic;
+
+	if(type.find('|') != std::string::npos)	// rule XY part present
+	{
+		mUseRuleXY = true;
+		std::string rulexy_part = type.substr(type.find('|') + 1);
+		type = type.substr(0, type.find('|'));
+
+		mRuleX = atoi(rulexy_part.substr(0, rulexy_part.find(',')).c_str());
+		rulexy_part = rulexy_part.substr(rulexy_part.find(',') + 1);
+		mRuleY = atoi(rulexy_part.substr(0, rulexy_part.find(',')).c_str());
+	}
 
 	if(orig_pic.find('|') != std::string::npos) // color part is found (orig_pic|color_part)
 	{
@@ -124,6 +136,12 @@ void RcRule::AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
 {
 	blitlist.AddElement(x + mOffsetX - 8 * ZxImage->GetKeyOffsetX(), y + mOffsetY - ZxImage->GetKeyOffsetY(),
 	                    RecoloredImage, mLayer);
+}
+
+bool RcRule::IsValidPosition(unsigned x, unsigned y) const
+{
+	const int BORDER_LEFT = 32, BORDER_TOP = 24;
+	return !mUseRuleXY || (x == BORDER_LEFT + mRuleX && y == BORDER_TOP + mRuleY);
 }
 
 bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const

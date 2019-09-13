@@ -123,7 +123,7 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 
 	auto blitLambda = [&blitlist, &MatchedProtectedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
-		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))
+		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsValidPosition(x + offset, y) && rule->IsFoundAt(curptr, offset))
 		{
 			rule->AddToBlitList(x + offset, y, blitlist);
 			if (rule->IsProtected())
@@ -136,7 +136,7 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 
 	auto blitSound = [&MatchedRules](unsigned y, unsigned x, unsigned offset, unsigned* dst, std::shared_ptr<RcRule> rule, unsigned char* curptr)
 	{
-		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsFoundAt(curptr, offset))	// $mm to refactor
+		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsValidPosition(x + offset, y) && rule->IsFoundAt(curptr, offset))	// $mm to refactor
 			MatchedRules.insert(rule);
 	};
 
