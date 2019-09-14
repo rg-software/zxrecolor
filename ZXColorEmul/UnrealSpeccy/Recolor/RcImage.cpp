@@ -114,6 +114,11 @@ bool RcImage::IsFoundColor(unsigned* dst, unsigned color) const
 	return color == *(dst - 2*(640 * mKeyOffsetY - mKeyOffsetX));
 }
 
+bool RcImage::IsValidPosition(unsigned x, unsigned y) const
+{
+	return x - 8 * mKeyOffsetX == 0 && y - mKeyOffsetY == 0;
+}
+
 void RcImage::Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const
 {
 	unsigned wx = mWidth, wy = mHeight;

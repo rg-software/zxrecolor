@@ -138,12 +138,6 @@ void RcRule::AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const
 	                    RecoloredImage, mLayer);
 }
 
-bool RcRule::IsValidPosition(unsigned x, unsigned y) const
-{
-	const int BORDER_LEFT = 32, BORDER_TOP = 24;
-	return !mUseRuleXY || (x == BORDER_LEFT + mRuleX && y == BORDER_TOP + mRuleY);
-}
-
 bool RcRule::IsFoundColor(unsigned* dst, unsigned x, unsigned y) const
 {
 	if (!mMatchColor)
@@ -181,4 +175,14 @@ bool RcRule::IsFoundAt(const uint8_t* curptr, unsigned offset) const
 {
 	// $mm NOTE: we list explict block types here, should eventually refactor it
 	return mType == BLOCK || mType == SOUND_BLOCK ? ZxImage->IsFoundAt(curptr) : ZxImages[offset]->IsFoundAt(curptr);
+}
+
+bool RcRule::IsValidPosition(unsigned x, unsigned y, unsigned offset) const
+{
+	if (!mUseRuleXY)
+		return true;
+	
+	const int BORDER_LEFT = 32, BORDER_TOP = 24;	// $mm CONST!
+	return mType == BLOCK || mType == SOUND_BLOCK ? ZxImage->IsValidPosition(x - BORDER_LEFT - mRuleX, y - BORDER_TOP - mRuleY) :
+													ZxImages[offset]->IsValidPosition(x - BORDER_LEFT - mRuleX, y - BORDER_TOP - mRuleY);
 }

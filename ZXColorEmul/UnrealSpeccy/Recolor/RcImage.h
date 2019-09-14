@@ -13,6 +13,7 @@ public:
 	bool IsFoundAt(const uint8_t* curptr) const;
 	unsigned MatchingPixelsCount(const uint8_t* curptr) const;
 	bool IsFoundColor(unsigned* dst, unsigned color) const;
+	bool IsValidPosition(unsigned x, unsigned y) const;
 
 	void Blit(unsigned x, unsigned y, unsigned pitch, uint8_t* dst) const;
 	unsigned short GetZxKey() const { return mKey; }
