@@ -4,7 +4,6 @@
 #include "SoundEvents.h"
 #include <map>
 #include <tuple>
-#include <random>
 
 class RcRule
 {
@@ -31,39 +30,25 @@ private:
 	int mID;
 	int mZxHeight;
 	int mZxWidth;
-	bool mMatchColor = false;
-	int mOffsetX = 0, mOffsetY = 0;
-	unsigned mRuleX = 0, mRuleY = 0;
-	bool mUseRuleXY = false;
+	bool mMatchColor;
+	int mOffsetX, mOffsetY;
+	unsigned mRuleX, mRuleY;
+	bool mUseRuleXY;
 	std::vector<std::tuple<int, int, unsigned>> mXYColor;
 	int mLayer;	// or channel
 
-	bool mAppearsFlag = false;
-	bool mDisappearsFlag = false;
-	bool mMuteAyFlag = false;
-	bool mMuteBeeperFlag = false;
-	bool mProtectedFlag = false;
-	bool mLoopFlag = false;
-	//bool mSeqFlag = false;
-	//bool mRandFlag = false;
+	bool mAppearsFlag;
+	bool mDisappearsFlag;
+	bool mMuteAyFlag;
+	bool mMuteBeeperFlag;
+	bool mProtectedFlag;
 	unsigned mProtectedPixels;
 
 	std::vector<std::shared_ptr<RcImage>> ZxImages; // old is always small-screen (x1)
 	std::shared_ptr<RcImage> ZxImage;		// maybe we should eventually keep ZxImages only
 	std::shared_ptr<RcImage> RecoloredImage;
-	std::vector<std::shared_ptr<SoundTrack>> Sounds;
+	std::shared_ptr<SoundTrack> Sound;
 
 	static std::map<std::string, unsigned> mNameRGB;
 	static unsigned mRuleCount;
-	static std::random_device mRandomDevice;
-	static std::mt19937 mRandom;
-
-	static bool hasSeparator(const std::string& str);
-	static bool isFlagFound(const std::set<std::string>& flags, const std::string& flag);
-	static std::string leftPart(const std::string& str);
-	static std::string rightPart(const std::string& str);
-	static std::string leftCommaPart(const std::string& str);
-	static std::string rightCommaPart(const std::string& str);
-	static RuleType parseRuleType(const std::string& type);
-	static decltype(mXYColor) parseColorPart(const std::string& full_color_part);
 };
