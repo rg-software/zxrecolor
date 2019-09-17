@@ -6,7 +6,7 @@
 class SoundTrack
 {
 public:
-	SoundTrack(const std::string& soundName);
+	SoundTrack(const std::string& soundName, bool isLooped);
 	void Play() const;
 	bool IsPlaying() const;
 	void Stop() const;
