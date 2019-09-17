@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Hello, world! - ZX Recoloring Project</title>
+        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="index.html">ZX Recoloring Project</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="index.html">About</a>
+                            </li>
+                            <li class="active">
+                                <a href="hello-world.html">Hello, world!</a>
+                            </li>
+                            <li >
+                                <a href="rules-syntax.html">Writing rules</a>
+                            </li>
+                            <li >
+                                <a href="handy-tools.html">Handy tools</a>
+                            </li>
+                            <li >
+                                <a href="tips-and-tricks.html">Tips and tricks</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="index.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="rules-syntax.html">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#hello-world">Hello, world!</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="hello-world">Hello, world!</h1>
+<p>For starters, let's try to recolor a couple of sprites in a small game titled <a href="http://www.worldofspectrum.org/infoseek.cgi?regexp=^I%2c+Ball+2%3a+Quest+for+the+Past$&amp;loadpics=3">I, Ball II</a>.</p>
+<p>Download and extract the archive <a href="files/iball2.zip">iball2.zip</a>. It contains a minimal binary distribution of an open source Spectrum emulator <a href="http://dlcorp.nedopc.com/viewforum.php?f=27&amp;sid=9c36f0fd40937a326424f2719edb5a4a">Unreal Speccy</a> (the main executable file is renamed into <code>iball2.exe</code>), and a SNA image of I, Ball II. The snapshot is taken at the beginning of level 2, since it contains the sprites of our interest.</p>
+<p>Run the game (i.e., execute <code>iball2.exe</code>) and make sure that everything works correctly. The controls are set to Sinclair joystick (keyboard keys 6, 7, 8, 9, 0). Initially, the game screen should look like this:</p>
+<p><img alt="" src="images/iball2_orig.png" /></p>
+<p>Now let's update the sprites of yellow balls and gray boxes:</p>
+<ol>
+<li>
+<p>Create a subfolder <code>game</code> inside the game folder. Here you should place both the old sprite pictures you want to substitute and their upgraded versions. For the balls and the boxes you'll need <a href="files/iball2_pics.zip">these pictures</a>.</p>
+</li>
+<li>
+<p>Create in the same <code>game</code> subfolder a file <code>settings.txt</code>, containing the following lines:</p>
+<pre><code>0 block zx_yellowball.bmp pc_yellowball.bmp
+0 pixel zx_graybrick.bmp pc_graybrick.bmp
+</code></pre>
+</li>
+</ol>
+<p>That's it! Run the game and enjoy the result:</p>
+<p><img alt="" src="images/iball2_recolor.png" /></p>
+<p>Some final notes:</p>
+<ul>
+<li>
+<p>Recolored screen is twice wider and twice higher than the original ZX Spectrum screen, so in most cases recolored sprites should also be twice wider and twice higher than their original counterparts.</p>
+</li>
+<li>
+<p>Both original and recolored sprites should be stored in the BMP 24bpp format. Areas painted with the pinkish color <code>RGB(242, 10, 242)</code> are treated as transparent.</p>
+</li>
+<li>
+<p>All non-transparent pixels in the original sprites must be either black (ink) or white (paper).</p>
+</li>
+<li>
+<p>The configuration file <code>settings.txt</code> consists of lines including at least the following compulsory elements:</p>
+<pre><code>&lt;layer-number&gt; &lt;rule-type&gt; &lt;original-sprite&gt; &lt;new-sprite&gt;
+</code></pre>
+<p>Layers are needed to organize background and foreground elements properly. The system draws sprites layer by layer, so foreground sprites should be placed on higher-numbered layers.</p>
+<p>Different rule types are used here to reduce CPU load. Fast cell-precise <code>block</code> rules assume that the original sprites are always aligned with the borders of 8x8 pixel blocks (which is a very common case for background objects). In contrast, slower pixel-precise <code>pixel</code> rules perform complete searching.</p>
+<p>In our case, yellow balls never leave their initial positions, so cell-precise matching is sufficient. However, gray boxes fall down when touched, so pixel-precise matching is necessary in their case.</p>
+</li>
+</ul>
+<p>In practice everything is usually not so simple. Keep reading!</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
