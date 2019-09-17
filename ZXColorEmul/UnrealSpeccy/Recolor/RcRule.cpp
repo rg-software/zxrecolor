@@ -1,11 +1,10 @@
 #include "RcRule.h"
+#include "SoundTrack.h"
 #include <string>
 #include <sstream>
 #include <set>
 
 unsigned RcRule::mRuleCount = 0;
-std::random_device RcRule::mRandomDevice;
-std::mt19937 RcRule::mRandom(mRandomDevice());
 
 std::map<std::string, unsigned> RcRule::mNameRGB = 
 {
@@ -135,20 +134,23 @@ RcRule::RcRule(const std::string& line)
 	mMuteBeeperFlag = isFlagFound(flags, "mute_beeper");
 
 	mLoopFlag = isFlagFound(flags, "loop");
-	//mSeqFlag = isFlagFound(flags, "seq");
-	//mRandFlag = isFlagFound(flags, "rand");
+	mSeqFlag = isFlagFound(flags, "seq");
 
-	auto protectedIt = std::find_if(flags.begin(), flags.end(), [](const std::string& v) { return v.find("protected") != std::string::npos; });
+	auto protectedIt = std::find_if(flags.begin(), flags.end(), [](const auto& v) { return v.find("protected") != std::string::npos; });
 	if(protectedIt != flags.end())
 	{
 		mProtectedFlag = true;
 		mProtectedPixels = std::stoi(rightPart(*protectedIt));
 	}
 
+	auto volumeIt = std::find_if(flags.begin(), flags.end(), [](const auto& v) { return v.find("volume") != std::string::npos; });
+	if (volumeIt != flags.end())
+		mVolume = std::stoi(rightPart(*volumeIt));
+
 	if (mType == SOUND_BLOCK || mType == SOUND_PIXEL)
 	{
 		for(const auto& sound : soundNames)
-			Sounds.push_back(std::make_shared<SoundTrack>(sound, mLoopFlag));
+			Sounds->Add(std::make_shared<SoundTrack>(sound, mLoopFlag, mVolume / 100.0));
 	}
 	else
 		RecoloredImage = std::make_shared<RcImage>(new_pic);
@@ -157,13 +159,11 @@ RcRule::RcRule(const std::string& line)
 
 void RcRule::AddToSoundEvents(bool appears, bool disappears, SoundEvents& events) const
 {
-	std::uniform_int_distribution<> dist(0, Sounds.size() - 1);
-
 	if(mAppearsFlag && appears)
-		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sounds[dist(mRandom)]);
+		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sounds->GetSound(mSeqFlag));
 
 	if(mDisappearsFlag && disappears)
-		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sounds[dist(mRandom)]);
+		events.AddElement(mMuteAyFlag, mMuteBeeperFlag, mID, mLayer, Sounds->GetSound(mSeqFlag));
 }
 
 void RcRule::AddToBlitList(unsigned x, unsigned y, BlitList& blitlist) const

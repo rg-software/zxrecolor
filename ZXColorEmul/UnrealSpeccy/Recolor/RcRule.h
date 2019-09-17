@@ -1,10 +1,9 @@
 #include "RcImage.h"
-#include "SoundTrack.h"
 #include "Blitlist.h"
 #include "SoundEvents.h"
 #include <map>
 #include <tuple>
-#include <random>
+#include "SoundList.h"
 
 class RcRule
 {
@@ -44,19 +43,17 @@ private:
 	bool mMuteBeeperFlag = false;
 	bool mProtectedFlag = false;
 	bool mLoopFlag = false;
-	//bool mSeqFlag = false;
-	//bool mRandFlag = false;
+	bool mSeqFlag = false;
 	unsigned mProtectedPixels;
+	unsigned mVolume = 100;
 
 	std::vector<std::shared_ptr<RcImage>> ZxImages; // old is always small-screen (x1)
 	std::shared_ptr<RcImage> ZxImage;		// maybe we should eventually keep ZxImages only
 	std::shared_ptr<RcImage> RecoloredImage;
-	std::vector<std::shared_ptr<SoundTrack>> Sounds;
+	std::unique_ptr<SoundList> Sounds = std::make_unique<SoundList>();
 
 	static std::map<std::string, unsigned> mNameRGB;
 	static unsigned mRuleCount;
-	static std::random_device mRandomDevice;
-	static std::mt19937 mRandom;
 
 	static bool hasSeparator(const std::string& str);
 	static bool isFlagFound(const std::set<std::string>& flags, const std::string& flag);

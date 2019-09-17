@@ -354,6 +354,9 @@
     <ClCompile Include="Recolor\SoundEvents.cpp">
       <Filter>Source Files\Recolor</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\SoundList.cpp">
+      <Filter>Source Files\Recolor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -411,6 +414,9 @@
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
     <ClInclude Include="Recolor\RcRuleVector.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\SoundList.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
   </ItemGroup>

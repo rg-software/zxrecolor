@@ -18,11 +18,13 @@ void SoundTrack::initializeBass()
 	mBassInitialized = true;
 }
 
-SoundTrack::SoundTrack(const std::string& soundName, bool isLooped)
+SoundTrack::SoundTrack(const std::string& soundName, bool isLooped, double volume)
 {
 	initializeBass();
 	mSoundName = soundName;
 	mSoundHandle = BASS::StreamCreateFile(false, (void*)soundName.c_str(), 0, 0, isLooped ? BASS_SAMPLE_LOOP : 0);
+	BASS::ChannelSetAttribute(mSoundHandle, BASS_ATTRIB_VOL, volume);
+
 	if(!mSoundHandle)
 		throw std::runtime_error("Cannot load " + soundName);
 	// $mm todo: deinitialize on exit
