@@ -357,6 +357,12 @@
     <ClCompile Include="Recolor\SoundList.cpp">
       <Filter>Source Files\Recolor</Filter>
     </ClCompile>
+    <ClCompile Include="Recolor\Resource.cpp">
+      <Filter>Source Files\Recolor</Filter>
+    </ClCompile>
+    <ClCompile Include="Recolor\zip.c">
+      <Filter>Source Files\Recolor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="settings.rc">
@@ -417,6 +423,15 @@
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
     <ClInclude Include="Recolor\SoundList.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\Resource.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\miniz.h">
+      <Filter>Source Files\Recolor</Filter>
+    </ClInclude>
+    <ClInclude Include="Recolor\zip.h">
       <Filter>Source Files\Recolor</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,6 @@
 #include "RcImage.h"
 #include <cassert>
+#include "Resource.h"
 
 RcImage::RcImage(const std::string& bmpName) : RcImage(bmpName, false, false)
 {
@@ -172,12 +173,21 @@ void RcImage::shiftData(std::vector<uint8_t>& data)
 
 RcImage::PlainBMP::PlainBMP(const std::string& bmpName)
 {
-	if (GetFileAttributes(bmpName.c_str()) == -1)
-		throw std::runtime_error("File " + bmpName + " not found");
-
+	Resource bmpResource(bmpName);
+	const char* ibuf = bmpResource.Data().c_str();
+	
+	BITMAPFILEHEADER* pBmfh = (BITMAPFILEHEADER*)ibuf;
+	BITMAPINFOHEADER* pBmih = (BITMAPINFOHEADER*)(ibuf + sizeof(BITMAPFILEHEADER));
+	BITMAPINFO* pBmi = (BITMAPINFO*)pBmih;
+	void* pBMPdata = (void*)(ibuf + pBmfh->bfOffBits);
+	void* pToFill = 0;
+	HBITMAP hObj = CreateDIBSection(NULL, pBmi, DIB_RGB_COLORS, &pToFill, NULL, NULL);
+	memcpy(pToFill, pBMPdata, pBmfh->bfSize - pBmfh->bfOffBits);
 	BITMAP gBitmap;
-	HBITMAP hObj = (HBITMAP)::LoadImage(0, bmpName.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-	assert(hObj != NULL);
+
+	if (hObj == NULL)
+		throw std::runtime_error("BMP format error in file " + bmpName);
+
 	GetObject(hObj, sizeof(BITMAP), (LPVOID)&gBitmap);
 
 	Width = gBitmap.bmWidth;

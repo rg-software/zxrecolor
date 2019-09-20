@@ -2,6 +2,7 @@
 
 #include <string>
 #include <windows.h>
+#include "Resource.h"
 
 class SoundTrack
 {
@@ -14,6 +15,7 @@ public:
 private:
 	std::string mSoundName;	// primarily for debug
 	DWORD mSoundHandle;
+	std::unique_ptr<Resource> mSoundResource;
 	
 	static bool mBassInitialized;
 	static void initializeBass();

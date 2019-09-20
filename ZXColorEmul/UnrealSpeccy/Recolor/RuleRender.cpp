@@ -21,6 +21,7 @@
 #include "../sdk/ddk.h"
 #include "../emul.h"
 #include "../sound.h"
+#include "Resource.h"
 extern CONFIG conf;
 
 typedef std::set<std::shared_ptr<RcRule>> RuleSet;
@@ -33,8 +34,9 @@ unsigned AyVolume, BeeperVolume;
 
 void LoadRules()
 {
-	_chdir("game");
-	std::ifstream is("settings.txt");
+	Resource settings("settings.txt");
+	//_chdir("game");
+	std::stringstream is(settings.Data());
 	std::string line;
 	while(std::getline(is, line))
 	{

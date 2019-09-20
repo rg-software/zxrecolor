@@ -5,6 +5,7 @@
 #include "../sdk/ddk.h"
 #include "../emul.h"
 #include "../sound.h"
+#include "Resource.h"
 extern CONFIG conf;
 
 bool SoundTrack::mBassInitialized = false;
@@ -22,7 +23,8 @@ SoundTrack::SoundTrack(const std::string& soundName, bool isLooped, double volum
 {
 	initializeBass();
 	mSoundName = soundName;
-	mSoundHandle = BASS::StreamCreateFile(false, (void*)soundName.c_str(), 0, 0, isLooped ? BASS_SAMPLE_LOOP : 0);
+	mSoundResource = std::make_unique<Resource>(soundName);
+	mSoundHandle = BASS::StreamCreateFile(true, (void*)mSoundResource->Data().c_str(), 0, mSoundResource->Data().size(), isLooped ? BASS_SAMPLE_LOOP : 0);
 	BASS::ChannelSetAttribute(mSoundHandle, BASS_ATTRIB_VOL, volume);
 
 	if(!mSoundHandle)

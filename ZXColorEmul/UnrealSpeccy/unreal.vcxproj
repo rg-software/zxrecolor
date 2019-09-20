@@ -217,10 +217,12 @@ ver &gt; nul</Command>
     <ClCompile Include="Recolor\RcImage.cpp" />
     <ClCompile Include="Recolor\RcRender.cpp" />
     <ClCompile Include="Recolor\RcRule.cpp" />
+    <ClCompile Include="Recolor\Resource.cpp" />
     <ClCompile Include="Recolor\RuleRender.cpp" />
     <ClCompile Include="Recolor\SoundEvents.cpp" />
     <ClCompile Include="Recolor\SoundList.cpp" />
     <ClCompile Include="Recolor\SoundTrack.cpp" />
+    <ClCompile Include="Recolor\zip.c" />
     <ClCompile Include="savesnd.cpp" />
     <ClCompile Include="savevid.cpp" />
     <ClCompile Include="sdcard.cpp" />
@@ -279,12 +281,15 @@ ver &gt; nul</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Recolor\Blitlist.h" />
+    <ClInclude Include="Recolor\miniz.h" />
     <ClInclude Include="Recolor\RcImage.h" />
     <ClInclude Include="Recolor\RcRule.h" />
     <ClInclude Include="Recolor\RcRuleVector.h" />
+    <ClInclude Include="Recolor\Resource.h" />
     <ClInclude Include="Recolor\SoundEvents.h" />
     <ClInclude Include="Recolor\SoundList.h" />
     <ClInclude Include="Recolor\SoundTrack.h" />
+    <ClInclude Include="Recolor\zip.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
