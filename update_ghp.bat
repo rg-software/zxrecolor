@@ -12,7 +12,11 @@ copy /y update_ghp.bat "%TEMP%"\update_ghp.bat
 
 :: update documentation branch, 
 :: then switch back to the default
+
+:: make sure we are in default
+:: note: purge extension must be enabled
 hg up default
+hg purge --all
 call make_docs.bat
 del index.html
 hg up docs
