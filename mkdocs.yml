@@ -3,10 +3,14 @@ site_name: ZX Recoloring Project
 docs_dir: 'Docs_Source'
 site_dir: 'Docs'
 use_directory_urls: false
+markdown_extensions:
+  - codehilite:
+      guess_lang: false
 nav:
   - 'index.md'
   - 'hello-world.md'
   - 'rules-syntax.md'
+  - 'deployment.md'
   - 'handy-tools.md'
   - 'tips-and-tricks.md'
   

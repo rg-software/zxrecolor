@@ -13,7 +13,7 @@ These changes require no coding, and are applied instantly, so it is possible to
 
 Unlike [Spec256](http://www.emulatronia.com/emusdaqui/spec256/index-eng.htm), ZX Recoloring Project does not require you to analyze and modify game snapshots. Everything works by means of pattern matching: if a certain sprite can be found on the screen, it will be substituted in real time.
 
-This approach has certain obvious limitations: it won't work for games based on scalable vector graphics (such as [3D Tank Duel](http://www.worldofspectrum.org/infoseekid.cgi?id=0005136)), and handling overlapping sprites require additional efforts. However, very nice-looking results can be achieved in most cases.
+This approach naturally works better for sprite-based rather than vector graphics-based games, and handling overlapping sprites require additional efforts. However, very nice-looking results can be achieved in most cases.
 
 So, grab the tools, check out [documentation](https://rg-software.github.io/zxrecolor/index.html) and start recoloring your favorite games!
 
@@ -22,4 +22,20 @@ The toolset can be built with MS Visual Studio 2017. Open `Developer Command Pro
 
     msbuild ZxRecolor.proj
 
-The resulting files will be stored in the `bin` subfolder. If you have MkDocs installed, you will also get full project documentation accessible via `index.html`.
+The resulting files will be stored in the `bin` subfolder. If you have MkDocs installed, you will also get full project documentation accessible via `index.html`. To install MkDocs, make sure you have [Python](https://www.python.org/) available and run:
+
+    pip install mkdocs
+    pip install pygments
+    pip install -u markdown
+
+# Future plans
+
+- remove unnecessary emulator settings;
+- executing arbitrary user code capability;
+- faster sprite matching (via better hashing / key rebalancing);
+- "don't match areas matched in other sprites" option; 
+- support of custom border size and palette;
+- off-screen sprite clipping for crash prevention;
+- toolset improvements;
+- antiflicker filter (via delayed recoloring);
+- "protected" flag for moving sprites.

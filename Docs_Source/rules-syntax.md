@@ -18,7 +18,7 @@ Rules are case-sensitive.
 Each sprite replacement rule can substitute an original ZX Spectrum sprite found on the screen with its upgraded version. Recolored screen is twice wider and twice higher (512x384) than the original screen (256x192), and imposes no color limits. Sprite replacement rules are described with the following syntax:
 
 ```
-<layer-number> <rule-type> <original-sprite> <new-sprite> [protected|N]
+<layer-number> <rule-type>[|x,y] <original-sprite> <new-sprite> [protected|N]
 ```
 
 ### Layers
@@ -31,6 +31,8 @@ Currently there are two types of sprite replacement rules: `block` and `pixel`. 
 
 Rules of `block` type search original sprites aligned with block corners only. In contrast, `pixel` rules check every location on the screen. There are two primary reasons to use `block` rules, where it is possible. First, they are much faster, since only block corner locations have to be checked. Second, they help fighting false positive matches. Sometimes, an accidental combination of pixels on the screen can form a "match" for a certain small sprite, causing the rule to trigger. If it is known that the original sprite is always block-aligned, we can minimize the chances of a false positive match.
 
+Rule type can be followed with an optional `|x,y` section, forcing the rule to be applicable to the original sprite located only in the specified position of the screen. This method is handy for detecting static elements displayed in known locations. 
+
 ### Original sprite declaration
 
 Original sprite declaration consists of the following elements:
@@ -41,7 +43,7 @@ Original sprite declaration consists of the following elements:
 
 Color palette in ZX Spectrum is specified per 8x8 sprite block rather than per pixel. In practice it often leads to "color clashes" (incorrectly colored areas), apparent in many Spectrum games. For us it means that color matching is unreliable: we cannot be sure that the given sprite will always preserve its color palette.
 
-Therefore, the basic matching procedure assumes that the original sprite does not contain any color information. It should be a 24bpp BMP image actually containing pixels of these colors only:
+Therefore, the basic matching procedure assumes that the original sprite does not contain any color information. It should be a 24bpp BMP image, with a width equal to a multiple of 8, and actually containing pixels of these colors only:
 
 - white, `RGB(255, 255, 255)`: background "paper" color;
 - black, `RGB(0, 0, 0)`: foreground "ink" color;
@@ -88,7 +90,7 @@ In effect, this technique allows to match immovable background objects when othe
 Sound rules let you add your own music and sound effects to the game. Their basic syntax is similar to the syntax of sprite replacement rules:
 
 ```
-<channel-number> <rule-type> <original-sprite> <sound-sample-file> <event> [flags] 
+<channel-number> <rule-type>[|x,y] <original-sprite> <sound-sample-file(s)> <event> [flags] 
 ```
 
 ### Channels
@@ -112,13 +114,14 @@ Events are used to initiate a playback; there are no dedicated means for stoppin
 
 ### Sound samples
 
-A sound sample is a conventional audio file. A variety of formats are supported, including MP3, WAV, and OGG.
+A sound sample is a conventional audio file. A variety of formats are supported, including MP3, WAV, and OGG. It is possible to specify a list of `|`-separated samples in one rule. When the rule is triggered, a random sample from the list will be chosen (unless `seq` flag is specified).
 
 ### Flags
 
-You may want to mute regular Spectrum sound output while playing your custom samples. This is achieved with `mute_ay` and `mute_beeper` flags:
+There are additional flags affecting the work of the sound engine:
 
 - `mute_ay`: AY sound processor will be turned off while the rule is active;
-- `mute_beeper`: regular ZX beeper will be turned off while the rule is active.
-
-This way, regular sound system of Spectrum will be turned on only if there are no active rules with these flags set.
+- `mute_beeper`: regular ZX beeper will be turned off while the rule is active;
+- `volume|N`: a sound sample will be played with the specified volume (0-100);
+- `loop`: a sound sample will be looped until interrupted by another rule; 
+- `seq`: samples in a list of samples will be chosen sequentially rather than randomly.

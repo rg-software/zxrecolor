@@ -1,8 +1,17 @@
 @echo off 
+:: Documentation updater
+::
+:: make sure there are no uncommitted changes in the project
+:: before calling this script!
+
+:: running the batch from an outside temp folder
 if "%1" == "skip" goto skip
 copy /y update_ghp.bat "%TEMP%"\update_ghp.bat 
 "%TEMP%"\update_ghp.bat skip
 :skip
+
+:: update documentation branch, 
+:: then switch back to the default
 hg up default
 call make_docs.bat
 del index.html

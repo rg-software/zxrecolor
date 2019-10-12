@@ -4,7 +4,7 @@ While you can manage any recoloring project solely with the help of your favorit
 
 ## UnrealSpeccy Emulator
 
-UnrealSpeccy includes numerous developer-oriented instruments, and some additional means are added to our customized version. Here is a very incomplete list:
+[UnrealSpeccy](http://dlcorp.nedopc.com/viewforum.php?f=27) includes numerous developer-oriented instruments, and some additional means are added to our customized version. Here is a very incomplete list:
 
 - `Ctrl+1`, `Ctrl+2`, `Ctrl+3`: switch between recolored, original, and black-and-white rendering.
 - `Alt+F8`: take a screenshot.
