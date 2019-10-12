@@ -7,11 +7,11 @@
         
         
         
-        <link rel="shortcut icon" href="/img/favicon.ico">
-        <title>ZX Recoloring Project</title>
-        <link href="/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="/css/font-awesome.min.css" rel="stylesheet">
-        <link href="/css/base.css" rel="stylesheet">
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Deployment - ZX Recoloring Project</title>
+        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
             <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
         <![endif]-->
 
-        <script src="/js/jquery-1.10.2.min.js" defer></script>
-        <script src="/js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap-3.0.3.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
@@ -39,7 +39,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/index.html">ZX Recoloring Project</a>
+                    <a class="navbar-brand" href="index.html">ZX Recoloring Project</a>
                 </div>
 
                 <!-- Expanded navigation -->
@@ -47,22 +47,22 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li >
-                                <a href="/index.html">About</a>
+                                <a href="index.html">About</a>
                             </li>
                             <li >
-                                <a href="/hello-world.html">Hello, world!</a>
+                                <a href="hello-world.html">Hello, world!</a>
                             </li>
                             <li >
-                                <a href="/rules-syntax.html">Writing rules</a>
+                                <a href="rules-syntax.html">Writing rules</a>
+                            </li>
+                            <li class="active">
+                                <a href="deployment.html">Deployment</a>
                             </li>
                             <li >
-                                <a href="/deployment.html">Deployment</a>
+                                <a href="handy-tools.html">Handy tools</a>
                             </li>
                             <li >
-                                <a href="/handy-tools.html">Handy tools</a>
-                            </li>
-                            <li >
-                                <a href="/tips-and-tricks.html">Tips and tricks</a>
+                                <a href="tips-and-tricks.html">Tips and tricks</a>
                             </li>
                         </ul>
 
@@ -72,21 +72,46 @@
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
+                            <li >
+                                <a rel="next" href="rules-syntax.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="handy-tools.html">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#deployment">Deployment</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
 
-    <div class="row-fluid">
-      <div id="main-content" class="span12">
-        <h1 id="404-page-not-found" style="text-align: center">404</h1>
-        <p style="text-align: center"><strong>Page not found</strong></p>
-      </div>
-    </div>
-
-
+<h1 id="deployment">Deployment</h1>
+<p>Deploying your remake is very easy: </p>
+<ol>
+<li>
+<p>Prepare a working folder with the minimal emulator environment. It should include the files <code>2006.rom</code>, <code>bass.dll</code>, <code>unreal.exe</code>, and <code>unreal.ini</code>.</p>
+</li>
+<li>
+<p>Place the <code>sna</code>-snapshot of the original ZX Spectrum game into the working folder. Open <code>unreal.ini</code> and make sure that the value of <code>snapshot</code> parameter matches the name of your snapshot.</p>
+</li>
+<li>
+<p>You can rename <code>unreal.exe</code> and <code>unreal.ini</code> into anything else like <code>MyGame.exe</code> and <code>MyGame.ini</code>, just make sure these names match.</p>
+</li>
+<li>
+<p>Place the content of your <code>game</code> folder (with pictures, sounds, and <code>settings.txt</code>) into the archive named <code>game.zip</code>. Make sure the resources are directly in the archive, not inside some subfolder.</p>
+</li>
+</ol>
+<p>Now you can simply convert your working folder to a regular or self-extracting archive and publish it anywhere you like! Just make sure to <a href="mailto:mozgovoy@u-aizu.ac.jp">drop me a line</a>, I'll be happy to know about new remakes :)</p></div>
         </div>
 
         <footer class="col-md-12">
@@ -94,11 +119,11 @@
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
-            var base_url = "/",
+            var base_url = ".",
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
-        <script src="/js/base.js" defer></script>
-        <script src="/search/main.js" defer></script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

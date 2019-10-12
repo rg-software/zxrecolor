@@ -56,6 +56,9 @@
                                 <a href="rules-syntax.html">Writing rules</a>
                             </li>
                             <li >
+                                <a href="deployment.html">Deployment</a>
+                            </li>
+                            <li >
                                 <a href="handy-tools.html">Handy tools</a>
                             </li>
                             <li >
@@ -93,8 +96,8 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="hello-world">Hello, world!</h1>
-<p>For starters, let's try to recolor a couple of sprites in a small game titled <a href="http://www.worldofspectrum.org/infoseek.cgi?regexp=^I%2c+Ball+2%3a+Quest+for+the+Past$&amp;loadpics=3">I, Ball II</a>.</p>
-<p>Download and extract the archive <a href="files/iball2.zip">iball2.zip</a>. It contains a minimal binary distribution of an open source Spectrum emulator <a href="http://dlcorp.nedopc.com/viewforum.php?f=27&amp;sid=9c36f0fd40937a326424f2719edb5a4a">Unreal Speccy</a> (the main executable file is renamed into <code>iball2.exe</code>), and a SNA image of I, Ball II. The snapshot is taken at the beginning of level 2, since it contains the sprites of our interest.</p>
+<p>For starters, let's practice recoloring a couple of sprites in a small game titled <a href="http://www.worldofspectrum.org/infoseek.cgi?regexp=^I%2c+Ball+2%3a+Quest+for+the+Past$&amp;loadpics=3">I, Ball II</a>.</p>
+<p>Download and extract the archive <a href="files/iball2.zip">iball2.zip</a>. It contains a minimal binary distribution of a modified open source Spectrum emulator <a href="http://dlcorp.nedopc.com/viewforum.php?f=27&amp;sid=9c36f0fd40937a326424f2719edb5a4a">Unreal Speccy</a> (the main executable file is renamed into <code>iball2.exe</code>), and a SNA image of I, Ball II. The snapshot is taken at the beginning of level 2, since it contains the sprites of our interest.</p>
 <p>Run the game (i.e., execute <code>iball2.exe</code>) and make sure that everything works correctly. The controls are set to Sinclair joystick (keyboard keys 6, 7, 8, 9, 0). Initially, the game screen should look like this:</p>
 <p><img alt="" src="images/iball2_orig.png" /></p>
 <p>Now let's update the sprites of yellow balls and gray boxes:</p>
@@ -104,9 +107,11 @@
 </li>
 <li>
 <p>Create in the same <code>game</code> subfolder a file <code>settings.txt</code>, containing the following lines:</p>
-<pre><code>0 block zx_yellowball.bmp pc_yellowball.bmp
+<div class="codehilite"><pre><span></span>0 block zx_yellowball.bmp pc_yellowball.bmp
 0 pixel zx_graybrick.bmp pc_graybrick.bmp
-</code></pre>
+</pre></div>
+
+
 </li>
 </ol>
 <p>That's it! Run the game and enjoy the result:</p>
@@ -124,8 +129,10 @@
 </li>
 <li>
 <p>The configuration file <code>settings.txt</code> consists of lines including at least the following compulsory elements:</p>
-<pre><code>&lt;layer-number&gt; &lt;rule-type&gt; &lt;original-sprite&gt; &lt;new-sprite&gt;
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;layer-number&gt; &lt;rule-type&gt; &lt;original-sprite&gt; &lt;new-sprite&gt;
+</pre></div>
+
+
 <p>Layers are needed to organize background and foreground elements properly. The system draws sprites layer by layer, so foreground sprites should be placed on higher-numbered layers.</p>
 <p>Different rule types are used here to reduce CPU load. Fast cell-precise <code>block</code> rules assume that the original sprites are always aligned with the borders of 8x8 pixel blocks (which is a very common case for background objects). In contrast, slower pixel-precise <code>pixel</code> rules perform complete searching.</p>
 <p>In our case, yellow balls never leave their initial positions, so cell-precise matching is sufficient. However, gray boxes fall down when touched, so pixel-precise matching is necessary in their case.</p>

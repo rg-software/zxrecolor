@@ -56,6 +56,9 @@
                                 <a href="rules-syntax.html">Writing rules</a>
                             </li>
                             <li >
+                                <a href="deployment.html">Deployment</a>
+                            </li>
+                            <li >
                                 <a href="handy-tools.html">Handy tools</a>
                             </li>
                             <li >
@@ -75,7 +78,7 @@
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="handy-tools.html">
+                                <a rel="prev" href="deployment.html">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -99,47 +102,54 @@
 <p>This section is intended to be a succint yet complete description of rule types and rule syntax. It might be a bit difficult to read it due to lack of practical examples, so make sure to check out <a href="tips-and-tricks.html">Tips and tricks</a> section as well.</p>
 <h2 id="settings-file">Settings file</h2>
 <p>All required game transformations are performed by means of rules, listed in the <code>game\settings.txt</code> file. Each line of this file is a separate rule. Empty lines and lines starting with a semicolon symbol are ignored:</p>
-<pre><code>; This is a comment
+<div class="codehilite"><pre><span></span>; This is a comment
 
 &lt;here-comes-my-first-rule&gt;
-</code></pre>
+</pre></div>
+
 
 <p>Rules are case-sensitive.</p>
 <h2 id="sprite-replacement-rules">Sprite replacement rules</h2>
 <p>Each sprite replacement rule can substitute an original ZX Spectrum sprite found on the screen with its upgraded version. Recolored screen is twice wider and twice higher (512x384) than the original screen (256x192), and imposes no color limits. Sprite replacement rules are described with the following syntax:</p>
-<pre><code>&lt;layer-number&gt; &lt;rule-type&gt; &lt;original-sprite&gt; &lt;new-sprite&gt; [protected|N]
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;layer-number&gt; &lt;rule-type&gt;[|x,y] &lt;original-sprite&gt; &lt;new-sprite&gt; [protected|N]
+</pre></div>
+
 
 <h3 id="layers">Layers</h3>
 <p>If a game has non-blank background, it is necessary to ensure that foreground images (such as game characters) are drawn over the background rather than behind it. This can be achieved with layers: each subsequent layer is drawn only after the previous layer is complete. For example, all the sprites on the layer 1 will be drawn after all the sprites on the layer 0. The <code>layer-number</code> element should be an integer.</p>
 <h3 id="replacement-rule-types">Replacement rule types</h3>
 <p>Currently there are two types of sprite replacement rules: <code>block</code> and <code>pixel</code>. ZX Spectrum screen is logically divided into 8x8-pixel blocks, having independent color palettes. In practice it means that immovable background elements are typically aligned with the borders of such blocks.</p>
 <p>Rules of <code>block</code> type search original sprites aligned with block corners only. In contrast, <code>pixel</code> rules check every location on the screen. There are two primary reasons to use <code>block</code> rules, where it is possible. First, they are much faster, since only block corner locations have to be checked. Second, they help fighting false positive matches. Sometimes, an accidental combination of pixels on the screen can form a "match" for a certain small sprite, causing the rule to trigger. If it is known that the original sprite is always block-aligned, we can minimize the chances of a false positive match.</p>
+<p>Rule type can be followed with an optional <code>|x,y</code> section, forcing the rule to be applicable to the original sprite located only in the specified position of the screen. This method is handy for detecting static elements displayed in known locations. </p>
 <h3 id="original-sprite-declaration">Original sprite declaration</h3>
 <p>Original sprite declaration consists of the following elements:</p>
-<pre><code>&lt;sprite-name&gt;.bmp[|x1,y1,color1[|x2,y2,color2[|...]]]
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;sprite-name&gt;.bmp[|x1,y1,color1[|x2,y2,color2[|...]]]
+</pre></div>
+
 
 <p>Color palette in ZX Spectrum is specified per 8x8 sprite block rather than per pixel. In practice it often leads to "color clashes" (incorrectly colored areas), apparent in many Spectrum games. For us it means that color matching is unreliable: we cannot be sure that the given sprite will always preserve its color palette.</p>
-<p>Therefore, the basic matching procedure assumes that the original sprite does not contain any color information. It should be a 24bpp BMP image actually containing pixels of these colors only:</p>
+<p>Therefore, the basic matching procedure assumes that the original sprite does not contain any color information. It should be a 24bpp BMP image, with a width equal to a multiple of 8, and actually containing pixels of these colors only:</p>
 <ul>
 <li>white, <code>RGB(255, 255, 255)</code>: background "paper" color;</li>
 <li>black, <code>RGB(0, 0, 0)</code>: foreground "ink" color;</li>
 <li>pinkish, <code>RGB(242, 10, 242)</code>: transparent color, ignored in matching operations.</li>
 </ul>
 <p>Sometimes, however, color information is both reliable and necessary. Thus, there is an option to specify a list of colors of <em>individual</em> sprite pixels. For example, the declaration</p>
-<pre><code>my_sprite.bmp|0,0,red|0,1,yellow
-</code></pre>
+<div class="codehilite"><pre><span></span>my_sprite.bmp|0,0,red|0,1,yellow
+</pre></div>
+
 
 <p>specifies that the match for <code>my_sprite.bmp</code> must have a black pixel in the top-left corner and a yellow pixel right under it. Color names are taken from the standard Spectrum vocabulary: <code>black</code>, <code>blue</code>, <code>red</code>, <code>magenta</code>, <code>green</code>, <code>cyan</code>, <code>yellow</code>, <code>white</code>. For brighter colors, add <code>+</code> to the color name: <code>black+</code>, <code>blue+</code>, <code>red+</code>, <code>magenta+</code>, <code>green+</code>, <code>cyan+</code>, <code>yellow+</code>, <code>white+</code>.</p>
 <h3 id="recolored-sprite-declaration">Recolored sprite declaration</h3>
 <p>Declaring recolored sprites is easier:</p>
-<pre><code>&lt;new_sprite&gt;.bmp[|dx,dy]
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;new_sprite&gt;.bmp[|dx,dy]
+</pre></div>
+
 
 <p>Here the optional <code>|dx,dy</code> part allows to specify a relative displacement of the new sprite on the screen. For example, if you want to place the new sprite just a bit higher than the original matched fragment, use</p>
-<pre><code>&lt;new_sprite&gt;.bmp|0,-1
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;new_sprite&gt;.bmp|0,-1
+</pre></div>
+
 
 <p>Note that the numbers here correspond to the original ZX Spectrum screen dimensions. Thus, "-1" will actually become "two pixels higher" in the final double-size render.</p>
 <h3 id="protected-clause">Protected clause</h3>
@@ -158,8 +168,9 @@
 <p>In effect, this technique allows to match immovable background objects when other sprites partially obscure them. Note that both paper and ink pixels participate in matching procedure. Thus, for example, an empty (paper-only) 8x8 block has 32 matching pixels with any half-ink/half-paper block.</p>
 <h2 id="sound-rules">Sound rules</h2>
 <p>Sound rules let you add your own music and sound effects to the game. Their basic syntax is similar to the syntax of sprite replacement rules:</p>
-<pre><code>&lt;channel-number&gt; &lt;rule-type&gt; &lt;original-sprite&gt; &lt;sound-sample-file&gt; &lt;event&gt; [flags] 
-</code></pre>
+<div class="codehilite"><pre><span></span>&lt;channel-number&gt; &lt;rule-type&gt;[|x,y] &lt;original-sprite&gt; &lt;sound-sample-file(s)&gt; &lt;event&gt; [flags] 
+</pre></div>
+
 
 <h3 id="channels">Channels</h3>
 <p>Every playback event is associated with an integer channel number. A single channel cannot be shared between two active playback events. If you start playback on the given channel, the previously active playback session of this channel will be interrupted.</p>
@@ -174,14 +185,16 @@
 </ul>
 <p>Events are used to initiate a playback; there are no dedicated means for stopping a playback. However, it is possible to play an empty/silent sound file on the given channel to achieve the same outcome.</p>
 <h3 id="sound-samples">Sound samples</h3>
-<p>A sound sample is a conventional audio file. A variety of formats are supported, including MP3, WAV, and OGG.</p>
+<p>A sound sample is a conventional audio file. A variety of formats are supported, including MP3, WAV, and OGG. It is possible to specify a list of <code>|</code>-separated samples in one rule. When the rule is triggered, a random sample from the list will be chosen (unless <code>seq</code> flag is specified).</p>
 <h3 id="flags">Flags</h3>
-<p>You may want to mute regular Spectrum sound output while playing your custom samples. This is achieved with <code>mute_ay</code> and <code>mute_beeper</code> flags:</p>
+<p>There are additional flags affecting the work of the sound engine:</p>
 <ul>
 <li><code>mute_ay</code>: AY sound processor will be turned off while the rule is active;</li>
-<li><code>mute_beeper</code>: regular ZX beeper will be turned off while the rule is active.</li>
-</ul>
-<p>This way, regular sound system of Spectrum will be turned on only if there are no active rules with these flags set.</p></div>
+<li><code>mute_beeper</code>: regular ZX beeper will be turned off while the rule is active;</li>
+<li><code>volume|N</code>: a sound sample will be played with the specified volume (0-100);</li>
+<li><code>loop</code>: a sound sample will be looped until interrupted by another rule; </li>
+<li><code>seq</code>: samples in a list of samples will be chosen sequentially rather than randomly.</li>
+</ul></div>
         </div>
 
         <footer class="col-md-12">
