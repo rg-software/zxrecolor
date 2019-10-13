@@ -8,7 +8,7 @@ While you can manage any recoloring project solely with the help of your favorit
 
 - `Ctrl+1`, `Ctrl+2`, `Ctrl+3`: switch between recolored, original, and black-and-white rendering.
 - `Alt+F8`: take a screenshot.
-- `Ctrl+8`: record a video clip (you will need to have [ffmpeg.exe](files/ffmpeg.zip) in the emulator folder). You can change target video format in `unreal.ini`: search for "ffmpeg encoding options". Also note that the resulting video will be placed into the "current folder", which is `game` if you have already created it.
+- `Ctrl+F8`: record a video clip (you will need to have [ffmpeg.exe](files/ffmpeg.zip) in the emulator folder). You can change target video format in `unreal.ini`: search for "ffmpeg encoding options". Also note that the resulting video will be placed into the "current folder", which is `game` if you have already created it.
 
 
 ## hqx
@@ -18,7 +18,10 @@ Many emulators improve video output by means of [hqx filter](https://en.wikipedi
 ## ZX Color Tool
 
 TODO
-<!-- A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:
+
+<!-- 
+
+A simple auxiliary instrument called ZX Color Tool is designed to edit sprite pairs conveniently:
 The main purpose of the tool is extraction of individual sprites out of a specifically marked-up image. It is quite hard to work with dozens of separate drawings. It is much easier to collect them into a single screen and to draw borders manually. Then ZX Color Tool will be able to save screen fragments as independent sprites automatically. Let's consider elements of the tool's main form:
 
 The Load Image button loads an image with sprites for further processing. In ZX mode the tool doubles the size of the image before displaying it (assuming that a user wants to load a ZX Spectrum screenshot with original-sized sprites).

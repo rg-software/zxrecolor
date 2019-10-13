@@ -8,6 +8,6 @@ Deploying your remake is very easy:
 
 2. You can rename `unreal.exe` and `unreal.ini` into anything else like `MyGame.exe` and `MyGame.ini`, just make sure these names match.
 
-3. Place the content of your `game` folder (with pictures, sounds, and `settings.txt`) into the archive named `game.zip`. Make sure the resources are directly in the archive, not inside some subfolder.
+3. Place the content of your `game` folder (with pictures, sounds, and `settings.txt`) into the archive named `game.zip` and move it into your working folder. Make sure the resources are directly in the archive, not inside some subfolder.
 
 Now you can simply convert your working folder to a regular or self-extracting archive and publish it anywhere you like! Just make sure to [drop me a line](mailto:mozgovoy@u-aizu.ac.jp), I'll be happy to know about new remakes :)
