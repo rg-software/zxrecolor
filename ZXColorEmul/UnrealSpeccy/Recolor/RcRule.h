@@ -22,6 +22,7 @@ public:
 	bool IsValidPosition(unsigned x, unsigned y, unsigned offset) const;
 	bool IsApproximateMatch(const uint8_t* curptr, unsigned offset) const;
 	bool IsProtected() const;
+	bool IsNoFlicker() const;
 	unsigned short GetZxKey() const;
 	bool operator<(const RcRule& rhs) const;
 
@@ -44,6 +45,7 @@ private:
 	bool mProtectedFlag = false;
 	bool mLoopFlag = false;
 	bool mSeqFlag = false;
+	bool mNoFlickerFlag = false;
 	unsigned mProtectedPixels;
 	unsigned mVolume = 100;
 

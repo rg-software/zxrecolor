@@ -128,8 +128,8 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 		if (y + rule->GetZxHeight() < 240 && rule->IsFoundColor(dst, x + offset, y) && rule->IsValidPosition(x, y, offset) && rule->IsFoundAt(curptr, offset))
 		{
 			rule->AddToBlitList(x + offset, y, blitlist);
-			if (rule->IsProtected())
-				MatchedProtectedRules.insert(std::make_tuple(y, x, offset, curptr, rule));	// $mm TOFIX: offset is missing here!
+			if (rule->IsProtected() || rule->IsNoFlicker())
+				MatchedProtectedRules.insert(std::make_tuple(y, x, offset, curptr, rule));
 		}
 	};
 
@@ -151,10 +151,14 @@ void recolor_render_impl(unsigned* dst, unsigned pitch, unsigned char* zx_screen
 	for(const auto& loc_rule : disappeared_protected)
 	{
 		const auto&[y, x, offset, ptr, rule] = loc_rule;
-		if(rule->IsApproximateMatch(ptr, offset))
+		if(rule->IsProtected() && rule->IsApproximateMatch(ptr, offset))
 		{
 			rule->AddToBlitList(x + offset, y, blitlist);
 			MatchedProtectedRules.insert(loc_rule);
+		}
+		else if(rule->IsNoFlicker())	// noflicker flag works similar to "protected" rules
+		{								// but only for one frame and without approximate matching checks
+			rule->AddToBlitList(x + offset, y, blitlist);
 		}
 	}
 

@@ -130,6 +130,7 @@ RcRule::RcRule(const std::string& line)
 		
 	mAppearsFlag = isFlagFound(flags, "appears");
 	mDisappearsFlag = isFlagFound(flags, "disappears");
+	mNoFlickerFlag = isFlagFound(flags, "noflicker");
 	mMuteAyFlag = isFlagFound(flags, "mute_ay");
 	mMuteBeeperFlag = isFlagFound(flags, "mute_beeper");
 
@@ -193,6 +194,11 @@ bool RcRule::IsApproximateMatch(const uint8_t* curptr, unsigned offset) const
 bool RcRule::IsProtected() const
 {
 	return mProtectedFlag;
+}
+
+bool RcRule::IsNoFlicker() const
+{
+	return mNoFlickerFlag;
 }
 
 unsigned short RcRule::GetZxKey() const
